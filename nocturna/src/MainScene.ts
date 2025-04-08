@@ -1,4 +1,4 @@
-import { Scene, Vector3, HemisphericLight, FollowCamera, MeshBuilder, StandardMaterial, Color3, DirectionalLight } from "@babylonjs/core";
+import { Scene, Vector3, HemisphericLight, FollowCamera, MeshBuilder, StandardMaterial, Color3, DirectionalLight, Mesh, ExecuteCodeAction, ActionManager } from "@babylonjs/core";
 import { Character } from "./Character";
 import { InputHandler } from "./InputHandler";
 
@@ -7,6 +7,7 @@ export class MainScene {
     private character: Character;
     private inputHandler: InputHandler;
     private camera: FollowCamera;
+    private platforms: Mesh[] = [];
 
     constructor(engine: any) {
         this.scene = new Scene(engine);
@@ -22,7 +23,7 @@ export class MainScene {
         // directionalLight.intensity = 1.0;
 
         // Create the ground
-        const ground = MeshBuilder.CreateGround("ground", { width: 50, height: 50 }, this.scene);
+        const ground = MeshBuilder.CreateGround("ground", { width: 1000, height: 1000 }, this.scene);
         const groundMaterial = new StandardMaterial("groundMaterial", this.scene);
         groundMaterial.diffuseColor = new Color3(0.5, 0.8, 0.5); // Greenish color
         ground.material = groundMaterial;
@@ -47,6 +48,55 @@ export class MainScene {
         console.log("Camera initialized:", this.camera);
         console.log("Camera position:", this.camera.position);
         console.log("Camera target:", this.camera.getTarget());
+
+         // Créer des plateformes
+        const platform1 = MeshBuilder.CreateBox("platform1", { width: 5, height: 0.5, depth: 2 }, this.scene);
+        platform1.position = new Vector3(6, 2, 0); // Position de la plateforme
+        this.platforms.push(platform1);
+
+        const platform2 = MeshBuilder.CreateBox("platform2", { width: 5, height: 0.5, depth: 2 }, this.scene);
+        platform2.position = new Vector3(12, 4, 0); // Position de la plateforme
+        this.platforms.push(platform2);
+
+        const platformMaterial = new StandardMaterial("platformMaterial", this.scene);
+        platformMaterial.diffuseColor = new Color3(0.8, 0.8, 0.8); // Couleur grise
+        this.platforms.forEach(platform => {
+            platform.material = platformMaterial;
+        });
+
+        this.platforms.forEach(platform => {
+            platform.actionManager = new ActionManager(this.scene);
+
+            platform.actionManager.registerAction(
+                new ExecuteCodeAction(
+                    {
+                        trigger: ActionManager.OnIntersectionEnterTrigger,
+                        parameter: this.character.mesh,
+                    },
+                    () => {
+                        console.log("Character entered the platform:", platform.name);
+                        this.character.onPlatformEnter(platform);
+                        // this.isOnGround = true;
+                        // this.velocity.y = 0;
+                        // this.character.mesh.position.y = platform.position.y + 1;
+                    }
+                )
+            );
+    
+            platform.actionManager.registerAction(
+                new ExecuteCodeAction(
+                    {
+                        trigger: ActionManager.OnIntersectionExitTrigger,
+                        parameter: this.character.mesh,
+                    },
+                    () => {
+                        console.log("Character left the platform:", platform.name);
+                        // this.isOnGround = false;
+                        this.character.onPlatformExit(platform);
+                    }
+                )
+            );
+        });
     }
 
     public update(dt: number) {

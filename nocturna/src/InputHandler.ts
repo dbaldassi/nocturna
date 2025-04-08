@@ -9,12 +9,10 @@ export class InputHandler {
         console.log("Create CHARATER INPUT HANDLER");
 
         window.addEventListener("keydown", (event) => {
-            console.log("Key pressed:", event.key);
             this.keys[event.key] = true;
         });
 
         window.addEventListener("keyup", (event) => {
-            console.log("Key released:", event.key);
             this.keys[event.key] = false;
         });
     }
@@ -23,7 +21,7 @@ export class InputHandler {
         return {
             left: this.keys["q"] || this.keys["ArrowLeft"],
             right: this.keys["d"] || this.keys["ArrowRight"],
-            jump: this.keys["Space"] || this.keys["ArrowUp"],
+            jump: this.keys[" "] || this.keys["ArrowUp"],
         };
     }
 }
