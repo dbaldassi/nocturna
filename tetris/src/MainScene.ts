@@ -14,7 +14,7 @@ export class MainScene {
     private readonly width: number = 100;
     private readonly height: number = 50;
 
-    public sendInput: (input: CharacterInput) => void;
+    public sendPosition: (input: Vector3) => void;
 
     constructor(engine: any) {
         this.scene = new Scene(engine);
@@ -59,45 +59,40 @@ export class MainScene {
         console.log("Camera target:", this.camera.getTarget());
     }
 
-    public addRemoteCharacter() {
-        this.remoteCharacter = new Character(new Vector3(0, 1, 0), this.scene, "remotePlayer", new Vector3(this.width, 0, 30));
+    public addRemoteCharacter(caller : boolean) {
+        this.character.mesh.position.x = caller ? 10 : 0;
 
-        [this.character, this.remoteCharacter].forEach((character) => {
-            character.mesh.actionManager = new ActionManager(this.scene);
-            character.mesh.actionManager.registerAction(
-                new ExecuteCodeAction({
-                        trigger: ActionManager.OnIntersectionEnterTrigger,
-                        parameter: character.mesh,
-                    },
-                    () => character.onPlatformEnter(character.mesh)
-                )
-            );
+        this.remoteCharacter = new Character(new Vector3(caller ? 0 : 10, 1, 0), this.scene, "remotePlayer", new Vector3(this.width, 0, 30));
 
-            character.mesh.actionManager.registerAction(
-                new ExecuteCodeAction({
-                        trigger: ActionManager.OnIntersectionExitTrigger,
-                        parameter: character.mesh,
-                    },
-                    () => character.onPlatformExit(character.mesh)
-                )
-            );
-        });
+        this.remoteCharacter.mesh.actionManager = new ActionManager(this.scene);
+        this.remoteCharacter.mesh.actionManager.registerAction(
+            new ExecuteCodeAction({
+                    trigger: ActionManager.OnIntersectionEnterTrigger,
+                    parameter: this.character.mesh,
+                },
+                () => this.character.onPlatformEnter(this.remoteCharacter.mesh)
+            )
+        );
+
+        this.remoteCharacter.mesh.actionManager.registerAction(
+            new ExecuteCodeAction({
+                    trigger: ActionManager.OnIntersectionExitTrigger,
+                    parameter: this.character.mesh,
+                },
+                () => this.character.onPlatformExit(this.remoteCharacter.mesh)
+            )
+        );
     }
 
-    public updateRemoteCharacter(input: CharacterInput) {
-        this.remoteInput = input;
-        console.log(input);
+    public updateRemoteCharacter(position: Vector3) {
+        this.remoteCharacter.mesh.position = position;
     }
 
     public update(dt: number) {
         const input = this.inputHandler.getInput();
-        if(this.sendInput) this.sendInput(input);
-        
-        if(this.remoteInput && this.remoteCharacter) {
-            this.remoteCharacter.update(dt, this.remoteInput);
-        }
-
         this.character.update(dt, input);
+
+        if(this.sendPosition) this.sendPosition(this.character.mesh.position);
     }
 
     public render() {

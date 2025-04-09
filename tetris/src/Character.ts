@@ -50,57 +50,50 @@ export class Character {
     }
 
     onPlatformEnter(platform: Mesh) {
-        const characterMinY = this.mesh.position.y - 0.8; // Bas du personnage
-        const characterMaxY = this.mesh.position.y + 0.8; // Haut du personnage
+        console.log("On platform enter !!!");
 
-        const platformMinY = platform.position.y - 0.2; // Bas de la plateforme
-        const platformMaxY = platform.position.y + 0.2; // Haut de la plateforme
+        const boundingInfo = this.mesh.getBoundingInfo();
+        const platformBoundingInfo = platform.getBoundingInfo();
 
-        const characterMinX = this.mesh.position.x - 0.8; // Gauche du personnage
-        const characterMaxX = this.mesh.position.x + 0.8; // Droite du personnage
-        const platformMinX = platform.position.x - 2.2; // Gauche de la plateforme
-        const platformMaxX = platform.position.x + 2.2; // Droite de la plateforme
+        // console.log(platform.getBoundingInfo(), platform.position._x);
 
-        const isAbovePlatform = characterMinY >= platformMaxY; // Le personnage est au-dessus de la plateforme
-        const isBelowPlatform = characterMaxY <= platformMinY; // Le personnage est en dessous de la plateforme
+        const characterRight = this.mesh.position.x + (boundingInfo.boundingBox.minimum.x - 0.5); // Gauche du personnage
+        const characterLeft = this.mesh.position.x + boundingInfo.boundingBox.maximum.x + 0.5; // Droite du personnage
 
-        const isOnLeftSide = characterMaxX <= platformMinX; // Le personnage est à gauche de la plateforme
-        const isOnRightSide = characterMinX >= platformMaxX; // Le personnage est à droite de la plateforme
+        const platformRight = platform.position._x + platformBoundingInfo.boundingBox.minimum._x; // Gauche de la plateforme
+        const platformLeft = platform.position._x + platformBoundingInfo.boundingBox.maximum._x; // Droite de la plateforme
+
+        // const isAbovePlatform = characterMinY >= platformMaxY; // Le personnage est au-dessus de la plateforme
+        // const isBelowPlatform = characterMaxY <= platformMinY; // Le personnage est en dessous de la plateforme
+
+        const isOnLeftSide = characterLeft >= platformRight; // Le personnage est à gauche de la plateforme
+        const isOnRightSide = characterRight <= platformLeft; // Le personnage est à droite de la plateforme
+
+        console.log({characterLeft, characterRight, platformLeft, platformRight, isOnLeftSide});
 
         const p_side = new PlatformSide();
         p_side.mesh = platform;
 
-        if(isAbovePlatform) {
-            console.log("Above platform");
-            this.isOnGround = true;
-            this.velocity.y = 0; // Arrêter la gravité
-            this.mesh.position.y = platformMaxY + 1; // Rester sur la plateforme
-            p_side.side = "top";
-        }
-        else if(isOnLeftSide) {
+        if(isOnLeftSide) {
             this.leftBlock = true;
             p_side.side = "left";
         }
         else if(isOnRightSide) {
             this.rightBlock = true;
             p_side.side = "right";
-            }
-        else if(isBelowPlatform) {
-            this.velocity.y = 0; // Arrêter la gravité
-            p_side.side = "bottom";
-        }  
-         
+        }
+                 
          this.collidingPlatform.push(p_side);
     }
 
     onPlatformExit(platform: Mesh) {
+        console.log("On platform exit !!!");
+
         const side = this.collidingPlatform.find(p => p.mesh === platform);
         this.collidingPlatform.splice(this.collidingPlatform.indexOf(side), 1);
        
         console.log(side.side);
 
-        if(side.side === "top") this.isOnGround = false;
-            // this.isOnGround = false;
         if(side.side === "right") this.rightBlock = false;
         if(side.side === "left") this.leftBlock = false;
         
@@ -124,10 +117,6 @@ export class Character {
         else if(characterLeft >= borderLeft) {
             this.mesh.position.x = borderLeft - boundingInfo.boundingBox.maximum.x;
             this.leftBlock = true;
-        }
-        else {
-            this.rightBlock = false;
-            this.leftBlock = false;
         }
     }
 

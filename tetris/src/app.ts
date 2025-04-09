@@ -91,8 +91,8 @@ class App {
         this.dataChannel = this.pc.createDataChannel("gameData");
         this.dataChannel.onopen = () => {
             console.log("Data channel opened");
-            this.scene.sendInput = (input) => this.sendInput(input);
-            this.scene.addRemoteCharacter();
+            this.scene.sendPosition = (position) => this.sendInput(position);
+            this.scene.addRemoteCharacter(true);
         };
         this.dataChannel.onclose = () => {
             console.log("Data channel closed");
@@ -136,14 +136,14 @@ class App {
             this.dataChannel = event.channel;
             this.dataChannel.onopen = () => {
                 console.log("Data channel opened");
-                this.scene.sendInput = (input) => this.sendInput(input);
-                this.scene.addRemoteCharacter();
+                this.scene.sendPosition = (position) => this.sendInput(position);
+                this.scene.addRemoteCharacter(false);
             };
             this.dataChannel.onclose = () => {
                 console.log("Data channel closed");
             };
             this.dataChannel.onmessage = (event) => {
-                console.log("Message from data channel: ", event.data);
+                // console.log("Message from data channel: ", event.data);
                 this.scene.updateRemoteCharacter(JSON.parse(event.data));
             };
         };
@@ -162,10 +162,10 @@ class App {
         });
     }
 
-    sendInput(input: CharacterInput) {
+    sendInput(position: Vector3) {
         if(this.dataChannel && this.dataChannel.readyState === "open") {
-            console.log("Sending input: ", JSON.stringify(input));
-            this.dataChannel.send(JSON.stringify(input));
+            // console.log("Sending input: ", JSON.stringify(position));
+            this.dataChannel.send(JSON.stringify(position));
         }
     }
 
