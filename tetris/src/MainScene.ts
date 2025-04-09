@@ -44,6 +44,8 @@ export class MainScene {
         this.inputHandler = new InputHandler();
         console.log("Character created:", this.character.mesh);
 
+        this.addPlatformsAboveCharacter(5, 10, 1, 2, 3, 5); // Add platforms above the character
+        
         // Initialize the camera
         this.camera = new FollowCamera("FollowCamera", new Vector3(0, 10, 100), this.scene); // Position temporaire
         // this.camera.target = new Vector3(0, 1, 0);
@@ -82,6 +84,25 @@ export class MainScene {
                 () => this.character.onPlatformExit(this.remoteCharacter.mesh)
             )
         );
+    }
+
+    addPlatformsAboveCharacter(platformCount: number, platformWidth: number, platformHeight: number, spacing: number, columnCount: number, columnSpacing: number) {
+        for (let col = 0; col < columnCount; col++) {
+            for (let i = 0; i < platformCount; i++) {
+                const platform = MeshBuilder.CreateBox(`platform_${col}_${i}`, { width: platformWidth, height: 1, depth: platformHeight }, this.scene);
+                const platformMaterial = new StandardMaterial(`platformMaterial_${col}_${i}`, this.scene);
+                platformMaterial.diffuseColor = new Color3(0.7, 0.7, 0.7); // Grayish color
+                platform.material = platformMaterial;
+
+                // Position the platform in a grid-like structure
+                platform.position.x = col * (platformWidth + columnSpacing); // Horizontal spacing for columns
+                platform.position.y = this.character.mesh.position.y + 2 + (i + 1) * spacing; // Vertical spacing for rows
+                platform.position.z = 0; // Centered in depth
+
+                this.platforms.push(platform); // Add to the platforms array
+                console.log(`Platform column ${col}, row ${i} created at position:`, platform.position);
+            }
+        }
     }
 
     public updateRemoteCharacter(position: Vector3) {

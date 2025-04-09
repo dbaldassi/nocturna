@@ -2,9 +2,7 @@ import { CharacterInput } from "./types";
 
 export class InputHandler {
     private keys: { [key: string]: boolean } = {};
-
     
-
     constructor() {
         console.log("Create CHARATER INPUT HANDLER");
 

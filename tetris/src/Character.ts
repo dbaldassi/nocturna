@@ -66,8 +66,8 @@ export class Character {
         // const isAbovePlatform = characterMinY >= platformMaxY; // Le personnage est au-dessus de la plateforme
         // const isBelowPlatform = characterMaxY <= platformMinY; // Le personnage est en dessous de la plateforme
 
-        const isOnLeftSide = characterLeft >= platformRight; // Le personnage est à gauche de la plateforme
-        const isOnRightSide = characterRight <= platformLeft; // Le personnage est à droite de la plateforme
+        const isOnLeftSide = characterLeft >= platformRight && characterLeft < platformLeft; // Le personnage est à gauche de la plateforme
+        const isOnRightSide = characterRight <= platformLeft && characterRight > platformRight; // Le personnage est à droite de la plateforme
 
         console.log({characterLeft, characterRight, platformLeft, platformRight, isOnLeftSide});
 

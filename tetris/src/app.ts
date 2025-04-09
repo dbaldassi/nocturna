@@ -25,7 +25,7 @@ class App {
     }
 
     createWebsocket() {
-        this.websocket = new WebSocket("wss://134.59.133.57:8090");
+        this.websocket = new WebSocket("wss://localhost:8090");
         this.websocket.onopen = () => {
             console.log("WebSocket connection established");
         };
