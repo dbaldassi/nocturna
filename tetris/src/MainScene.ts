@@ -2,6 +2,7 @@ import { Scene, Vector3, HemisphericLight, FollowCamera, MeshBuilder, StandardMa
 import { Character } from "./Character";
 import { InputHandler } from "./InputHandler";
 import { CharacterInput } from "./types";
+import { Ball } from "./Ball"
 
 export class MainScene {
     private scene: Scene;
@@ -13,6 +14,7 @@ export class MainScene {
     private platforms: Mesh[] = [];
     private readonly width: number = 100;
     private readonly height: number = 50;
+    private ball: Ball;
 
     public sendPosition: (input: Vector3) => void;
 
@@ -20,6 +22,8 @@ export class MainScene {
         this.scene = new Scene(engine);
 
         this.initializeScene();
+
+        this.ball.start();
     }
 
     private initializeScene() {
@@ -40,11 +44,14 @@ export class MainScene {
 
         // Initialize the character as a cube
         this.character = new Character(new Vector3(0, 1, 0), this.scene, "localPlayer", new Vector3(this.width, 0, 30));
+        this.ball = new Ball(this.scene, new Vector3(0,2,0), 1);
+        this.addCollisions(this.character.mesh, this.ball);
 
         this.inputHandler = new InputHandler();
         console.log("Character created:", this.character.mesh);
 
-        this.addPlatformsAboveCharacter(5, 10, 1, 2, 3, 5); // Add platforms above the character
+        // this.addPlatformsAboveCharacter(5, 10, 1, 2, 3, 5); // Add platforms above the character
+        this.createBoundary(this.width, this.height, 10); // Create the boundaries
         
         // Initialize the camera
         this.camera = new FollowCamera("FollowCamera", new Vector3(0, 10, 100), this.scene); // Position temporaire
@@ -61,29 +68,35 @@ export class MainScene {
         console.log("Camera target:", this.camera.getTarget());
     }
 
+    private addCollisions(src: Mesh, dst: any) {
+        if(!dst.mesh.actionManager) {
+            dst.mesh.actionManager = new ActionManager(this.scene);
+        }
+
+        dst.mesh.actionManager.registerAction(
+            new ExecuteCodeAction({
+                    trigger: ActionManager.OnIntersectionEnterTrigger,
+                    parameter: src,
+                },
+                () => dst.onPlatformEnter(src)
+            )
+        );
+
+        dst.mesh.actionManager.registerAction(
+            new ExecuteCodeAction({
+                    trigger: ActionManager.OnIntersectionExitTrigger,
+                    parameter: src,
+                },
+                () => dst.onPlatformExit(src)
+            )
+        );   
+    }
+
     public addRemoteCharacter(caller : boolean) {
         this.character.mesh.position.x = caller ? 10 : 0;
 
         this.remoteCharacter = new Character(new Vector3(caller ? 0 : 10, 1, 0), this.scene, "remotePlayer", new Vector3(this.width, 0, 30));
-
-        this.remoteCharacter.mesh.actionManager = new ActionManager(this.scene);
-        this.remoteCharacter.mesh.actionManager.registerAction(
-            new ExecuteCodeAction({
-                    trigger: ActionManager.OnIntersectionEnterTrigger,
-                    parameter: this.character.mesh,
-                },
-                () => this.character.onPlatformEnter(this.remoteCharacter.mesh)
-            )
-        );
-
-        this.remoteCharacter.mesh.actionManager.registerAction(
-            new ExecuteCodeAction({
-                    trigger: ActionManager.OnIntersectionExitTrigger,
-                    parameter: this.character.mesh,
-                },
-                () => this.character.onPlatformExit(this.remoteCharacter.mesh)
-            )
-        );
+        this.addCollisions(this.remoteCharacter.mesh, this.character);
     }
 
     addPlatformsAboveCharacter(platformCount: number, platformWidth: number, platformHeight: number, spacing: number, columnCount: number, columnSpacing: number) {
@@ -105,6 +118,40 @@ export class MainScene {
         }
     }
 
+    private createBoundary(width: number, height: number, depth: number) {
+        const wallThickness = 1; // Épaisseur des murs
+    
+        // Mur gauche
+        const leftWall = MeshBuilder.CreateBox("leftWall", { width: wallThickness, height: height, depth: depth }, this.scene);
+        leftWall.position.x = -width / 2;
+        leftWall.position.y = height / 2;
+    
+        // Mur droit
+        const rightWall = MeshBuilder.CreateBox("rightWall", { width: wallThickness, height: height, depth: depth }, this.scene);
+        rightWall.position.x = width / 2;
+        rightWall.position.y = height / 2;
+    
+        // Mur avant
+        const frontWall = MeshBuilder.CreateBox("frontWall", { width: width, height: height, depth: wallThickness }, this.scene);
+        frontWall.position.z = -depth / 2;
+        frontWall.position.y = height / 2
+    
+        // Mur arrière
+        /*const backWall = MeshBuilder.CreateBox("backWall", { width: width, height: height, depth: wallThickness }, this.scene);
+        backWall.position.z = depth / 2;
+        backWall.position.y = height / 2;
+        backWall.checkCollisions = true;*/
+    
+        // Plafond (optionnel, si nécessaire)
+        const ceiling = MeshBuilder.CreateBox("ceiling", { width: width, height: wallThickness, depth: depth }, this.scene);
+        ceiling.position.y = 10;
+
+        [leftWall, rightWall, frontWall, ceiling].forEach(wall => {
+            this.addCollisions(wall, this.character);
+            this.addCollisions(wall, this.ball);
+        });
+    }
+
     public updateRemoteCharacter(position: Vector3) {
         this.remoteCharacter.mesh.position = position;
     }
@@ -112,6 +159,7 @@ export class MainScene {
     public update(dt: number) {
         const input = this.inputHandler.getInput();
         this.character.update(dt, input);
+        this.ball.update(dt);
 
         if(this.sendPosition) this.sendPosition(this.character.mesh.position);
     }

@@ -96,9 +96,6 @@ export class Character {
 
         if(side.side === "right") this.rightBlock = false;
         if(side.side === "left") this.leftBlock = false;
-        
-
-        
     }
 
     checkBorder() {
@@ -121,7 +118,7 @@ export class Character {
     }
 
     update(dt: number, input: CharacterInput) {
-        this.checkBorder();
+        // this.checkBorder();
         this.move(dt, input);
     }
 }
