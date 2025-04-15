@@ -1,10 +1,12 @@
 import { Scene, TransformNode, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType } from "@babylonjs/core";
+import { Face } from "./Face";
 
 export class Cube {
     private scene: Scene;
     private size: number;
     private parent: TransformNode;
     mesh: any;
+    private faces: Face[] = [];
 
     constructor(scene: Scene, size: number, parent: TransformNode) {
         this.scene = scene;
@@ -13,54 +15,61 @@ export class Cube {
         // Create a parent node for the cube
         this.parent = parent;
 
+        // Initialize the cube mesh
+        this.mesh = MeshBuilder.CreateBox("cubeMesh", { size: this.size }, this.scene);
+        this.mesh.parent = this.parent;
+
         // Initialize the cube
         this.createPlanes();
     }
 
     private createPlanes() {
-        const halfSize = this.size / 2;
-
-        // Define materials for each side of the cube
-        const materials = [
-            new StandardMaterial("frontMaterial", this.scene),
-            new StandardMaterial("backMaterial", this.scene),
-            new StandardMaterial("leftMaterial", this.scene),
-            new StandardMaterial("rightMaterial", this.scene),
-            new StandardMaterial("topMaterial", this.scene),
-            new StandardMaterial("bottomMaterial", this.scene),
+        // create 6 face with face class
+        const colors = [
+            new Color3(1, 0, 0), // Red
+            new Color3(0, 1, 0), // Green
+            new Color3(0, 0, 1), // Blue
+            new Color3(1, 1, 0), // Yellow
+            new Color3(1, 0.5, 0), // Orange
+            new Color3(1, 1, 1) // White
+        ];
+        const positions = [
+            new Vector3(0, 0, -this.size / 2),
+            new Vector3(0, 0, this.size / 2),
+            new Vector3(this.size / 2, 0, 0),
+            new Vector3(-this.size / 2, 0, 0),
+            new Vector3(0, this.size / 2, 0),
+            new Vector3(0, -this.size / 2, 0)
+        ];
+        const rotations = [
+            new Vector3(0, Math.PI, 0),
+            new Vector3(0, 0, 0),
+            new Vector3(0, Math.PI / 2, 0),
+            new Vector3(0, -Math.PI / 2, 0),
+            new Vector3(-Math.PI / 2, 0, 0),
+            new Vector3(Math.PI / 2, 0, 0)
         ];
 
-        // Assign unique colors to each material
-        materials[0].diffuseColor = new Color3(1, 0, 0); // Red
-        materials[1].diffuseColor = new Color3(0, 1, 0); // Green
-        materials[2].diffuseColor = new Color3(0, 0, 1); // Blue
-        materials[3].diffuseColor = new Color3(1, 1, 0); // Yellow
-        materials[4].diffuseColor = new Color3(1, 0, 1); // Magenta
-        materials[5].diffuseColor = new Color3(0, 1, 1); // Cyan
-
-        // Create six planes at the origin
-        const planes = [
-            { name: "front", position: new Vector3(0, 0, -halfSize), rotation: new Vector3(0, Math.PI, 0), material: materials[0] },
-            { name: "back", position: new Vector3(0, 0, halfSize), rotation: new Vector3(0, 0, 0), material: materials[1] },
-            { name: "left", position: new Vector3(-halfSize, 0, 0), rotation: new Vector3(0, -Math.PI / 2, 0), material: materials[2] },
-            { name: "right", position: new Vector3(halfSize, 0, 0), rotation: new Vector3(0, Math.PI / 2, 0), material: materials[3] },
-            { name: "top", position: new Vector3(0, halfSize, 0), rotation: new Vector3(-Math.PI / 2, 0, 0), material: materials[4] },
-            { name: "bottom", position: new Vector3(0, -halfSize, 0), rotation: new Vector3(Math.PI / 2, 0, 0), material: materials[5] },
+        const names = [
+            "Front",
+            "Back",
+            "Right",
+            "Left",
+            "Top",
+            "Bottom"
         ];
+        for (let i = 0; i < 6; i++) {
+            const face = new Face(this.scene, this.size, this, positions[i], names[i], colors[i], rotations[i]);
+            this.faces.push(face);
+        }
 
-        planes.forEach(plane => {
-            const planeMesh = MeshBuilder.CreatePlane(plane.name, { size: this.size }, this.scene);
-            planeMesh.position = plane.position;
-            planeMesh.rotation = plane.rotation;
-            planeMesh.material = plane.material;
-            planeMesh.parent = this.parent;
-
-            // Add physics to the plane
-            new PhysicsAggregate(planeMesh, PhysicsShapeType.BOX, { mass: 0, friction: 0.5, restitution: 0.3 }, this.scene);
-        });
     }
 
     public getParent(): TransformNode {
         return this.parent;
+    }
+
+    public rotateLeft(): void {
+        return;
     }
 }

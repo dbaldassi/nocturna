@@ -8,13 +8,14 @@ import HavokPhysics from "@babylonjs/havok";
 
 class App {
     engine: Engine;
-    scene: Scene; 
+    scene: Scene;
     canvas: HTMLCanvasElement;
     inputStates: {};
     freeCamera: FreeCamera;
     followCamera: FollowCamera;
     // Physics engine
     havokInstance;
+
 
     constructor() {
         // create the canvas html element and attach it to the webpage
@@ -59,18 +60,39 @@ class App {
     }
 
     modifySettings(scene: Scene, inputStates: {}) {
+        let isAnimating = false; // Flag to track if an animation is running
+
         window.addEventListener("keydown", (event) => {
+            if (isAnimating) return; // Ignore key presses while an animation is running
+
+            const cubeParent = (scene as any).cubeParent;
+            if (!cubeParent) return;
+
             if (event.key === "Z" || event.key === "z") {
-                // Rotate the entire cube by animating its parent node
-                const cubeParent = (scene as any).cubeParent;
-                if (cubeParent) {
-                    this.animateRotation(cubeParent, "rotation.x", cubeParent.rotation.x, cubeParent.rotation.x + Math.PI / 2, 500);
-                }
+                isAnimating = true;
+                this.animateRotation(cubeParent, "rotation.x", cubeParent.rotation.x, cubeParent.rotation.x + Math.PI / 2, 1000, () => {
+                    isAnimating = false;
+                });
+            } else if (event.key === "S" || event.key === "s") {
+                isAnimating = true;
+                this.animateRotation(cubeParent, "rotation.x", cubeParent.rotation.x, cubeParent.rotation.x - Math.PI / 2, 1000, () => {
+                    isAnimating = false; // Re-enable keybindings after animation
+                });
+            } else if (event.key === "Q" || event.key === "q") {
+                isAnimating = true;
+                this.animateRotation(cubeParent, "rotation.y", cubeParent.rotation.y, cubeParent.rotation.y + Math.PI / 2, 1000, () => {
+                    isAnimating = false;
+                });
+            } else if (event.key === "D" || event.key === "d") {
+                isAnimating = true;
+                this.animateRotation(cubeParent, "rotation.y", cubeParent.rotation.y, cubeParent.rotation.y - Math.PI / 2, 1000, () => {
+                    isAnimating = false;
+                });
             }
         });
     }
 
-    animateRotation(target: TransformNode, property: string, from: number, to: number, duration: number) {
+    animateRotation(target: TransformNode, property: string, from: number, to: number, duration: number, onComplete: () => void) {
         const animation = new Animation(
             "cubeRotationAnimation",
             property,
@@ -78,20 +100,20 @@ class App {
             Animation.ANIMATIONTYPE_FLOAT,
             Animation.ANIMATIONLOOPMODE_CONSTANT
         );
-    
+
         const keys = [
             { frame: 0, value: from },
             { frame: 60, value: to }, // 60 frames for the animation
         ];
-    
+
         animation.setKeys(keys);
-    
+
         // Attach the animation to the target
         target.animations = [];
         target.animations.push(animation);
-    
-        // Start the animation
-        this.scene.beginAnimation(target, 0, 60, false, duration / 1000);
+
+        // Start the animation and call `onComplete` when it finishes
+        this.scene.beginAnimation(target, 0, 60, false, duration / 1000, onComplete);
     }
 
     endGame() {
@@ -100,41 +122,34 @@ class App {
 
     createScene() {
         const scene = new Scene(this.engine);
-    
+
         // Initialize the physics plugin
         const hk = new HavokPlugin(true, this.havokInstance);
         scene.enablePhysics(new Vector3(0, -9.81, 0), hk);
-    
+
         // Create a cube using the Cube class
         const parentCube = new TransformNode("parentCube", scene);
         const cube = new Cube(scene, 20, parentCube);
 
-        // Use a public method or property to set the parent
         parentCube.position.y = 10;
         parentCube.position.x = 0;
         parentCube.position.z = 0;
 
         const light = new HemisphericLight("light", new Vector3(0, 10, 0), scene);
-    
-        // Store the cube parent for later use
-        const cubeParent = cube.getParent();
-        (scene as any).cubeParent = cubeParent;
-    
-        // Create a FollowCamera and attach it to the cube
 
-        const followCamera = new FollowCamera("FollowCamera", new Vector3(0, 10, 0), scene);
-        followCamera.radius = 10; // Distance from the target
-        followCamera.heightOffset = 10; // Height offset from the target
-        followCamera.rotationOffset = 0; // Rotation offset
-        followCamera.lockedTarget = cube.mesh; // Lock the camera to the cube mesh
-        followCamera.fov = 1.2; // Field of view
-    
+        // Place the camera inside the parentCube and aim at its center
+        const fixedCamera = new FreeCamera("FixedCamera", new Vector3(0, 10, 10), scene);
+        fixedCamera.setTarget(parentCube.position);
+
+        // Disable user controls to make the camera fixed
+        fixedCamera.detachControl();
+
         return scene;
     }
-    
+
     gameLoop() {
         const divFps = document.getElementById("fps");
-    
+
         // run the main render loop
         this.engine.runRenderLoop(() => {
             this.scene.render();
