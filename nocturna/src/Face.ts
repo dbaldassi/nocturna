@@ -1,4 +1,4 @@
-import { Color3, MeshBuilder, PhysicsAggregate, PhysicsShapeType, Scene, StandardMaterial, TransformNode, Vector3 } from "@babylonjs/core";
+import { Color3, HemisphericLight, MeshBuilder, PhysicsAggregate, PhysicsShapeType, PointLight, Scene, StandardMaterial, Texture, TransformNode, Vector3 } from "@babylonjs/core";
 import { Cube } from "./Cube";
 
 export class Face {
@@ -20,7 +20,6 @@ export class Face {
         this.cubeFace = cubeFace;
         this.color = color;
 
-        
         // Initialize the cube face
         this.createFace();
     }
@@ -33,8 +32,13 @@ export class Face {
         plane.parent = this.parent;
 
         // Adjust the position to be relative to the parent cube
-        plane.material = new StandardMaterial(this.cubeFace + "Material", this.scene);
-        (plane.material as StandardMaterial).diffuseColor = this.color;
+        const cloudMaterial = new StandardMaterial(this.cubeFace + "Material", this.scene);
+        cloudMaterial.diffuseTexture = new Texture("images/clouds.jpg", this.scene); // Replace with your cloud texture path
+        cloudMaterial.backFaceCulling = false; // Ensure the texture is visible from all angles
+        plane.material = cloudMaterial;
+
+        const pointLight = new HemisphericLight("hemisphericLight", new Vector3(this.position.x / 2, this.position.y / 2, this.position.z / 2   ), this.scene); // Place light at the center
+        pointLight.intensity = 0.4;
 
         // Add physics to the plane
         new PhysicsAggregate(plane, PhysicsShapeType.BOX, { mass: 0, friction: 0.5, restitution: 0.3 }, this.scene);

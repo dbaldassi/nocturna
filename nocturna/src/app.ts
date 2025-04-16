@@ -4,6 +4,7 @@ import { Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, Mesh, MeshBu
 import { Cube } from "./Cube";
 
 import HavokPhysics from "@babylonjs/havok";
+import { Level } from "./Level";
 
 class App {
     engine: Engine;
@@ -61,33 +62,18 @@ class App {
     modifySettings(scene: Scene, inputStates: {}) {
         let isAnimating = false; // Flag to track if an animation is running
 
-        console.log("Scene created");
         window.addEventListener("keydown", (event) => {
             if (isAnimating) return; // Ignore key presses while an animation is running
-
             const cubeParent = (scene as any).cubeParent;
-            console.log(cubeParent);
             if (!cubeParent) return;
-            console.log("Key pressed: " + event.key);
-            if (event.key === "Z" || event.key === "z") {
+            if (event.key === "Q" || event.key === "q") {
                 isAnimating = true;
-                console.log("Z pressed");
                 this.animateRotation(cubeParent, "rotation.x", cubeParent.rotation.x, cubeParent.rotation.x + Math.PI / 2, 1000, () => {
-                    isAnimating = false;
-                });
-            } else if (event.key === "S" || event.key === "s") {
-                isAnimating = true;
-                this.animateRotation(cubeParent, "rotation.x", cubeParent.rotation.x, cubeParent.rotation.x - Math.PI / 2, 1000, () => {
-                    isAnimating = false; // Re-enable keybindings after animation
-                });
-            } else if (event.key === "Q" || event.key === "q") {
-                isAnimating = true;
-                this.animateRotation(cubeParent, "rotation.y", cubeParent.rotation.y, cubeParent.rotation.y + Math.PI / 2, 1000, () => {
                     isAnimating = false;
                 });
             } else if (event.key === "D" || event.key === "d") {
                 isAnimating = true;
-                this.animateRotation(cubeParent, "rotation.y", cubeParent.rotation.y, cubeParent.rotation.y - Math.PI / 2, 1000, () => {
+                this.animateRotation(cubeParent, "rotation.x", cubeParent.rotation.x, cubeParent.rotation.x - Math.PI / 2, 1000, () => {
                     isAnimating = false;
                 });
             }
@@ -127,71 +113,15 @@ class App {
 
         // Initialize the physics plugin with higher gravity
         const hk = new HavokPlugin(true, this.havokInstance);
-        scene.enablePhysics(new Vector3(0, -100, 0), hk); // Increased gravity
+        scene.enablePhysics(new Vector3(0, -9.81, 0), hk); // Increased gravity
 
-        // Create a cube using the Cube class
-        const parentCube = new Cube(scene, 1000); // Increase the cube size
+        new Level(scene, this.canvas); // Initialize the level
 
-        parentCube.position.x = 0;
-        parentCube.position.y = 500; // Adjust position to match the larger size
-        parentCube.position.z = 0;
-
-        // Attach parentCube to the scene for global access
-        (scene as any).cubeParent = parentCube;
-
-        // Replace HemisphericLight with PointLight at the center of the cube
-        const pointLight = new PointLight("pointLight", parentCube.position, scene);
-        pointLight.intensity = 0.5; // Adjust intensity to reduce overexposure
-
-        // Define cameras pointing at each face of the cube
-        const cameras = [
-        ];
-
-        // Define cameras pointing at each angle of the cube
-        cameras.push(
-            new FreeCamera("frontCamera", new Vector3(0, 500, -500), scene), // Front
-            new FreeCamera("topFrontCamera", new Vector3(0, 750, -250), scene),  // Top Front Right
-            new FreeCamera("topCamera", new Vector3(0, 1000, 0), scene),    // Top
-            new FreeCamera("topBackRightCamera", new Vector3(0, 750, 250), scene),    // Top Back Right
-            new FreeCamera("backCamera", new Vector3(0, 500, 500), scene),  // Back
-            new FreeCamera("bottomBackLeftCamera", new Vector3(0, 250, 250), scene),   // Bottom Back Left
-            new FreeCamera("bottomCamera", new Vector3(0, 0, 0), scene),     // Bottom
-            new FreeCamera("bottomFrontLeftCamera", new Vector3(0, 250, -250), scene), // Bottom Front Left
-        );
-
-        // Set all cameras to target the parentCube
-        cameras.forEach(camera => {
-            camera.setTarget(parentCube.position);
-            camera.inputs.clear(); // Disable camera movement
-        });
-
-        // Set the default active camera
-        let activeCameraIndex = 0;
-        scene.activeCamera = cameras[activeCameraIndex];
-        scene.activeCamera.attachControl(this.canvas, true);
-
-        // Add camera switching logic
-        window.addEventListener("keydown", (event) => {
-            if (event.key === "p" || event.key === "P") {
-                // Switch to the next camera
-                scene.activeCamera.detachControl();
-                activeCameraIndex = (activeCameraIndex + 1) % cameras.length;
-                scene.activeCamera = cameras[activeCameraIndex];
-                scene.activeCamera.attachControl(this.canvas, true);
-            } else if (event.key === "o" || event.key === "O") {
-                // Switch to the previous camera
-                scene.activeCamera.detachControl();
-                activeCameraIndex = (activeCameraIndex - 1 + cameras.length) % cameras.length;
-                scene.activeCamera = cameras[activeCameraIndex];
-                scene.activeCamera.attachControl(this.canvas, true);
-            }
-        });
-
-        // Create a player represented by a smaller sphere
-        const player = MeshBuilder.CreateSphere("player", { diameter: 20 }, this.scene); // Reduced size
-        player.position = new Vector3(0, 600, 0); // Position the player above the cube
-        player.material = new StandardMaterial("playerMaterial", this.scene);
-        (player.material as StandardMaterial).diffuseColor = Color3.Blue()
+        const sphere = MeshBuilder.CreateSphere("playerSphere", { diameter: 10 }, this.scene);
+        sphere.position = new Vector3(0, 15, 0); // Position it just above the first platform
+        const sphereMaterial = new StandardMaterial("sphereMaterial", this.scene);
+        sphereMaterial.diffuseColor = new Color3(1, 0, 0); // Red color
+        sphere.material = sphereMaterial;
 
         return scene;
     }

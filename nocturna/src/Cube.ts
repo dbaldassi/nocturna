@@ -18,9 +18,6 @@ export class Cube extends TransformNode {
 
         // Initialize the cube faces
         this.createPlanes();
-
-        // Initialize a platform inside the cube
-        this.initPlatform();
     }
 
     private createPlanes() {
@@ -60,17 +57,5 @@ export class Cube extends TransformNode {
             const face = new Face(this.scene, this.size, this, positions[i], names[i], colors[i], rotations[i]);
             this.faces.push(face);
         }
-    }
-
-    private initPlatform() {
-        // Create the first platform (horizontal)
-        new Platform(
-            this.scene,
-            new Vector3(50, 5, 50), // Platform size
-            new Vector3(0, 10, 0), // Platform position
-            new Color3(0.5, 0.5, 0.5), // Platform color
-            this // Parent is the cube
-        );
-
     }
 }
