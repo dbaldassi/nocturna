@@ -30,7 +30,7 @@ class App {
             console.log("WebSocket connection established");
         };
         this.websocket.onmessage = (msg) => {
-            console.log("Message from server: ", msg.data);
+            // console.log("Message from server: ", msg.data);
             // Handle incoming messages from the server
             let data = JSON.parse(msg.data);
 
@@ -99,8 +99,8 @@ class App {
         };
 
         this.dataChannel.onmessage = (event) => {
-            console.log("Message from data channel: ", event.data);
-            this.scene.updateRemoteCharacter(JSON.parse(event.data));
+            // console.log("Message from data channel: ", event.data);
+            this.scene.updateObjectPosition(JSON.parse(event.data));
         };
 
         this.pc.createOffer().then((offer) => {
@@ -144,7 +144,7 @@ class App {
             };
             this.dataChannel.onmessage = (event) => {
                 // console.log("Message from data channel: ", event.data);
-                this.scene.updateRemoteCharacter(JSON.parse(event.data));
+                this.scene.updateObjectPosition(JSON.parse(event.data));
             };
         };
 
@@ -162,7 +162,7 @@ class App {
         });
     }
 
-    sendInput(position: Vector3) {
+    sendInput(position: any) {
         if(this.dataChannel && this.dataChannel.readyState === "open") {
             // console.log("Sending input: ", JSON.stringify(position));
             this.dataChannel.send(JSON.stringify(position));

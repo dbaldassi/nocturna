@@ -38,27 +38,27 @@ export class Ball {
         let ballLeft = this.mesh.position.x + ballBoundingBox.maximum.x + this.hitbox; // Left of the ball
         let ballRight = this.mesh.position.x + ballBoundingBox.minimum.x - this.hitbox; // Right of the ball
 
-        let otherBottom = other.position.y + otherBoundingBox.minimum.y - this.hitbox; // Bottom of the other object
-        let otherTop = other.position.y + otherBoundingBox.maximum.y + this.hitbox; // Top of the other object
-        let otherLeft = other.position.x + otherBoundingBox.maximum.x + this.hitbox; // Left of the other object
-        let otherRight = other.position.x + otherBoundingBox.minimum.x - this.hitbox; // Right of the other object        
+        let otherBottom = other.position._y + otherBoundingBox.minimum.y - this.hitbox; // Bottom of the other object
+        let otherTop = other.position._y + otherBoundingBox.maximum.y + this.hitbox; // Top of the other object
+        let otherLeft = other.position._x + otherBoundingBox.maximum.x + this.hitbox; // Left of the other object
+        let otherRight = other.position._x + otherBoundingBox.minimum.x - this.hitbox; // Right of the other object        
 
         let isAbove = ballBottom <= otherTop && ballBottom > otherBottom;
         let isBelow = ballTop >= otherBottom && ballTop < otherTop;
         let isLeft = ballRight <= otherLeft && ballRight > otherRight;
         let isRight = ballLeft >= otherRight && ballLeft < otherLeft;
 
-        console.log({ballBottom, ballTop, ballLeft, ballRight});
-        console.log({otherBottom, otherTop, otherLeft, otherRight});
-        console.log({isAbove, isBelow, isLeft, isRight});
+        // console.log({ballBottom, ballTop, ballLeft, ballRight});
+        // console.log({otherBottom, otherTop, otherLeft, otherRight});
+        // console.log({isAbove, isBelow, isLeft, isRight});
 
         if(isAbove && !isBelow || isBelow && !isAbove) {
             this.velocity.y = -this.velocity.y;
             if(isAbove) {
                 let ballLeft = this.mesh.position.x + ballBoundingBox.maximum.x; // Left of the ball
                 let ballRight = this.mesh.position.x + ballBoundingBox.minimum.x; // Right of the ball
-                let otherLeft = other.position.x + otherBoundingBox.maximum.x; // Left of the other object
-                let otherRight = other.position.x + otherBoundingBox.minimum.x; // Right of the other object     
+                let otherLeft = other.position._x + otherBoundingBox.maximum.x; // Left of the other object
+                let otherRight = other.position._x + otherBoundingBox.minimum.x; // Right of the other object     
 
                 const width = otherLeft - otherRight;
                 console.log({width});
@@ -71,6 +71,23 @@ export class Ball {
                 else {
                     this.velocity.x = 0;
                 }
+            }
+
+            else {
+                console.log(other.metadata);
+                if(other.name === "ceiling" || other.name === "leftWall" || other.name === "rightWall") return;
+
+                if (other.metadata && other.metadata.actions) {
+                    other.metadata.actions.forEach(({ dst, enterAction, exitAction }: any) => {
+                        if (dst.mesh.actionManager) {
+                            dst.mesh.actionManager.unregisterAction(enterAction);
+                            dst.mesh.actionManager.unregisterAction(exitAction);
+                        }
+                    });
+                    other.metadata.actions = []; // Nettoyer les actions associées
+                }
+
+                other.dispose();
             }
         }
 
