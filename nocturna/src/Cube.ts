@@ -74,21 +74,24 @@ export class Cube {
 
         window.addEventListener("keydown", (event) => {
             if (isAnimating) return; // Ignore key presses while an animation is running
-            console.log(event.key, "change gravity");
-            if (event.key === "Q" || event.key === "q") {
-                this.scene.getPhysicsEngine().setGravity(new Vector3(0, this.gravityForce, 0)); // Gravity down
-                isAnimating = false;
-            } else if (event.key === "D" || event.key === "d") {
-                this.scene.getPhysicsEngine().setGravity(new Vector3(0, -this.gravityForce, 0)); // Gravity up
-                isAnimating = false;
-            } else if (event.key === "W" || event.key === "w") {
-                this.scene.getPhysicsEngine().setGravity(new Vector3(0, 0, -this.gravityForce)); // Gravity forward
-                isAnimating = false;
-            } else if (event.key === "X" || event.key === "x") {
-                this.scene.getPhysicsEngine().setGravity(new Vector3(0, 0, this.gravityForce)); // Gravity backward
-                isAnimating = false;
+            // if q or d animate rotation
+            if (event.key == "Q" || event.key == "q") {
+                isAnimating = true; // Set the flag to true
+                this.animateRotation(this.mesh, "rotation.x", this.mesh.rotation.x, this.mesh.rotation.x + Math.PI / 2, 1000, () => {
+                    isAnimating = false; // Reset the flag when animation completes
+                });
+            } else if (event.key == "D" || event.key == "d") {
+                isAnimating = true; // Set the flag to true
+                this.animateRotation(this.mesh, "rotation.x", this.mesh.rotation.x, this.mesh.rotation.x - Math.PI / 2, 1000, () => {
+                    isAnimating = false; // Reset the flag when animation completes
+                });
             }
 
+            //get all platform meshes
+            const platformMeshes = this.scene.meshes.filter(mesh => mesh.name.startsWith("platform")); 
+            platformMeshes.forEach(platform => {
+                platform.recreatePhysicsBody();
+            })
         });
     }
 
