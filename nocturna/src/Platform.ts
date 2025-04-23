@@ -7,10 +7,10 @@ export class Platform {
     private position: Vector3;
     private rotation: Vector3;
     private color: Color3;
-    private parent: Cube;
+    private parent: TransformNode;
     private mesh: Mesh;
 
-    constructor(scene: Scene, size: Vector3, position: Vector3, rotation: Vector3, color: Color3, parent: any) {
+    constructor(scene: Scene, size: Vector3, position: Vector3, rotation: Vector3, color: Color3, parent: TransformNode) {
         this.scene = scene;
         this.size = size;
         this.position = position;
@@ -25,7 +25,7 @@ export class Platform {
     public createPlatform(): Mesh {
         const platform = MeshBuilder.CreateBox("platform", { width: this.size.x, height: this.size.y, depth: this.size.z }, this.scene);
         platform.position = this.position;
-        platform.parent = this.parent.mesh;
+        platform.parent = this.parent;
         platform.rotation = this.rotation;
 
         // Apply material
@@ -35,9 +35,19 @@ export class Platform {
         platform.material = material;
 
         // Add physics to the platform
-        new PhysicsAggregate(platform, PhysicsShapeType.BOX, { mass: 0, friction: 0.5, restitution: 0.1 }, this.scene);
+        new PhysicsAggregate(platform, PhysicsShapeType.BOX, { mass: 0, friction: 10, restitution: 0 }, this.scene);
 
         return platform;
+    }
+
+    public recreatePhysicsBody() {
+        // Supprimez l'ancien corps physique
+        if (this.mesh.physicsBody) {
+            this.mesh.physicsBody.dispose();
+        }
+    
+        // Créez un nouveau corps physique avec les nouvelles transformations
+        new PhysicsAggregate(this.mesh, PhysicsShapeType.BOX, { mass: 0, friction: 10, restitution: 0 }, this.scene);
     }
 
     public getMesh(): Mesh {
