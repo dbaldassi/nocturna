@@ -49,7 +49,6 @@ export class Player {
     public move(dt: number, input: CharacterInput) {
         // Récupérer le corps physique du joueur
         const physicsBody = this.mesh.physicsBody;
-
         if (!physicsBody) {
             console.warn("Physics body not found for the player mesh.");
             return;
