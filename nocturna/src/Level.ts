@@ -30,6 +30,7 @@ export class Level {
 
         // Create a parent transform node for the cube
         this.parent = new TransformNode("parent", this.scene);
+        this.parent.position = new Vector3(0, 0, 0);
         
         const platformConfigs = [
             { size: new Vector3(50, 5, 50), position: new Vector3(0, 20, 0), color: new Color3(0.5, 0.5, 0.5), rotation: new Vector3(0, 0, 0)},
@@ -117,6 +118,25 @@ export class Level {
             this.parent.rotation.y -= Math.PI / 2;
             this.updatePlatformPhysics();
         }
-        
+        else if(input.rotate_left_x) {
+            // 90 left
+            this.parent.rotation.x += Math.PI / 2;
+            this.updatePlatformPhysics();
+        }
+        else if(input.rotate_right_x) {
+            // 90 right
+            this.parent.rotation.x -= Math.PI / 2;
+            this.updatePlatformPhysics();
+        }
+        else if(input.rotate_left_z) {
+            // 90 left
+            this.parent.rotation.z += Math.PI / 2;
+            this.updatePlatformPhysics();
+        }
+        else if(input.rotate_right_z) {
+            // 90 right
+            this.parent.rotation.z -= Math.PI / 2;
+            this.updatePlatformPhysics();
+        }
     }
 }

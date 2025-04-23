@@ -5,7 +5,7 @@ export class InputHandler {
     private key_once: string[] = [];
 
     constructor() {
-        this.key_once = [ "x", "X", "c", "C", "y", "Y", "u", "U", "h", "H", "p", "P"];
+        this.key_once = [ "x", "X", "c", "C", "y", "Y", "u", "U", "h", "H", "p", "P", "j", "J"];
 
         window.addEventListener("keydown", (event) => {
             if(!this.key_once.includes(event.key)) {
