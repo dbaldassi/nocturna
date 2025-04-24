@@ -23,7 +23,7 @@ export class GameScene {
 
         // Initialize the physics plugin with higher gravity
         this.hk = new HavokPlugin(true, this.havokInstance);
-        this.scene.enablePhysics(new Vector3(0, -119.81, 0), this.hk);
+        this.scene.enablePhysics(new Vector3(0, -1000, 0), this.hk);
         this.scene.getPhysicsEngine().setTimeStep(1 / 120);
 
         this.currentLevel = new Level(this.scene);

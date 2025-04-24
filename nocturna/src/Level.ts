@@ -1,4 +1,4 @@
-import { Scene, Vector3, Color3, TransformNode, FollowCamera } from "@babylonjs/core";
+import { Scene, Vector3, Color3, TransformNode, FollowCamera, Animation } from "@babylonjs/core";
 import { Cube } from "./Cube";
 import { Platform } from "./Platform";
 import { Player } from "./Player";
@@ -15,6 +15,7 @@ export class Level {
     private activeCameraIndex: number = 0;
     private cameras: FollowCamera[] = [];
     private parent: TransformNode;
+    private isAnimating: boolean = false;
 
     constructor(scene: Scene, cubeSize: number = 3000) {
         this.scene = scene;
@@ -31,12 +32,12 @@ export class Level {
         // Create a parent transform node for the cube
         this.parent = new TransformNode("parent", this.scene);
         this.parent.position = new Vector3(0, 0, 0);
-        
+
         const platformConfigs = [
-            { size: new Vector3(50, 5, 50), position: new Vector3(0, 20, 0), color: new Color3(0.5, 0.5, 0.5), rotation: new Vector3(0, 0, 0)},
+            { size: new Vector3(50, 5, 50), position: new Vector3(0, 100, 0), color: new Color3(0.5, 0.5, 0.5), rotation: new Vector3(0, 0, 0) },
             // { size: new Vector3(50, 5, 50), position: new Vector3(0, 20, 30), color: new Color3(0.3, 0.7, 0.3), rotation: new Vector3(Math.PI / 2, 0, 0) },
             { size: new Vector3(50, 5, 50), position: new Vector3(-50, 25, 0), color: new Color3(0.7, 0.3, 0.3), rotation: new Vector3(0, 0, 0) },
-            { size: new Vector3(50, 5, 50), position: new Vector3(100, 40, 0), color: new Color3(0.3, 0.3, 0.7), rotation: new Vector3(0, 0, Math.PI / 2) },
+            { size: new Vector3(50, 5, 50), position: new Vector3(110, 20, 0), color: new Color3(0.3, 0.3, 0.7), rotation: new Vector3(0, 0, Math.PI / 2) },
             { size: new Vector3(50, 5, 50), position: new Vector3(-100, 30, 0), color: new Color3(0.7, 0.7, 0.3), rotation: new Vector3(0, 0, 0) },
             { size: new Vector3(50, 5, 50), position: new Vector3(150, 60, 0), color: new Color3(0.3, 0.7, 0.7), rotation: new Vector3(0, 0, Math.PI / 2) },
             { size: new Vector3(50, 5, 50), position: new Vector3(-150, 35, 0), color: new Color3(0.7, 0.3, 0.7), rotation: new Vector3(0, 0, 0) },
@@ -89,7 +90,7 @@ export class Level {
         this.scene.activeCamera.attachControl(app.canvas, true);
     }
 
-    
+
 
     private updatePlatformPhysics() {
         this.platforms.forEach(platform => {
@@ -98,45 +99,59 @@ export class Level {
         });
     }
 
+
+    private animateRotation(axis: "x" | "y" | "z", angle: number, duration: number = 500) {
+        if (this.isAnimating) {
+            return; // Prevent starting a new animation while one is already running
+        }
+    
+        this.isAnimating = true; // Set isAnimating to true when animation starts
+    
+        const fps = this.scene.getEngine().getFps(); // Get the current FPS
+    
+        const animation = new Animation(
+            `rotate_${axis}`,
+            `rotation.${axis}`,
+            fps, // Frames per second
+            Animation.ANIMATIONTYPE_FLOAT,
+            Animation.ANIMATIONLOOPMODE_CONSTANT
+        );
+    
+        const currentRotation = this.parent.rotation[axis];
+        const keys = [
+            { frame: 0, value: currentRotation },
+            { frame: duration / 16.67, value: currentRotation + angle }, // Convert duration to frames
+        ];
+    
+        animation.setKeys(keys);
+        this.parent.animations = [animation];
+    
+        this.scene.beginAnimation(this.parent, 0, duration / 16.67, false, 1, () => {
+            this.isAnimating = false; // Set isAnimating to false when animation completes
+            this.updatePlatformPhysics(); // Update physics after animation completes
+        });
+    }
+    
     public update(dt: number, input: CharacterInput) {
-        // this.cube.update(dt, input);
-        
-        if(input.pov) {
+        if (input.pov) {
             this.changePov();
         }
-
+    
         this.player.update(dt, input);
-
-        // Update transform node rotation
-        if(input.rotate_left_y) {
-            // 90 left
-            this.parent.rotation.y += Math.PI / 2;
-            this.updatePlatformPhysics();
-        }
-        else if(input.rotate_right_y) {
-            // 90 right
-            this.parent.rotation.y -= Math.PI / 2;
-            this.updatePlatformPhysics();
-        }
-        else if(input.rotate_left_x) {
-            // 90 left
-            this.parent.rotation.x += Math.PI / 2;
-            this.updatePlatformPhysics();
-        }
-        else if(input.rotate_right_x) {
-            // 90 right
-            this.parent.rotation.x -= Math.PI / 2;
-            this.updatePlatformPhysics();
-        }
-        else if(input.rotate_left_z) {
-            // 90 left
-            this.parent.rotation.z += Math.PI / 2;
-            this.updatePlatformPhysics();
-        }
-        else if(input.rotate_right_z) {
-            // 90 right
-            this.parent.rotation.z -= Math.PI / 2;
-            this.updatePlatformPhysics();
+    
+        // Animate transform node rotation
+        if (input.rotate_left_y) {
+            this.animateRotation("y", Math.PI / 2);
+        } else if (input.rotate_right_y) {
+            this.animateRotation("y", -Math.PI / 2);
+        } else if (input.rotate_left_x) {
+            this.animateRotation("x", Math.PI / 2);
+        } else if (input.rotate_right_x) {
+            this.animateRotation("x", -Math.PI / 2);
+        } else if (input.rotate_left_z) {
+            this.animateRotation("z", Math.PI / 2);
+        } else if (input.rotate_right_z) {
+            this.animateRotation("z", -Math.PI / 2);
         }
     }
 }

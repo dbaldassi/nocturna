@@ -10,7 +10,7 @@ export class Cube {
     private bottomFace: string;
     public mesh: any;
 
-    private gravityForce: number = 9.81; // Default gravity force
+    private gravityForce: number = 10000; // Default gravity force
 
     constructor(scene: Scene, size: number) {
         this.scene = scene;

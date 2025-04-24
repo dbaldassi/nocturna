@@ -1,4 +1,4 @@
-import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, Mesh, Space, TransformNode, BoundingBox } from "@babylonjs/core";
+import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, Mesh, Space, TransformNode, BoundingBox, Ray } from "@babylonjs/core";
 import { Cube } from "./Cube";
 import { Platform } from "./Platform";
 import { CharacterInput } from "./types";
@@ -21,7 +21,7 @@ export class Player {
     public createPlayer(): Mesh {
         const sphere = MeshBuilder.CreateSphere("player", { diameter: this.diameter }, this.scene);
         sphere.position = this.position;
-        sphere.position.y += this.diameter;
+        sphere.position.y += this.diameter * 2;
 
         const material = new StandardMaterial("playerMaterial", this.scene);
         material.diffuseColor = new Color3(1, 0, 0);
@@ -47,25 +47,25 @@ export class Player {
     public move(dt: number, input: CharacterInput) {
         // Récupérer le corps physique du joueur
         const physicsBody = this.mesh.physicsBody;
-    
+
         if (!physicsBody) {
             console.warn("Physics body not found for the player mesh.");
             return;
         }
-    
+
         // console.log(input);
 
         // Calculer les directions locales
-        const right = Vector3.Right().scale(input.right ? -1 : 0);
-        const left = Vector3.Left().scale(input.left ? -1 : 0);
-    
+        const right = Vector3.Right().scale(input.right ? -5 : 0);
+        const left = Vector3.Left().scale(input.left ? -5 : 0);
+
         // Combiner les mouvements horizontaux
         const horizontalMovement = right.add(left);
         // console.log("Velocity Vector: ", horizontalMovement);
         // Appliquer la vitesse en fonction de l'entrée utilisateur
         const velocity = horizontalMovement.scale(this.speed * dt / 1000);
-        
-    
+
+
         // Récupérer la vitesse actuelle pour conserver l'effet de gravité
         const currentVelocity = physicsBody.getLinearVelocity();
         velocity.y = currentVelocity.y; // Conserver la composante verticale (gravité)
@@ -84,18 +84,25 @@ export class Player {
 
         //     this.jumpPosition = undefined; 
         // }
-    
+
         // // Appliquer la nouvelle vitesse
         // physicsBody.setLinearVelocity(velocity);
-    
+
         // //console.log("Applied Velocity:", velocity);
         // if (currentVelocity.y < 0) {
         //     const extraGravity = new Vector3(0, -5000, 0); // Force descendante supplémentaire
         //     physicsBody.applyForce(extraGravity, this.mesh.getAbsolutePosition());
         // }
 
-        if (input.jump && currentVelocity.y < 0.001) {
-            const jumpForce = new Vector3(0, 5000, 0); // Force verticale pour le saut
+        const ray = new Vector3(0, -1, 0); // Downward ray
+        const rayLength = this.diameter / 2 + 0.1; // Slightly below the player
+        const rayOrigin = this.mesh.getAbsolutePosition().add(new Vector3(0, -this.diameter / 2, 0)); // Adjust ray origin to the bottom of the player
+        const hit = this.scene.pickWithRay(new Ray(rayOrigin, ray, rayLength));
+
+        const isGrounded = hit && hit.pickedMesh && hit.pickedMesh.name.startsWith("platform");
+
+        if (input.jump && isGrounded) {
+            const jumpForce = new Vector3(0, 100000, 0); 
             physicsBody.applyImpulse(jumpForce, this.mesh.getAbsolutePosition());
         }
     }
