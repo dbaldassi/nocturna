@@ -17,6 +17,8 @@ export class Character {
     isOnGround: boolean = true;
     leftBlock: boolean = false;
     rightBlock: boolean = false;
+    forwardBlock: boolean = false;
+    backwardBlock: boolean = false;
     collidingPlatform: PlatformSide[] = [];
     border: Vector3;
     public mesh: Mesh;
@@ -45,6 +47,10 @@ export class Character {
         direction.x -= input.right && !this.rightBlock ? 1 : 0;
         direction.x += input.left && !this.leftBlock ? 1 : 0;
         direction.x *= this.speed * (dt/1000); 
+
+        direction.z -= input.forward && !this.forwardBlock ? 1 : 0;
+        direction.z += input.backward && !this.backwardBlock ? 1 : 0;
+        direction.z *= this.speed * (dt/1000);
 
         this.mesh.position.addInPlace(direction)
     }
@@ -100,25 +106,24 @@ export class Character {
 
     checkBorder() {
         const boundingInfo = this.mesh.getBoundingInfo();
-
-        const characterRight = this.mesh.position.x + boundingInfo.boundingBox.minimum.x; // Gauche du personnage
-        const characterLeft = this.mesh.position.x + boundingInfo.boundingBox.maximum.x; // Droite du personnage
-
-        const borderRight = this.border.x / -2;
-        const borderLeft = this.border.x / 2;
-
-        if(characterRight <= borderRight) {
-            this.mesh.position.x = borderRight - boundingInfo.boundingBox.minimum.x;
-            this.rightBlock = true;
+        const zsize = boundingInfo.boundingBox.extendSize.z * 2 + 1;
+        console.log(this.mesh.position.z, zsize);
+        if(this.mesh.position.z <= -zsize) {
+            this.mesh.position.z = -zsize;
+            this.forwardBlock = true;
         }
-        else if(characterLeft >= borderLeft) {
-            this.mesh.position.x = borderLeft - boundingInfo.boundingBox.maximum.x;
-            this.leftBlock = true;
+        else if(this.mesh.position.z >= 0) {
+            this.mesh.position.z = 0;
+            this.backwardBlock = true;
+        }
+        else {
+            this.forwardBlock = false;
+            this.backwardBlock = false;
         }
     }
 
     update(dt: number, input: CharacterInput) {
-        // this.checkBorder();
+        this.checkBorder();
         this.move(dt, input);
     }
 }
