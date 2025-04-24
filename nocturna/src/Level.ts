@@ -70,7 +70,7 @@ export class Level {
         this.cameras[1].fov = 5;
 
         this.scene.activeCamera = this.cameras[this.activeCameraIndex];
-        this.scene.activeCamera.attachControl(app.canvas, true);
+        
 
     }
 
