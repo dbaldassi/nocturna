@@ -1,6 +1,6 @@
 import { Scene, Vector3, Color3, TransformNode, FollowCamera, Animation } from "@babylonjs/core";
 import { Cube } from "./Cube";
-import { Platform } from "./Platform";
+import { ParentedPlatformFactory, Platform } from "./Platform";
 import { Player } from "./Player";
 
 import { CharacterInput } from "./types";
@@ -42,7 +42,15 @@ export class Level {
             { size: new Vector3(50, 5, 50), position: new Vector3(250, 100, 0), color: new Color3(0.7, 0.3, 0.3), rotation: new Vector3(0, 0, Math.PI / 2) },
         ];
 
-        platformConfigs.forEach(config => Platform.create(config, this.parent, this.scene));
+        const factory = new ParentedPlatformFactory();
+        platformConfigs.forEach(config => {
+            const platformConfig = {
+                ...config,
+                scene: this.scene,
+                parent: this.parent
+            }
+            factory.create(platformConfig)
+        });
 
         // Initialize the player on top of the first platform
         const firstPlatformPosition = platformConfigs[0].position.clone();

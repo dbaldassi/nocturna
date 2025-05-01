@@ -39,6 +39,8 @@ export class ParentNode {
     }
 
     private animateRotation(axis: "x" | "y" | "z", angle: number, duration: number = 500) {
+        console.log(`Animating rotation around ${axis} by ${angle} radians over ${duration} ms`);
+
         if (this.isAnimating) {
             return; // Prevent starting a new animation while one is already running
         }

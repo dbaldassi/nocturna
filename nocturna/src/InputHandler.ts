@@ -19,6 +19,18 @@ export class InputHandler {
         rotate_right_z: ["j"],
         pov: ["p"],
         jump: [" "],
+        action_1: ["1"],
+        action_2: ["2"],
+        action_3: ["3"],
+        action_4: ["4"],
+        action_5: ["5"],
+        action_6: ["6"],
+        action_7: ["7"],
+        action_8: ["8"],
+        action_9: ["9"],
+        action_0: ["0"],
+        action_minus: ["-"],
+        action_plus: ["+"],
     };
     private keybindManager: KeybindsManager;
     // Store actions, which call a function when the key is pressed
@@ -61,6 +73,13 @@ export class InputHandler {
         } else {
             console.warn(`Action "${key}" does not exist.`);
         }
+    }
+
+    public removeAllActions() {
+        for (const key in this.actions) {
+            delete this.actions[key];
+        }
+        this.actions = {};
     }
 
     public run_actions() {
