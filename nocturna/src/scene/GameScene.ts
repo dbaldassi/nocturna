@@ -1,32 +1,39 @@
 
-import { Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, Mesh, MeshBuilder, Texture, FreeCamera, FollowCamera, StandardMaterial, Color3, HavokPlugin, PhysicsAggregate, PhysicsShapeType, PhysicsMotionType, PBRMaterial, SceneLoader, TransformNode, AbstractMesh, PointLight, Animation } from "@babylonjs/core";
+import { Engine, Vector3, HavokPlugin } from "@babylonjs/core";
 
-import { InputHandler } from "./InputHandler";
-import { CharacterInput } from "./types";
-import { Level } from "./Level";
+import { Level } from "../Level";
 import HavokPhysics from "@babylonjs/havok";
+import { BaseScene } from "./BaseScene";
 
-export class GameScene {
-    private scene: Scene;
-    private inputHandler: InputHandler;
+export class GameScene extends BaseScene {
+
     private havokInstance: any;
     private hk: HavokPlugin;
     private currentLevel: Level;
 
-    constructor(engine: any, inputHandler: InputHandler) {
-        this.inputHandler = inputHandler;
-        this.scene = new Scene(engine);
-        
+    constructor(engine: Engine) {
+        super(engine);
     }
 
-    public async initializeScene() {
+    static async createScene(engine: Engine) {
+        const scene = new GameScene(engine);
+
+        await scene.addPhysic();
+        scene.loadLevel();
+
+        return scene;
+    }
+
+    private async addPhysic() {
         this.havokInstance = await this.getInitializedHavok();
 
         // Initialize the physics plugin with higher gravity
         this.hk = new HavokPlugin(true, this.havokInstance);
         this.scene.enablePhysics(new Vector3(0, -1000, 0), this.hk);
         this.scene.getPhysicsEngine().setTimeStep(1 / 120);
+    }
 
+    private loadLevel() {
         this.currentLevel = new Level(this.scene);
     }
 
@@ -43,9 +50,5 @@ export class GameScene {
             }
         });
         return havok;
-    }
-
-    public render() {
-        this.scene.render();
     }
 }

@@ -22,7 +22,7 @@ export class Platform {
         this.mesh = this.createPlatform();
     }
 
-    public createPlatform(): Mesh {
+    private createPlatform(): Mesh {
         const platform = MeshBuilder.CreateBox("platform", { width: this.size.x, height: this.size.y, depth: this.size.z }, this.scene);
         platform.position = this.position;
         platform.parent = this.parent;

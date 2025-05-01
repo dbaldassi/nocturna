@@ -116,9 +116,7 @@ export class Cube {
         this.scene.beginAnimation(target, 0, fps, false, duration / 1000, onComplete);
     }
 
-    public update(dt: number, input: CharacterInput) {
-        if(input.rotate_left_y) {
-            
-        }
+    public update(_: number, __: CharacterInput) {
+
     }
 }

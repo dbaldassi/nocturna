@@ -1,16 +1,18 @@
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
-import { Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, Mesh, MeshBuilder, Texture, FreeCamera, FollowCamera, StandardMaterial, Color3, HavokPlugin, PhysicsAggregate, PhysicsShapeType, PhysicsMotionType, PBRMaterial, SceneLoader, TransformNode, AbstractMesh, PointLight, Animation } from "@babylonjs/core";
-import { GameScene } from "./GameScene";
-import { InputHandler } from "./InputHandler";
+import { Engine } from "@babylonjs/core";
+import { BaseScene } from "./scene/BaseScene";
+import { SceneFactory } from "./scene/SceneFactory";
 
 export class App {
-    engine: Engine;
-    scene: GameScene;
-    canvas: HTMLCanvasElement;
-    inputHandler: InputHandler;
+    private engine: Engine;
+    private scene: BaseScene;
+    private factory: SceneFactory;
+    private canvas: HTMLCanvasElement;
 
     constructor() {
+        this.factory = new SceneFactory
+
         document.addEventListener('DOMContentLoaded', () => {
             const cards: NodeListOf<HTMLElement> = document.querySelectorAll('.mode-card');
             const startButton: HTMLElement | null = document.getElementById('start-game');
@@ -48,19 +50,7 @@ export class App {
                     if (gameModeSelectionDiv) {
                         gameModeSelectionDiv.remove();
                     }
-                    switch (selectedMode) {
-                        case 'singleplayer':
-                            this.start();
-                            break;
-                        case 'multiplayer':
-                            this.start();
-                            break;
-                        case 'tutorial':
-                            this.start();
-                            break;
-                        default:
-                            console.error('Unknown game mode selected');
-                    }
+                    this.start(selectedMode);
                 }
             });
         });
@@ -68,7 +58,7 @@ export class App {
         this.inputHandler = new InputHandler();
     }
 
-    async start() {
+    async start(mode) {
         // create the canvas html element and attach it to the webpage
         this.canvas = document.createElement("canvas");
         this.canvas.width = window.innerWidth;
@@ -81,8 +71,8 @@ export class App {
 
         // initialize babylon scene and engine
         this.engine = new Engine(this.canvas, true);
-        this.scene = new GameScene(this.engine, this.inputHandler);
-        await this.scene.initializeScene();
+        this.scene = await SceneFactory.createScene(mode, this.engine);
+
         this.gameLoop();
     }
 
