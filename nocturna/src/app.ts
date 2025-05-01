@@ -90,6 +90,4 @@ export class App {
 
 }
 const gameEngine = new App();
-// gameEngine.start();
 
-export { gameEngine as app };
