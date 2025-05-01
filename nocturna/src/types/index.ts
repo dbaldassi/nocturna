@@ -1,6 +1,8 @@
 export interface CharacterInput {
     left: boolean;
     right: boolean;
+    up: boolean;
+    down: boolean;
     jump: boolean;
     dash: boolean;
     rotate_left_x: boolean;

@@ -7,6 +7,8 @@ export class InputHandler {
     private keyBindings: { [action: string]: string[] } = {
         left: ["a"],
         right: ["d"],
+        up: ["w"],
+        down: ["s"],
         // forward: ["w"],
         // backward: ["s"],
         // dash: ["Shift"],
@@ -39,12 +41,24 @@ export class InputHandler {
         this.keybindManager = new KeybindsManager(this);
     }
 
+    getKeyCode(key: string): number {
+        if(this.keyBindings[key] === undefined) {
+            console.warn(`Key "${key}" is not bound to any action.`);
+            return 0;
+        }
+
+        const keyCode = this.keyBindings[key][0].charCodeAt(0);
+        console.log(`Key "${key}" is bound to code: ${keyCode}`);
+
+        return keyCode;
+    }
+
     getInput(): CharacterInput {
         const input = {
             left: this.isKeyPressed("left"),
             right: this.isKeyPressed("right"),
-            forward: this.isKeyPressed("forward"),
-            backward: this.isKeyPressed("backward"),
+            up: this.isKeyPressed("up"),
+            down: this.isKeyPressed("down"),
             dash: this.isKeyPressed("dash"),
             rotate_left_x: this.isKeyPressed("rotate_left_x"),
             rotate_right_x: this.isKeyPressed("rotate_right_x"),

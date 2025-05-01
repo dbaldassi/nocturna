@@ -54,8 +54,6 @@ export class App {
                 }
             });
         });
-
-        this.inputHandler = new InputHandler();
     }
 
     async start(mode) {
