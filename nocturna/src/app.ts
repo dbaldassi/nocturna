@@ -7,12 +7,9 @@ import { SceneFactory } from "./scene/SceneFactory";
 export class App {
     private engine: Engine;
     private scene: BaseScene;
-    private factory: SceneFactory;
     private canvas: HTMLCanvasElement;
 
     constructor() {
-        this.factory = new SceneFactory
-
         document.addEventListener('DOMContentLoaded', () => {
             const cards: NodeListOf<HTMLElement> = document.querySelectorAll('.mode-card');
             const startButton: HTMLElement | null = document.getElementById('start-game');

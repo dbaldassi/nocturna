@@ -1,6 +1,7 @@
 import { Scene, Vector3, TransformNode, Animation, Mesh } from "@babylonjs/core";
 
 import { CharacterInput } from "./types";
+import { InputHandler } from "./InputHandler";
 
 export interface ParentNodeObserver {
     onRotationChange: () => void;
@@ -70,22 +71,16 @@ export class ParentNode {
         });
     }
 
-    public update(input: CharacterInput) {
+    public setupKeyActions(inputHandler: InputHandler) {
+        inputHandler.addAction("rotate_left_x", () => this.animateRotation("x", Math.PI / 2));
+        inputHandler.addAction("rotate_right_x", () => this.animateRotation("x", -Math.PI / 2));
+        inputHandler.addAction("rotate_left_y", () => this.animateRotation("y", Math.PI / 2));
+        inputHandler.addAction("rotate_right_y", () => this.animateRotation("y", -Math.PI / 2));
+        inputHandler.addAction("rotate_left_z", () => this.animateRotation("z", Math.PI / 2));
+        inputHandler.addAction("rotate_right_z", () => this.animateRotation("z", -Math.PI / 2));
+    }
+
+    public update() {
         // Update transform node position
-        
-        // Animate transform node rotation
-        if (input.rotate_left_y) {
-            this.animateRotation("y", Math.PI / 2);
-        } else if (input.rotate_right_y) {
-            this.animateRotation("y", -Math.PI / 2);
-        } else if (input.rotate_left_x) {
-            this.animateRotation("x", Math.PI / 2);
-        } else if (input.rotate_right_x) {
-            this.animateRotation("x", -Math.PI / 2);
-        } else if (input.rotate_left_z) {
-            this.animateRotation("z", Math.PI / 2);
-        } else if (input.rotate_right_z) {
-            this.animateRotation("z", -Math.PI / 2);
-        }
     }
 }

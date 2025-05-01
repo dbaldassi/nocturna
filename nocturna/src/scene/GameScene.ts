@@ -4,12 +4,18 @@ import { Engine, Vector3, HavokPlugin } from "@babylonjs/core";
 import { Level } from "../Level";
 import HavokPhysics from "@babylonjs/havok";
 import { BaseScene } from "./BaseScene";
+import { Cube } from "../Cube";
+import { ParentNode } from "../ParentNode";
+
+const CUBE_SIZE = 3000;
 
 export class GameScene extends BaseScene {
 
     private havokInstance: any;
     private hk: HavokPlugin;
     private currentLevel: Level;
+    private cube: Cube;
+    private parent: ParentNode;
 
     constructor(engine: Engine) {
         super(engine);
@@ -19,6 +25,14 @@ export class GameScene extends BaseScene {
         const scene = new GameScene(engine);
 
         await scene.addPhysic();
+
+        // Create the main cube
+        scene.cube = new Cube(scene.scene, CUBE_SIZE);
+        scene.cube.mesh.position = new Vector3(0, CUBE_SIZE / 2, 0);
+        // Create the parent node
+        scene.parent = new ParentNode(Vector3.Zero(), scene.scene);
+        scene.parent.setupKeyActions(scene.inputHandler);
+
         scene.loadLevel();
 
         return scene;
@@ -34,7 +48,7 @@ export class GameScene extends BaseScene {
     }
 
     private loadLevel() {
-        this.currentLevel = new Level(this.scene);
+        this.currentLevel = new Level(this.scene, this.parent, this.cube, CUBE_SIZE);
     }
 
     public update(dt: number) {

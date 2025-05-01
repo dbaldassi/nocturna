@@ -28,14 +28,7 @@ export class Level {
     }
 
     private initializeLevel() {
-
-        // Create the main cube
-        this.cube = new Cube(this.scene, this.cubeSize);
-        this.cube.mesh.position = new Vector3(0, this.cubeSize / 2, 0);
-
-        // Create the parent node
-        this.parent = new ParentNode(Vector3.Zero(), this.scene);
-
+        
         const platformConfigs = [
             { size: new Vector3(50, 5, 50), position: new Vector3(0, 100, 0), color: new Color3(0.5, 0.5, 0.5), rotation: new Vector3(0, 0, 0) },
             // { size: new Vector3(50, 5, 50), position: new Vector3(0, 20, 30), color: new Color3(0.3, 0.7, 0.3), rotation: new Vector3(Math.PI / 2, 0, 0) },
@@ -73,10 +66,6 @@ export class Level {
         // this.victoryCondition.setCoinPosition(new Vector3(0, 100, 0)); // Set the coin position to the first platform
         // start a timer from 0 to infinity
         this.startTimer();
-    }
-
-    public getCube(): Cube {
-        return this.cube;
     }
 
     public changePov() {

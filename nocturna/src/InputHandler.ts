@@ -3,7 +3,6 @@ import { KeybindsManager } from "./Keybinds";
 
 export class InputHandler {
     private keys: { [key: string]: boolean } = {};
-    private key_once: string[] = [];
     private keyBindings: { [action: string]: string[] } = {
         left: ["a"],
         right: ["d"],
@@ -22,35 +21,55 @@ export class InputHandler {
         jump: [" "],
     };
     private keybindManager: KeybindsManager;
+    // Store actions, which call a function when the key is pressed
+    private actions: { [key: string]: () => void } = {};
 
     constructor() {
-        this.key_once = ["x", "c", "y", "u", "h", "p", "j"];
-
         window.addEventListener("keydown", (event) => {
-            if (!this.keybindManager.isEditingKeybinds() && !this.key_once.includes(event.key)) {
-                this.keys[event.key] = true;
+            if (!this.keybindManager.isEditingKeybinds()) {
+                // Iterate through actions and call the function if the key is pressed
+
+                if(!this.keys[event.key]) { 
+                    this.keys[event.key] = true;
+                    this.run_actions();
+                }
+                else this.keys[event.key] = true;
             }
         });
 
         window.addEventListener("keyup", (event) => {
             if (!this.keybindManager.isEditingKeybinds()) {
-                this.keys[event.key] = !this.keys[event.key];
+                this.keys[event.key] = false;
             }
         });
 
         this.keybindManager = new KeybindsManager(this);
     }
 
-    getKeyCode(key: string): number {
-        if(this.keyBindings[key] === undefined) {
+    public addAction(key: string, action: () => void) {
+        if (this.keyBindings[key] === undefined) {
             console.warn(`Key "${key}" is not bound to any action.`);
-            return 0;
+            return;
         }
 
-        const keyCode = this.keyBindings[key][0].charCodeAt(0);
-        console.log(`Key "${key}" is bound to code: ${keyCode}`);
+        this.actions[key] = action;
+    }
 
-        return keyCode;
+    public removeAction(key: string) {
+        if (this.actions[key]) {
+            delete this.actions[key];
+        } else {
+            console.warn(`Action "${key}" does not exist.`);
+        }
+    }
+
+    public run_actions() {
+        for (const key in this.actions) {
+            console.log("key", key);
+            if (this.isKeyPressed(key)) {
+                this.actions[key]();
+            }
+        }
     }
 
     getInput(): CharacterInput {
@@ -59,20 +78,8 @@ export class InputHandler {
             right: this.isKeyPressed("right"),
             up: this.isKeyPressed("up"),
             down: this.isKeyPressed("down"),
-            dash: this.isKeyPressed("dash"),
-            rotate_left_x: this.isKeyPressed("rotate_left_x"),
-            rotate_right_x: this.isKeyPressed("rotate_right_x"),
-            rotate_left_y: this.isKeyPressed("rotate_left_y"),
-            rotate_right_y: this.isKeyPressed("rotate_right_y"),
-            rotate_left_z: this.isKeyPressed("rotate_left_z"),
-            rotate_right_z: this.isKeyPressed("rotate_right_z"),
-            pov: this.isKeyPressed("pov"),
             jump: this.isKeyPressed("jump"),
         };
-
-        for (let elt of this.key_once) {
-            this.keys[elt] = false;
-        }
 
         return input;
     }
