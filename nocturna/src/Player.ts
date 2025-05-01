@@ -10,6 +10,8 @@ export class Player {
     private position: Vector3;
     private speed: number = 2000.0;
     private jumpPosition: Vector3 = undefined;
+    private haswin: boolean = false;
+    private score: number = 0;
 
     constructor(scene: Scene, position: Vector3) {
         this.scene = scene;
@@ -109,5 +111,21 @@ export class Player {
 
     public update(dt: number, input: CharacterInput) {
         this.move(dt, input);
+    }
+
+    public hasWon(): boolean {
+        return this.haswin;
+    }
+
+    public setWin() {
+        this.haswin = true;
+    }
+
+    public getScore(): number {
+        return this.score;
+    }
+
+    public setScore(score: number) {
+        this.score = score;
     }
 }

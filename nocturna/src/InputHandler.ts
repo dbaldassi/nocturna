@@ -1,5 +1,5 @@
 import { CharacterInput } from "./types";
-import { KeybindsManager } from "./keybinds";
+import { KeybindsManager } from "./Keybinds";
 
 export class InputHandler {
     private keys: { [key: string]: boolean } = {};

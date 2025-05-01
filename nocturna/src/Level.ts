@@ -5,6 +5,7 @@ import { Player } from "./Player";
 
 import { app } from "./app";
 import { CharacterInput } from "./types";
+import { VictoryCondition } from "./victory";
 
 export class Level {
     private scene: Scene;
@@ -16,6 +17,10 @@ export class Level {
     private cameras: FollowCamera[] = [];
     private parent: TransformNode;
     private isAnimating: boolean = false;
+    private victoryCondition: VictoryCondition;
+    private timer: number = 0;
+
+    private score: number = 0;
 
     constructor(scene: Scene, cubeSize: number = 3000) {
         this.scene = scene;
@@ -70,8 +75,12 @@ export class Level {
         this.cameras[1].fov = 5;
 
         this.scene.activeCamera = this.cameras[this.activeCameraIndex];
-        
 
+        // ne victory condition
+        this.victoryCondition = new VictoryCondition(this.scene, new Vector3(-100, 25, 0), this.parent); // Set the position of the coin to the first platform
+        // this.victoryCondition.setCoinPosition(new Vector3(0, 100, 0)); // Set the coin position to the first platform
+        // start a timer from 0 to infinity
+        this.startTimer();
     }
 
     private createPlatform(size: Vector3, position: Vector3, color: Color3, rotation: Vector3) {
@@ -104,11 +113,11 @@ export class Level {
         if (this.isAnimating) {
             return; // Prevent starting a new animation while one is already running
         }
-    
+
         this.isAnimating = true; // Set isAnimating to true when animation starts
-    
+
         const fps = this.scene.getEngine().getFps(); // Get the current FPS
-    
+
         const animation = new Animation(
             `rotate_${axis}`,
             `rotation.${axis}`,
@@ -116,29 +125,32 @@ export class Level {
             Animation.ANIMATIONTYPE_FLOAT,
             Animation.ANIMATIONLOOPMODE_CONSTANT
         );
-    
+
         const currentRotation = this.parent.rotation[axis];
         const keys = [
             { frame: 0, value: currentRotation },
             { frame: duration / 16.67, value: currentRotation + angle }, // Convert duration to frames
         ];
-    
+
         animation.setKeys(keys);
         this.parent.animations = [animation];
-    
+
         this.scene.beginAnimation(this.parent, 0, duration / 16.67, false, 1, () => {
             this.isAnimating = false; // Set isAnimating to false when animation completes
             this.updatePlatformPhysics(); // Update physics after animation completes
         });
     }
-    
+
     public update(dt: number, input: CharacterInput) {
+        if (this.player.hasWon()) {
+            return; // Prevent further updates if the game is won
+        }
         if (input.pov) {
             this.changePov();
         }
-    
+
         this.player.update(dt, input);
-    
+
         // Animate transform node rotation
         if (input.rotate_left_y) {
             this.animateRotation("y", Math.PI / 2);
@@ -153,5 +165,25 @@ export class Level {
         } else if (input.rotate_right_z) {
             this.animateRotation("z", -Math.PI / 2);
         }
+
+        this.victoryCondition.checkWin(this.player, this.timer); // Check if the player has won
+    }
+
+    private startTimer() {
+        this.timer = 0; // Reset the timer to 0 at the start
+        const timerElement = document.getElementById("game-timer"); // Get the timer element
+        timerElement.classList.remove("hidden");
+        
+        setInterval(() => {
+            if (!this.player || !this.player.hasWon()) { 
+                this.timer += 1000; // Increment the timer by 1 second
+                if (timerElement) {
+                    const minutes = Math.floor(this.timer / 1000 / 60);
+                    const seconds = this.timer / 1000 % 60;
+                    const formattedTime = `${minutes}:${seconds.toString().padStart(2, '0')}`; // Format as MM:SS
+                    timerElement.textContent = `Time: ${formattedTime}`; // Update the timer element
+                }
+            }
+        }, 1000); // Update every second
     }
 }

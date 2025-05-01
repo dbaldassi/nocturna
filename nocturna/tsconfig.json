@@ -19,5 +19,5 @@
     "skipLibCheck": true // skip type-checking of .d.ts files (it speeds up transpiling)
   },
   "include": ["src"], // specify location(s) of .ts files
-  "lib": ["es2016", "dom"]
+  "lib": ["es2017", "dom"]
 }

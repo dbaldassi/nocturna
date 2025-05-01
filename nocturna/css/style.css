@@ -19,6 +19,21 @@
     user-select: none;
 }
 
+#game-timer {
+    position: fixed;
+    top: 30px;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 20px;
+    padding: 10px;
+    border-radius: 10px;
+    z-index: 1000;
+    text-align: center;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
 
 body {
     font-family: 'Exo 2', sans-serif;
