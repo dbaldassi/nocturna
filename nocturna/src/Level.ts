@@ -33,9 +33,8 @@ export class Level {
         this.cube = new Cube(this.scene, this.cubeSize);
         this.cube.mesh.position = new Vector3(0, this.cubeSize / 2, 0);
 
-        // Create a parent transform node for the cube
-        this.parent = new TransformNode("parent", this.scene);
-        this.parent.position = new Vector3(0, 0, 0);
+        // Create the parent node
+        this.parent = new ParentNode(Vector3.Zero(), this.scene);
 
         const platformConfigs = [
             { size: new Vector3(50, 5, 50), position: new Vector3(0, 100, 0), color: new Color3(0.5, 0.5, 0.5), rotation: new Vector3(0, 0, 0) },
@@ -76,11 +75,6 @@ export class Level {
         this.startTimer();
     }
 
-    private createPlatform(size: Vector3, position: Vector3, color: Color3, rotation: Vector3) {
-        const platform = new Platform(this.scene, size, position, rotation, color, this.parent);
-        this.platforms.push(platform);
-    }
-
     public getCube(): Cube {
         return this.cube;
     }
@@ -90,7 +84,6 @@ export class Level {
         this.activeCameraIndex = (this.activeCameraIndex + 1) % this.cameras.length;
         this.scene.activeCamera = this.cameras[this.activeCameraIndex];
     }
-
     public update(dt: number, input: CharacterInput) {
         if (this.player.hasWon()) {
             return; // Prevent further updates if the game is won

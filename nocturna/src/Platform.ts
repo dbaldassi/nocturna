@@ -1,43 +1,40 @@
-import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, TransformNode, PhysicsAggregate, PhysicsShapeType, Texture, Mesh } from "@babylonjs/core";
-import { Cube } from "./Cube";
+import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, Texture, Mesh } from "@babylonjs/core";
+import { ParentNodeObserver, ParentNode } from "./ParentNode";
 
-export class Platform {
-    private scene: Scene;
-    private size: Vector3;
-    private position: Vector3;
-    private rotation: Vector3;
-    private color: Color3;
-    private parent: TransformNode;
+export class Platform implements ParentNodeObserver {
+
     private mesh: Mesh;
 
-    constructor(scene: Scene, size: Vector3, position: Vector3, rotation: Vector3, color: Color3, parent: TransformNode) {
-        this.scene = scene;
-        this.size = size;
-        this.position = position;
-        this.color = color;
-        this.parent = parent;
-        this.rotation = rotation;
-
-        // Create the platform
-        this.mesh = this.createPlatform();
+    constructor(mesh: Mesh) {
+        this.mesh = mesh;
     }
 
-    private createPlatform(): Mesh {
-        const platform = MeshBuilder.CreateBox("platform", { width: this.size.x, height: this.size.y, depth: this.size.z }, this.scene);
-        platform.position = this.position;
-        platform.parent = this.parent;
-        platform.rotation = this.rotation;
+    static create(config: { size: Vector3, position: Vector3, color: Color3, rotation: Vector3 }, parent: ParentNode, scene: Scene): Platform {
+        // const platform = new Platform(scene, config.size, config.position, config.rotation, config.color);
+
+        const mesh = MeshBuilder.CreateBox("platform", { width: config.size.x, height: config.size.y, depth: config.size.z }, scene);
+        mesh.position = config.position;
+        mesh.rotation = config.rotation;
 
         // Apply material
-        const material = new StandardMaterial("platformMaterial", this.scene);
-        material.diffuseTexture = new Texture("images/wood.jpg", this.scene); // Replace with the path to your wood texture
+        const material = new StandardMaterial("platformMaterial", scene);
+        material.diffuseTexture = new Texture("images/wood.jpg", scene); // Replace with the path to your wood texture
         material.backFaceCulling = false; // Ensure the texture is visible from all sides
-        platform.material = material;
+        mesh.material = material;
 
         // Add physics to the platform
-        new PhysicsAggregate(platform, PhysicsShapeType.BOX, { mass: 0, friction: 10, restitution: 0 }, this.scene);
+        new PhysicsAggregate(mesh, PhysicsShapeType.BOX, { mass: 0, friction: 10, restitution: 0 }, scene);
+
+        const platform = new Platform(mesh);
+
+        parent.addChild(mesh);
+        parent.addObserver(platform);
 
         return platform;
+    }
+
+    public onRotationChange() {
+        this.recreatePhysicsBody();
     }
 
     public recreatePhysicsBody() {
