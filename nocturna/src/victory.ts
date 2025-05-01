@@ -2,6 +2,7 @@ import { Animation, Color3, int, Mesh, MeshBuilder, Scene, StandardMaterial, Tra
 import { SceneLoader } from '@babylonjs/core/Loading/sceneLoader';
 import "@babylonjs/loaders/glTF";
 import { Player } from './Player';
+import { ParentNode } from './ParentNode';
 
 export class VictoryCondition {
     private scene: Scene;
