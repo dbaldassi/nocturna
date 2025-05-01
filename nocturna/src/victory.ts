@@ -8,9 +8,9 @@ export class VictoryCondition {
     public mesh: Mesh;
     private diameter: number = 10;
     private position: Vector3;
-    private parent: TransformNode;
+    private parent: ParentNode;
 
-    constructor(scene: Scene, position: Vector3, parent: TransformNode) {
+    constructor(scene: Scene, position: Vector3, parent: ParentNode) {
         this.scene = scene;
         this.position = position;
         this.parent = parent;
@@ -36,7 +36,8 @@ export class VictoryCondition {
         const coin = MeshBuilder.CreateCylinder("coin", { diameter: this.diameter, height: 0.5 }, this.scene);
         coin.position = this.position;
         coin.position.y += this.diameter * 2;
-        coin.parent = this.parent;
+        // coin.parent = this.parent;
+        this.parent.addChild(coin);
         coin.material = new StandardMaterial("coinMaterial", this.scene);
         (coin.material as StandardMaterial).diffuseColor = new Color3(1, 1, 0); // Gold color
 
