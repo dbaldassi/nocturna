@@ -13,9 +13,10 @@ export class GameScene {
     private hk: HavokPlugin;
     private currentLevel: Level;
 
-    constructor(engine: any) {
+    constructor(engine: any, inputHandler: InputHandler) {
+        this.inputHandler = inputHandler;
         this.scene = new Scene(engine);
-        this.inputHandler = new InputHandler();
+        
     }
 
     public async initializeScene() {

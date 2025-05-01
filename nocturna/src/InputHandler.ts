@@ -1,36 +1,42 @@
 import { CharacterInput } from "./types";
+import { KeybindsManager } from "./keybinds";
 
 export class InputHandler {
     private keys: { [key: string]: boolean } = {};
     private key_once: string[] = [];
     private keyBindings: { [action: string]: string[] } = {
-        left: ["a", "ArrowLeft"],
-        right: ["d", "ArrowRight"],
-        forward: ["w", "ArrowUp"],
-        backward: ["s", "ArrowDown"],
-        dash: ["Shift"],
-        rotate_left_x: ["x", "X"],
-        rotate_right_x: ["c", "C"],
-        rotate_left_y: ["y", "Y"],
-        rotate_right_y: ["u", "U"],
-        rotate_left_z: ["h", "H"],
-        rotate_right_z: ["j", "J"],
-        pov: ["p", "P"],
+        left: ["a"],
+        right: ["d"],
+        // forward: ["w"],
+        // backward: ["s"],
+        // dash: ["Shift"],
+        rotate_left_x: ["x"],
+        rotate_right_x: ["c"],
+        rotate_left_y: ["y"],
+        rotate_right_y: ["u"],
+        rotate_left_z: ["h"],
+        rotate_right_z: ["j"],
+        pov: ["p"],
         jump: [" "],
     };
+    private keybindManager: KeybindsManager;
 
     constructor() {
-        this.key_once = ["x", "X", "c", "C", "y", "Y", "u", "U", "h", "H", "p", "P", "j", "J"];
+        this.key_once = ["x", "c", "y", "u", "h", "p", "j"];
 
         window.addEventListener("keydown", (event) => {
-            if (!this.key_once.includes(event.key)) {
+            if (!this.keybindManager.isEditingKeybinds() && !this.key_once.includes(event.key)) {
                 this.keys[event.key] = true;
             }
         });
 
         window.addEventListener("keyup", (event) => {
-            this.keys[event.key] = !this.keys[event.key];
+            if (!this.keybindManager.isEditingKeybinds()) {
+                this.keys[event.key] = !this.keys[event.key];
+            }
         });
+
+        this.keybindManager = new KeybindsManager(this);
     }
 
     getInput(): CharacterInput {

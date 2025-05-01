@@ -2,11 +2,13 @@ import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import { Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, Mesh, MeshBuilder, Texture, FreeCamera, FollowCamera, StandardMaterial, Color3, HavokPlugin, PhysicsAggregate, PhysicsShapeType, PhysicsMotionType, PBRMaterial, SceneLoader, TransformNode, AbstractMesh, PointLight, Animation } from "@babylonjs/core";
 import { GameScene } from "./GameScene";
+import { InputHandler } from "./InputHandler";
 
 export class App {
     engine: Engine;
     scene: GameScene;
     canvas: HTMLCanvasElement;
+    inputHandler: InputHandler;
 
     constructor() {
         document.addEventListener('DOMContentLoaded', () => {
@@ -62,6 +64,8 @@ export class App {
                 }
             });
         });
+
+        this.inputHandler = new InputHandler();
     }
 
     async start() {
@@ -77,7 +81,7 @@ export class App {
 
         // initialize babylon scene and engine
         this.engine = new Engine(this.canvas, true);
-        this.scene = new GameScene(this.engine);
+        this.scene = new GameScene(this.engine, this.inputHandler);
         await this.scene.initializeScene();
         this.gameLoop();
     }
