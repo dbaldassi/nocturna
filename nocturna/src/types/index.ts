@@ -9,6 +9,7 @@ export interface CharacterInput {
 export interface AbstractState {
     enter(): void;
     exit(): void;
+    name(): string;
     update(dt: number, input : CharacterInput): AbstractState | null;
 }
 

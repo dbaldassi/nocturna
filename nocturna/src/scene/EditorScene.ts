@@ -9,90 +9,192 @@ import { Platform, FixedPlatformFactory, ParentedPlatformFactory, PlatformFactor
 
 const CUBE_SIZE = 3000;
 
-class AdditionState implements AbstractState {
-    private scene: EditorScene;
-    private nextState: boolean = false;
-    private inputHandler: InputHandler;
-    private fixedPlatformFactory: FixedPlatformFactory;
-    private parentedPlatformFactory: ParentedPlatformFactory;
+
+abstract class EditorState implements AbstractState {
+    protected scene: EditorScene;
+    protected inputHandler: InputHandler;
+    private goNextState: boolean = false;
+    private goPreviousState: boolean = false;
+
+    private static stateList: EditorState[] = [];
+    private static currentStateIndex: number = 0;
 
     constructor(scene: EditorScene, inputHandler: InputHandler) {
         this.scene = scene;
         this.inputHandler = inputHandler;
+    }
+
+    public static addState(...states: EditorState[]) : void {
+        this.stateList.push(...states);
+    }
+
+    public static clearState() : void {
+        this.stateList = []
+        this.currentStateIndex = 0;
+    }
+
+    private static nextIndex() : number {
+        return (EditorState.currentStateIndex + 1) % EditorState.stateList.length;
+    }
+
+    private static previousIndex() : number {
+        return (EditorState.currentStateIndex - 1 + EditorState.stateList.length) % EditorState.stateList.length;
+    }
+
+    protected getModeChangeText() : string {
+        const next = EditorState.nextIndex();
+        const previous = EditorState.previousIndex();
+
+        return `+: ${EditorState.stateList[next].name()} -: ${EditorState.stateList[previous].name()}`;
+    }
+
+    public abstract name(): string;
+    public abstract clone(): EditorState;
+
+    enter() {
+        this.inputHandler.addAction("action_plus", () => {
+            if(!this.goPreviousState) {
+                EditorState.currentStateIndex = EditorState.nextIndex();
+                this.goNextState = true;
+            }
+        });
+        this.inputHandler.addAction("action_minus", () => {
+            if(!this.goNextState) {
+                EditorState.currentStateIndex = EditorState.previousIndex();
+                this.goPreviousState = true;
+            }
+        });
+    }
+
+    exit() {
+        this.inputHandler.removeAction("action_plus");
+        this.inputHandler.removeAction("action_minus");
+    }
+
+    update(dt: number, input: CharacterInput): AbstractState | null {
+        if (this.goNextState || this.goPreviousState) 
+            return EditorState.stateList[EditorState.currentStateIndex].clone();
+
+        return null;
+    }
+}
+
+class AdditionState extends EditorState {
+    private fixedPlatformFactory: FixedPlatformFactory;
+    private parentedPlatformFactory: ParentedPlatformFactory;
+
+    constructor(scene: EditorScene, inputHandler: InputHandler) {
+        super(scene, inputHandler);
 
         this.fixedPlatformFactory = new FixedPlatformFactory();
         this.parentedPlatformFactory = new ParentedPlatformFactory(); 
     }
 
-    enter() {
-        console.log("Entering Addition State");
-        this.scene.showMenu("Addition mode -> 1: Platform 0: Move Mode");
+    public name(): string {
+        return "Addition Mode";
+    }
 
-        this.inputHandler.addAction("action_1", () => {
-            // add platform
-            this.scene.addPlatform(this.fixedPlatformFactory);
-        });
-        this.inputHandler.addAction("action_2", () => {
-            // add platform
-            this.scene.addPlatform(this.parentedPlatformFactory);
-        });
-        this.inputHandler.addAction("action_0", () => {
-            this.nextState = true;
-        });
+    public clone(): EditorState{
+        return new AdditionState(this.scene, this.inputHandler);
+    }
+
+    enter() {
+        super.enter();
+
+        this.scene.showMenu(`${this.name()} -> 1: Platform ${this.getModeChangeText()}`);
+
+        this.inputHandler.addAction("action_1", () => this.scene.addPlatform(this.fixedPlatformFactory));
+        this.inputHandler.addAction("action_2", () => this.scene.addPlatform(this.parentedPlatformFactory));
     }
 
     exit() {
+        super.exit();
         this.inputHandler.removeAction("action_1");
-        this.inputHandler.removeAction("action_0");
-
-        console.log("Exiting Addition State");
         this.scene.hideMenu();
     }
 
     update(dt: number, input: CharacterInput): AbstractState | null {
-        // Logic for addition state
-
-        if(this.nextState) {
-            return new MoveState(this.scene, this.inputHandler);
-        }
-
         this.scene.moveCamera(dt, input);
-        return null;
+        return super.update(dt, input);
     }
 }
 
-class MoveState implements AbstractState {
-    private scene: EditorScene;
-    private nextState: boolean = false;
-    private inputHandler: InputHandler;
-
+class MoveState extends EditorState {
     constructor(scene: EditorScene, inputHandler: InputHandler) {
-        this.inputHandler = inputHandler;
-        this.scene = scene;
+        super(scene, inputHandler);
+    }
+
+    public clone(): EditorState {
+        return new MoveState(this.scene, this.inputHandler);
+    }
+
+    public name(): string {
+        return "Move mode";
     }
 
     enter() {
-        console.log("Entering Move State");
-        this.scene.showMenu("Move mode -> WASD: Move Selection 0: Resize Mode");
-        this.inputHandler.addAction("action_0", () => {
-            this.nextState = true;
-        });
+        super.enter();
+        this.scene.showMenu(`${this.name()} -> WASD: Move Selection ${this.getModeChangeText()}`);
     }
     exit() {
-        this.inputHandler.removeAction("action_0");
-        console.log("Exiting Move State");
+        super.exit();
         this.scene.hideMenu();
     }
 
     update(dt: number, input: CharacterInput): AbstractState | null {
-        // Logic for move state
-        if(this.nextState) {
-            return new AdditionState(this.scene, this.inputHandler);
-        }
-       
         this.scene.moveSelection(dt,input);
+        return super.update(dt, input);
+    }
+}
 
-        return null;
+class RotationState extends EditorState {
+    constructor(scene: EditorScene, inputHandler: InputHandler) {
+        super(scene, inputHandler);
+    }
+    enter() {
+        super.enter();
+        this.scene.showMenu(`${this.name()} -> WASD: Move Selection ${this.getModeChangeText()}`);
+    }
+    exit() {
+        super.exit();
+        this.scene.hideMenu();
+    }
+    update(dt: number, input: CharacterInput): AbstractState | null {
+        this.scene.rotateSelection(dt,input);
+        return super.update(dt, input);
+    }
+    public clone(): EditorState {
+        return new RotationState(this.scene, this.inputHandler);
+    }
+
+    public name(): string {
+        return "Rotation mode";
+    }
+
+}
+
+class ResizeState extends EditorState {
+    constructor(scene: EditorScene, inputHandler: InputHandler) {
+        super(scene, inputHandler);
+    }
+    enter() {
+        super.enter();
+        this.scene.showMenu(`${this.name()} -> WASD: Move Selection ${this.getModeChangeText()}`);
+    }
+    exit() {
+        super.exit();
+        this.scene.hideMenu();
+    }
+    update(dt: number, input: CharacterInput): AbstractState | null {
+        this.scene.resizeSelection(dt,input);
+        return super.update(dt, input);
+    }
+    public clone(): EditorState {
+        return new ResizeState(this.scene, this.inputHandler);
+    }
+
+    public name(): string {
+        return "Resize mode";
     }
 }
 
@@ -107,6 +209,13 @@ export class EditorScene extends BaseScene {
 
     constructor(engine: Engine, inputHandler: InputHandler) {
         super(engine, inputHandler);
+
+        EditorState.clearState();
+        EditorState.addState(new AdditionState(this, this.inputHandler),
+            new MoveState(this, this.inputHandler),
+            new RotationState(this, this.inputHandler),
+            new ResizeState(this, this.inputHandler)
+        );
     }
 
     static async createScene(engine: Engine, inputHandler: InputHandler): Promise<BaseScene> {
@@ -194,6 +303,18 @@ export class EditorScene extends BaseScene {
     public moveSelection(dt: number, input: CharacterInput) {
         if (this.currentSelection) {
             this.currentSelection.updatePosition(dt, input);
+        }
+    }
+
+    public resizeSelection(dt: number, input: CharacterInput) {
+        if (this.currentSelection) {
+            this.currentSelection.updateScale(dt, input);
+        }
+    }
+
+    public rotateSelection(dt: number, input: CharacterInput) {
+        if (this.currentSelection) {
+            this.currentSelection.updateRotation(dt, input);
         }
     }
 
