@@ -101,7 +101,7 @@ class AdditionState extends EditorState {
     enter() {
         super.enter();
 
-        this.scene.showMenu(`${this.name()} -> 1: Platform ${this.getModeChangeText()}`);
+        this.scene.showMenu(`${this.name()} -> 1: Fixed Platform 2: Parented Platform ${this.getModeChangeText()}`);
 
         this.inputHandler.addAction("action_1", () => this.scene.addPlatform(this.fixedPlatformFactory));
         this.inputHandler.addAction("action_2", () => this.scene.addPlatform(this.parentedPlatformFactory));
@@ -110,6 +110,7 @@ class AdditionState extends EditorState {
     exit() {
         super.exit();
         this.inputHandler.removeAction("action_1");
+        this.inputHandler.removeAction("action_2");
         this.scene.hideMenu();
     }
 
@@ -223,15 +224,13 @@ export class EditorScene extends BaseScene {
         const scene = new EditorScene(engine, inputHandler);
         scene.parentNode = new ParentNode(Vector3.Zero(), scene.scene);
         scene.parentNode.setupKeyActions(scene.inputHandler);
+
+        scene.inputHandler.addAction("save", () => scene.serializeScene());
+
         scene.cube = new Cube(scene.scene, CUBE_SIZE);
         scene.cube.mesh.position = Vector3.Zero();
 
-        // const ground = MeshBuilder.CreateGround("ground", { width: 1000, height: 1000 }, scene.scene);
-        // ground.isPickable = true; // Permet au raycast de détecter ce plan
-        // ground.visibility = 0; // Rendre le plan invisible
-
         scene.camera = new FreeCamera("camera", new Vector3(0, 0, -500), scene.scene);
-        // scene.camera.setTarget(Vector3.Zero()); // La caméra regarde vers l'origine
         scene.camera.attachControl(true); // Permet de contrôler la caméra avec la souris et le clavier
         scene.camera.speed = 2; // Vitesse de la caméra
 
@@ -259,15 +258,12 @@ export class EditorScene extends BaseScene {
         // Sélectionner le nouvel objet
         this.currentSelection = object;
         this.currentSelection.setSelected(true);
-    
-        console.log("Selected object:", object);
     }
 
     private deselectCurrentSelection() {
         if (this.currentSelection) {
             this.currentSelection.setSelected(false);
             this.currentSelection = null;
-            console.log("Deselected current object");
         }
     }
 
@@ -292,7 +288,7 @@ export class EditorScene extends BaseScene {
     
         // Créer un bloc de texte pour les instructions
         const instructions = new TextBlock();
-        instructions.text = text;
+        instructions.text = `${text} enter: Save Scene`;
         instructions.color = "black";
         instructions.fontSize = 24;
         instructions.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
@@ -374,5 +370,28 @@ export class EditorScene extends BaseScene {
             this.currentState = nextState;
             this.currentState.enter();
         }
+    }
+
+    public serializeScene(): void {
+        const serializedObjects = this.editorObjects.map((obj) => obj.serialize());
+        const jsonScene = JSON.stringify(serializedObjects, null, 2); // Convertir en JSON formaté
+    
+        // Créer un Blob contenant le JSON
+        const blob = new Blob([jsonScene], { type: "application/json" });
+    
+        // Créer un lien de téléchargement
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "scene.json"; // Nom du fichier téléchargé
+        a.style.display = "none";
+    
+        // Ajouter le lien au document et déclencher le clic
+        document.body.appendChild(a);
+        a.click();
+    
+        // Nettoyer le DOM
+        document.body.removeChild(a);
+    
+        console.log("Scene serialized and download triggered.");
     }
 }

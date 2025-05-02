@@ -1,3 +1,5 @@
+import { Mesh } from "@babylonjs/core";
+
 export interface CharacterInput {
     left: boolean;
     right: boolean;
@@ -14,11 +16,11 @@ export interface AbstractState {
 }
 
 export interface EditorObject {
-
     updatePosition(dt: number, input: CharacterInput): void;
     updateRotation(dt: number, input: CharacterInput): void;
     updateScale(dt: number, input: CharacterInput): void;
     setSelected(selected: boolean): void;
     isSelected(): boolean;
     getMesh(): Mesh;
+    serialize(): any;
 }

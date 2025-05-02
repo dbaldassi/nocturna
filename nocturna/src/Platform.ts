@@ -22,6 +22,8 @@ export class Platform  {
 
 export class ParentedPlatform extends Platform implements ParentNodeObserver {
 
+    public static readonly Type: string = "parented_platform";
+
     constructor(mesh: Mesh, scene: Scene) {
         super(mesh, scene);
     }
@@ -43,11 +45,13 @@ export class ParentedPlatform extends Platform implements ParentNodeObserver {
 }
 
 export class FixedPlatform extends Platform  {
+    public static readonly Type: string = "fixed_platform";
 
     constructor(mesh: Mesh, scene: Scene) {
         super(mesh, scene);
     }
 }
+
 export class PlatformEditorDelegate implements EditorObject { 
     private platform: Platform;
     private selected: boolean = false;
@@ -99,6 +103,15 @@ export class PlatformEditorDelegate implements EditorObject {
     public getMesh(): Mesh {
         return this.platform.getMesh();
     }
+
+    public serialize(): any {
+        const data = {
+            position: this.platform.getMesh().position,
+            rotation: this.platform.getMesh().rotation,
+            size: this.platform.getMesh().scaling,
+        };
+        return data;
+    }
 }
 
 export class FixedPlatformEditor extends FixedPlatform  implements EditorObject {
@@ -133,9 +146,14 @@ export class FixedPlatformEditor extends FixedPlatform  implements EditorObject 
     public getMesh(): Mesh {
         return this.delegate.getMesh();
     }
+    public serialize(): any {
+        const data = this.delegate.serialize();
+        data.type = FixedPlatform.Type;
+        return data;
+    }
 }
 
-export class ParentedPlatformEditor extends ParentedPlatform  {
+export class ParentedPlatformEditor extends ParentedPlatform implements EditorObject {
     private platform:  ParentedPlatform;
     private delegate: PlatformEditorDelegate;
 
@@ -166,6 +184,11 @@ export class ParentedPlatformEditor extends ParentedPlatform  {
     }
     public getMesh(): Mesh {
         return this.delegate.getMesh();
+    }
+    public serialize(): any {
+        const data = this.delegate.serialize();
+        data.type = ParentedPlatform.Type;
+        return data;
     }
 }
 

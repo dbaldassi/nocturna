@@ -31,6 +31,7 @@ export class InputHandler {
         action_0: ["0"],
         action_minus: ["-"],
         action_plus: ["+"],
+        save: ["Enter"],
     };
     private keybindManager: KeybindsManager;
     // Store actions, which call a function when the key is pressed
