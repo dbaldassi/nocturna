@@ -20,5 +20,5 @@ export interface EditorObject {
     updateScale(dt: number, input: CharacterInput): void;
     setSelected(selected: boolean): void;
     isSelected(): boolean;
-    
+    getMesh(): Mesh;
 }

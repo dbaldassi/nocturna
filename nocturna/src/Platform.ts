@@ -51,37 +51,55 @@ export class FixedPlatform extends Platform  {
 export class PlatformEditorDelegate implements EditorObject { 
     private platform: Platform;
     private selected: boolean = false;
-    private readonly speed: number = 1;
+    private readonly lateralspeed: number = 0.5;
+    private readonly rotationspeed: number = 0.005;
+    private originalEmissiveColor: Color3 | null = null; // Stocker la couleur d'origine
 
     constructor(platform: Platform) {
         this.platform = platform;
     }
 
     public updatePosition(dt: number, input: CharacterInput): void {
-        const moveSpeed = this.speed * dt;
+        const moveSpeed = this.lateralspeed * dt;
         this.platform.getMesh().position.x += (input.right ? 1 : (input.left ? -1 : 0)) * moveSpeed;
         this.platform.getMesh().position.y += (input.up ? 1 : (input.down ? -1 : 0)) * moveSpeed;
     }
 
     public updateRotation(dt: number, input: CharacterInput): void {
-        const moveSpeed = this.speed * dt;
+        const moveSpeed = this.rotationspeed * dt;
         this.platform.getMesh().rotation.y += (input.right ? 1 : (input.left ? -1 : 0)) * moveSpeed;
         this.platform.getMesh().rotation.x += (input.up ? 1 : (input.down ? -1 : 0)) * moveSpeed;
     }
 
-    public updateScale(dt: number, input: CharacterInput): void {
-        // Implement scale logic if needed
+    public updateScale(_: number, input: CharacterInput): void {
+        this.platform.getMesh().scaling.x += (input.right ? 1 : (input.left ? -1 : 0));
+        this.platform.getMesh().scaling.y += (input.up ? 1 : (input.down ? -1 : 0));
     }
 
     public setSelected(selected: boolean): void {
         this.selected = selected;
+
+        const material = this.platform.getMesh().material as StandardMaterial;
+        if (!material) return;
+
+        if (selected) {
+            this.originalEmissiveColor = material.emissiveColor.clone();
+            material.emissiveColor = Color3.Yellow(); // Jaune
+        } else {
+            if (this.originalEmissiveColor) {
+                material.emissiveColor = this.originalEmissiveColor;
+            }
+        }
     }
 
     public isSelected(): boolean {
         return this.selected;
     }
-}
 
+    public getMesh(): Mesh {
+        return this.platform.getMesh();
+    }
+}
 
 export class FixedPlatformEditor extends FixedPlatform  implements EditorObject {
     private platform:  FixedPlatform;
@@ -111,6 +129,9 @@ export class FixedPlatformEditor extends FixedPlatform  implements EditorObject 
     }
     public isSelected(): boolean {
         return this.delegate.isSelected();
+    }
+    public getMesh(): Mesh {
+        return this.delegate.getMesh();
     }
 }
 
@@ -142,6 +163,9 @@ export class ParentedPlatformEditor extends ParentedPlatform  {
     }
     public isSelected(): boolean {
         return this.delegate.isSelected();
+    }
+    public getMesh(): Mesh {
+        return this.delegate.getMesh();
     }
 }
 

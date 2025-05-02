@@ -1,5 +1,5 @@
 import { AdvancedDynamicTexture, TextBlock, Control } from "@babylonjs/gui";
-import { Engine, Vector3, FreeCamera, MeshBuilder } from "@babylonjs/core";
+import { Engine, Vector3, FreeCamera, Mesh } from "@babylonjs/core";
 
 import { BaseScene } from "./BaseScene";import { ParentNode } from "../ParentNode";
 import { Cube } from "../Cube";
@@ -206,6 +206,7 @@ export class EditorScene extends BaseScene {
     private currentState: AbstractState;
     private guiTexture: AdvancedDynamicTexture | null = null;
     private currentSelection: EditorObject | null = null;
+    private editorObjects: EditorObject[] = [];
 
     constructor(engine: Engine, inputHandler: InputHandler) {
         super(engine, inputHandler);
@@ -239,7 +240,50 @@ export class EditorScene extends BaseScene {
         scene.currentState = new AdditionState(scene, scene.inputHandler);
         scene.currentState.enter();
 
+        scene.setupClickListener();
+
         return scene;
+    }
+
+    private getEditorObjectByMesh(mesh: Mesh): EditorObject | null {
+        // Parcourir tous les objets EditorObject pour trouver celui qui correspond au mesh
+        return this.editorObjects.find((obj) => obj.getMesh() === mesh) || null;
+    }
+
+    private selectEditorObject(object: EditorObject) {
+        // Désélectionner l'objet actuel
+        if (this.currentSelection) {
+            this.currentSelection.setSelected(false);
+        }
+    
+        // Sélectionner le nouvel objet
+        this.currentSelection = object;
+        this.currentSelection.setSelected(true);
+    
+        console.log("Selected object:", object);
+    }
+
+    private deselectCurrentSelection() {
+        if (this.currentSelection) {
+            this.currentSelection.setSelected(false);
+            this.currentSelection = null;
+            console.log("Deselected current object");
+        }
+    }
+
+    public setupClickListener() {
+        this.scene.onPointerDown = (evt, pickResult) => {
+            if (pickResult?.hit && pickResult.pickedMesh) {
+                // Vérifier si le mesh appartient à un EditorObject
+                const selectedObject = this.getEditorObjectByMesh(pickResult.pickedMesh);
+                if (selectedObject) {
+                    this.selectEditorObject(selectedObject);
+                } else {
+                    // Si aucun objet n'est sélectionné, désélectionner l'objet actuel
+                    this.deselectCurrentSelection();
+                }
+            }
+        };
     }
 
     public showMenu(text: string) {
@@ -273,7 +317,7 @@ export class EditorScene extends BaseScene {
         if (pickResult?.hit && pickResult.pickedPoint) {
             // Récupérer la position où la souris pointe
             const position = pickResult.pickedPoint;
-            // position.z = 0;
+            position.z -= 50/2;
     
             // Configurer les paramètres de la plateforme
             const config = {
@@ -286,7 +330,8 @@ export class EditorScene extends BaseScene {
     
             // Créer la plateforme avec la factory
             const platform = factory.createForEditor(config);
-            this.currentSelection = platform;
+            this.editorObjects.push(platform);
+            this.selectEditorObject(platform);
     
             console.log("Platform created at:", position);
         } else {
