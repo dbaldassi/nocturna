@@ -224,7 +224,7 @@ export class EditorScene extends BaseScene {
         scene.parentNode = new ParentNode(Vector3.Zero(), scene.scene);
         scene.parentNode.setupKeyActions(scene.inputHandler);
         scene.cube = new Cube(scene.scene, CUBE_SIZE);
-        scene.cube.mesh.position = new Vector3(0, CUBE_SIZE / 2, 0);
+        scene.cube.mesh.position = Vector3.Zero();
 
         // const ground = MeshBuilder.CreateGround("ground", { width: 1000, height: 1000 }, scene.scene);
         // ground.isPickable = true; // Permet au raycast de détecter ce plan
