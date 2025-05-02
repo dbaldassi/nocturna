@@ -1,4 +1,4 @@
-import { Animation, Color3, int, Mesh, MeshBuilder, Scene, StandardMaterial, TransformNode, Vector3 } from '@babylonjs/core';
+import { Animation, Color3, int, Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, Scene, StandardMaterial, TransformNode, Vector3 } from '@babylonjs/core';
 import { SceneLoader } from '@babylonjs/core/Loading/sceneLoader';
 import "@babylonjs/loaders/glTF";
 import { Player } from './Player';
@@ -36,9 +36,8 @@ export class VictoryCondition {
         // create a coin shape
         const coin = MeshBuilder.CreateCylinder("coin", { diameter: this.diameter, height: 0.5 }, this.scene);
         coin.position = this.position;
-        coin.position.y += this.diameter * 2;
-        // coin.parent = this.parent;
-        this.parent.addChild(coin);
+        coin.position.y += this.diameter * 4;
+        // this.parent.addChild(coin);
         coin.material = new StandardMaterial("coinMaterial", this.scene);
         (coin.material as StandardMaterial).diffuseColor = new Color3(1, 1, 0); // Gold color
 
@@ -51,6 +50,7 @@ export class VictoryCondition {
         const distance = Vector3.Distance(player.mesh.position, this.mesh.position);
         if (distance < this.diameter) {
             player.setWin(true);
+            player.removePhysics();
             // display win scrreen from html
             const winScreen = document.getElementById("win-screen") as HTMLElement;
             winScreen.classList.remove("hidden");
@@ -103,6 +103,18 @@ export class VictoryCondition {
                 finalScoreElement.textContent = Math.floor(current).toLocaleString();
             }
         }, interval);
+        this.initialiseButtons();
+    }
+
+    private initialiseButtons(): void {
+        const restartButton = document.getElementById("continue-button") as HTMLElement;
+        const menuButton = document.getElementById("win-menu-button") as HTMLElement;
+        restartButton.addEventListener("click", () => {
+            window.location.reload();
+        });
+        menuButton.addEventListener("click", () => {
+            window.location.reload(); 
+        });
     }
 
 }

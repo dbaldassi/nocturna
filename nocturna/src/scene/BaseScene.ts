@@ -7,14 +7,19 @@ export abstract class BaseScene {
     protected scene: Scene;
     protected inputHandler: InputHandler;
 
-    constructor(engine: any) {
+    constructor(engine: any, inputHandler: InputHandler) {
+        this.inputHandler = inputHandler;
         this.scene = new Scene(engine);
-        this.inputHandler = new InputHandler();
     }
 
     public abstract update(dt: number) : void;
 
     public render() {
         this.scene.render();
+    }
+
+    public restart() {
+        this.scene.dispose();
+        this.scene = new Scene(this.scene.getEngine());
     }
 }

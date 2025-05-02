@@ -10,6 +10,7 @@ export class Player {
     private position: Vector3;
     private speed: number = 2000.0;
     private haswin: boolean = false;
+    private hasLoose: boolean = false;
     private score: number = 0;
     private jumpForce: Vector3 = undefined;
 
@@ -24,10 +25,10 @@ export class Player {
     public createPlayer(): Mesh {
         const sphere = MeshBuilder.CreateSphere("player", { diameter: this.diameter }, this.scene);
         sphere.position = this.position;
-        sphere.position.y += this.diameter * 2;
+        sphere.position.y += this.diameter * 10;
 
         const material = new StandardMaterial("playerMaterial", this.scene);
-        material.diffuseColor =  Color3.Red();
+        material.diffuseColor = Color3.Red();
         sphere.material = material;
         new PhysicsAggregate(sphere, PhysicsShapeType.SPHERE, { mass: 70, friction: 10, restitution: 0 }, this.scene);
         // sphere.physicsBody.setMassProperties({ mass: 1 });
@@ -91,5 +92,22 @@ export class Player {
 
     public setScore(score: number) {
         this.score = score;
+    }
+
+    public getMesh(): Mesh {
+        return this.mesh;
+    }
+
+    public setLose(lose: boolean) {
+        this.hasLoose = lose;
+    }
+
+    public hasLost(): boolean {
+        return this.hasLoose;
+    }
+
+    public removePhysics() {
+        this.mesh.physicsBody.dispose();
+        this.mesh.physicsBody = null;
     }
 }

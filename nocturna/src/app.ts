@@ -3,13 +3,16 @@ import "@babylonjs/inspector";
 import { Engine } from "@babylonjs/core";
 import { BaseScene } from "./scene/BaseScene";
 import { SceneFactory } from "./scene/SceneFactory";
+import { InputHandler } from "./InputHandler";
 
 export class App {
     private engine: Engine;
     private scene: BaseScene;
     private canvas: HTMLCanvasElement;
+    private inputHandler: InputHandler;
 
     constructor() {
+        this.inputHandler = new InputHandler();
         document.addEventListener('DOMContentLoaded', () => {
             const cards: NodeListOf<HTMLElement> = document.querySelectorAll('.mode-card');
             const startButton: HTMLElement | null = document.getElementById('start-game');
@@ -66,7 +69,7 @@ export class App {
 
         // initialize babylon scene and engine
         this.engine = new Engine(this.canvas, true);
-        this.scene = await SceneFactory.createScene(mode, this.engine);
+        this.scene = await SceneFactory.createScene(mode, this.engine, this.inputHandler);
 
         this.gameLoop();
     }

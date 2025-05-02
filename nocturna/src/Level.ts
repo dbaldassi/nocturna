@@ -6,6 +6,7 @@ import { Player } from "./Player";
 import { CharacterInput } from "./types";
 import { VictoryCondition } from "./victory";
 import { ParentNode } from "./ParentNode";
+import { LooseCondition } from "./loose";
 
 export class Level {
     private scene: Scene;
@@ -13,11 +14,12 @@ export class Level {
     private activeCameraIndex: number = 0;
     private cameras: FollowCamera[] = [];
     private victoryCondition: VictoryCondition;
+    private loseCondition: LooseCondition; // Replace with the actual type if available
     private timer: number = 0;
-    private score: number = 0;
     private parent: ParentNode;
     private cubeSize: number;
     private cube: Cube;
+    private platforms: Platform[] = [];
 
     constructor(scene: Scene, parent: ParentNode, cube: Cube, cubeSize: number) {
         this.cubeSize = cubeSize;
@@ -38,7 +40,7 @@ export class Level {
             { size: new Vector3(50, 5, 50), position: new Vector3(150, 60, 0), color: new Color3(0.3, 0.7, 0.7), rotation: new Vector3(0, 0, Math.PI / 2) },
             { size: new Vector3(50, 5, 50), position: new Vector3(-150, 35, 0), color: new Color3(0.7, 0.3, 0.7), rotation: new Vector3(0, 0, 0) },
             { size: new Vector3(50, 5, 50), position: new Vector3(200, 80, 0), color: new Color3(0.5, 0.5, 0.5), rotation: new Vector3(0, 0, Math.PI / 2) },
-            { size: new Vector3(50, 5, 50), position: new Vector3(-200, 40, 0), color: new Color3(0.3, 0.7, 0.3), rotation: new Vector3(0, 0, 0) },
+            { size: new Vector3(50, 5, 50), position: new Vector3(-150, 0, 0), color: new Color3(0.3, 0.7, 0.3), rotation: new Vector3(0, 0, Math.PI / 2) },
             { size: new Vector3(50, 5, 50), position: new Vector3(250, 100, 0), color: new Color3(0.7, 0.3, 0.3), rotation: new Vector3(0, 0, Math.PI / 2) },
         ];
 
@@ -49,7 +51,8 @@ export class Level {
                 scene: this.scene,
                 parent: this.parent
             }
-            factory.create(platformConfig)
+            //factory.create(platformConfig)
+            this.platforms.push(factory.create(platformConfig)); // Create and add the platform to the scene
         });
 
         // Initialize the player on top of the first platform
@@ -72,6 +75,7 @@ export class Level {
         // ne victory condition
         this.victoryCondition = new VictoryCondition(this.scene, new Vector3(-100, 25, 0), this.parent); // Set the position of the coin to the first platform
         // this.victoryCondition.setCoinPosition(new Vector3(0, 100, 0)); // Set the coin position to the first platform
+        this.loseCondition = new LooseCondition(this.player, this.scene); // Initialize the lose condition
         // start a timer from 0 to infinity
         this.startTimer();
     }
@@ -82,7 +86,7 @@ export class Level {
         this.scene.activeCamera = this.cameras[this.activeCameraIndex];
     }
     public update(dt: number, input: CharacterInput) {
-        if (this.player.hasWon()) {
+        if (this.player.hasWon() || this.player.hasLost()) {
             return; // Prevent further updates if the game is won
         }
         /*if (input.pov) {
@@ -93,6 +97,7 @@ export class Level {
         this.parent.update();
 
         this.victoryCondition.checkWin(this.player, this.timer); // Check if the player has won
+        this.loseCondition.checkLoose(this.timer); // Check if the player has lost
     }
 
     private startTimer() {
@@ -101,7 +106,7 @@ export class Level {
         timerElement.classList.remove("hidden");
         
         setInterval(() => {
-            if (!this.player || !this.player.hasWon()) { 
+            if (!this.player || !this.player.hasWon() || !this.player.hasLost()) { 
                 this.timer += 1000; // Increment the timer by 1 second
                 if (timerElement) {
                     const minutes = Math.floor(this.timer / 1000 / 60);

@@ -105,12 +105,12 @@ export class EditorScene extends BaseScene {
     private guiTexture: AdvancedDynamicTexture | null = null;
     private currentSelection: EditorObject | null = null;
 
-    constructor(engine: Engine) {
-        super(engine);
+    constructor(engine: Engine, inputHandler: InputHandler) {
+        super(engine, inputHandler);
     }
 
-    static async createScene(engine: Engine) {
-        const scene = new EditorScene(engine);
+    static async createScene(engine: Engine, inputHandler: InputHandler): Promise<BaseScene> {
+        const scene = new EditorScene(engine, inputHandler);
         scene.parentNode = new ParentNode(Vector3.Zero(), scene.scene);
         scene.parentNode.setupKeyActions(scene.inputHandler);
         scene.cube = new Cube(scene.scene, CUBE_SIZE);

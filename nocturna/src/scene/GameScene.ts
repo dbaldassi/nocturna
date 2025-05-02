@@ -6,6 +6,7 @@ import HavokPhysics from "@babylonjs/havok";
 import { BaseScene } from "./BaseScene";
 import { Cube } from "../Cube";
 import { ParentNode } from "../ParentNode";
+import { InputHandler } from "../InputHandler";
 
 const CUBE_SIZE = 3000;
 
@@ -17,12 +18,12 @@ export class GameScene extends BaseScene {
     private cube: Cube;
     private parent: ParentNode;
 
-    constructor(engine: Engine) {
-        super(engine);
+    constructor(engine: Engine, inputHandler: InputHandler) {
+        super(engine, inputHandler);
     }
 
-    static async createScene(engine: Engine) {
-        const scene = new GameScene(engine);
+    static async createScene(engine: Engine, inputHandler: InputHandler): Promise<BaseScene> {
+        const scene = new GameScene(engine, inputHandler);
 
         await scene.addPhysic();
 
