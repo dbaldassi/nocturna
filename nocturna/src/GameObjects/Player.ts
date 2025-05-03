@@ -1,6 +1,7 @@
-import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, Mesh, Space, TransformNode, BoundingBox, Ray } from "@babylonjs/core";
+import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, AbstractMesh, Mesh, Ray } from "@babylonjs/core";
 import { CharacterInput, EditorObject, getMeshSize } from "../types";
 import { GameObject, GameObjectConfig, GameObjectFactory } from "../types";
+import { FixedPlatform, ParentedPlatform } from "./Platform";
 
 export class Player implements GameObject {
     public static readonly Type: string = "player";
@@ -8,7 +9,6 @@ export class Player implements GameObject {
     private scene: Scene;
     public mesh: Mesh;
     private diameter: number = 10;
-    private position: Vector3;
     private speed: number = 2000.0;
     private haswin: boolean = false;
     private hasLoose: boolean = false;
@@ -20,6 +20,11 @@ export class Player implements GameObject {
         this.jumpForce = new Vector3(0, 100000, 0); // Force de saut initiale
 
         this.mesh = mesh;
+    }
+
+    private isPlatform(mesh: AbstractMesh): boolean {
+        console.log("isPlatform", mesh.name);
+        return mesh.name === "platform";
     }
 
     public move(dt: number, input: CharacterInput) {
@@ -49,13 +54,16 @@ export class Player implements GameObject {
         physicsBody.setLinearVelocity(velocity);
 
         const ray = Vector3.Down(); // Downward ray
-        const rayLength = this.diameter / 2 + 0.1; // Slightly below the player
-        const rayOrigin = this.mesh.getAbsolutePosition().add(new Vector3(0, -this.diameter / 2, 0)); // Adjust ray origin to the bottom of the player
+        const diameter = getMeshSize(this.mesh).x;
+        const rayLength = diameter; // Slightly below the player
+        const rayOrigin = this.mesh.getAbsolutePosition().add(new Vector3(0, -diameter / 2, 0)); // Adjust ray origin to the bottom of the player
         const hit = this.scene.pickWithRay(new Ray(rayOrigin, ray, rayLength));
 
-        const isGrounded = hit && hit.pickedMesh && hit.pickedMesh.name.startsWith("platform");
+        const isGrounded = hit && hit.pickedMesh && this.isPlatform(hit.pickedMesh);
 
+        console.log("isGrounded", isGrounded, hit);
         if (input.jump && isGrounded) {
+            console.log("Jumping", this.jumpForce);
             physicsBody.applyImpulse(this.jumpForce, this.mesh.getAbsolutePosition());
         }
     }
