@@ -7,10 +7,10 @@ import { BaseScene } from "./BaseScene";
 import { Cube } from "../Cube";
 import { ParentNode } from "../ParentNode";
 import { InputHandler } from "../InputHandler";
-import { Player } from "../Player";
+import { Player } from "../GameObjects/Player";
 import { GameObject, GameObjectVisitor } from "../types";
 import { LevelLoaderObserver, LevelLoader } from "../LevelLoader";
-import { VictoryCondition } from "../victory";
+import { VictoryCondition } from "../GameObjects/victory";
 import { LooseCondition } from "../loose";
 
 const CUBE_SIZE = 3000;

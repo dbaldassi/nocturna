@@ -1,6 +1,6 @@
 import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, Mesh, Space, TransformNode, BoundingBox, Ray } from "@babylonjs/core";
-import { CharacterInput, EditorObject, getMeshSize } from "./types";
-import { GameObject, GameObjectConfig, GameObjectFactory } from "./types";
+import { CharacterInput, EditorObject, getMeshSize } from "../types";
+import { GameObject, GameObjectConfig, GameObjectFactory } from "../types";
 
 export class Player implements GameObject {
     public static readonly Type: string = "player";

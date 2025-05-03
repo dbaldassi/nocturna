@@ -1,11 +1,9 @@
 import { Animation, Color3, int, Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, Scene, StandardMaterial, TransformNode, Vector3 } from '@babylonjs/core';
 import { SceneLoader } from '@babylonjs/core/Loading/sceneLoader';
 import "@babylonjs/loaders/glTF";
-import { Player } from './Player';
-import { ParentNode } from './ParentNode';
-import { GameObject, CharacterInput, getMeshSize } from './types';
-import { GameObjectConfig, GameObjectFactory, EditorObject, GameObjectVisitor } from './types';
-import { ParentNodeObserver } from './ParentNode';
+import { GameObject, CharacterInput, getMeshSize } from '../types';
+import { GameObjectConfig, GameObjectFactory, EditorObject, GameObjectVisitor } from '../types';
+import { ParentNodeObserver } from '../ParentNode';
 
 export class VictoryCondition implements GameObject, ParentNodeObserver {
     public static readonly Type: string = "victory_condition";
@@ -136,6 +134,7 @@ export class VictoryConditionEditor extends VictoryCondition implements EditorOb
     }
     public updateScale(dt: number, input: CharacterInput): void {
     }
+
     public setSelected(selected: boolean): void {
         const material = this.mesh.material as StandardMaterial;
         if (!material) return;

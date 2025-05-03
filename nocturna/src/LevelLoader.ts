@@ -1,11 +1,11 @@
 
 import { Cube } from "./Cube";
 import { ParentNode } from "./ParentNode";
-import { Player, PlayerEditor, PlayerFactory } from "./Player";
+import { Player, PlayerEditor, PlayerFactory } from "./GameObjects/Player";
 import { Scene, Vector3 } from "@babylonjs/core";
 import { GameObjectFactory, GameObjectConfig, EditorObject, GameObject } from "./types";
-import { ParentedPlatform, ParentedPlatformFactory, FixedPlatform, FixedPlatformFactory } from "./Platform";
-import { VictoryCondition, VictoryConditionFactory } from "./victory";
+import { ParentedPlatform, ParentedPlatformFactory, FixedPlatform, FixedPlatformFactory } from "./GameObjects/Platform";
+import { VictoryCondition, VictoryConditionFactory } from "./GameObjects/victory";
 
 export interface LevelLoaderObserver {
     onCube(cube : Cube): void;

@@ -1,4 +1,4 @@
-import { Player } from "./Player";
+import { Player } from "./GameObjects/Player";
 import { Scene } from "@babylonjs/core";
 
 export class LooseCondition {

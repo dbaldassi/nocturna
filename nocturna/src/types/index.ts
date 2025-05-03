@@ -1,5 +1,5 @@
 import { Mesh, Vector3, Scene } from "@babylonjs/core";
-import { VictoryCondition } from "../victory";
+import { VictoryCondition } from "../GameObjects/victory";
 import { ParentNode } from "../ParentNode";
 
 export interface CharacterInput {

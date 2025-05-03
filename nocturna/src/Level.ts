@@ -4,7 +4,7 @@ import { ParentedPlatformFactory, Platform } from "./Platform";
 import { Player } from "./Player";
 
 import { CharacterInput } from "./types";
-import { VictoryCondition } from "./victory";
+import { VictoryCondition } from "./GameObjects/victory";
 import { ParentNode } from "./ParentNode";
 import { LooseCondition } from "./loose";
 
