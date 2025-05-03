@@ -50,6 +50,14 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         // scene.parent.setupKeyActions(scene.inputHandler);
 
         scene.loadLevel("scene");
+        scene.scene.debugLayer.show({
+            overlay: true,
+            embedMode: true,
+            showExplorer: true,
+            showInspector: true,
+            enablePopup: true,
+        })
+
 
         return scene;
     }
@@ -61,6 +69,14 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         this.hk = new HavokPlugin(true, this.havokInstance);
         this.scene.enablePhysics(new Vector3(0, -1000, 0), this.hk);
         this.scene.getPhysicsEngine().setTimeStep(1 / 120);
+        // this.hk.setDebugMode(true);
+        // this.hk.setCollisionCallbackEnabled(true);
+
+        /*const observable = this.hk.onCollisionObservable;
+        observable.add((collision) => {
+            const { bodyA, bodyB } = collision;
+            console.log(`Collision detected between ${bodyA.name} and ${bodyB.name}`);
+        });*/
     }
 
     private loadLevel(file: string) {
@@ -122,14 +138,16 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         this.gameObjects.push(object);
         const mesh = object.getMesh();
 
-        // if (mesh.physicsBody) {
-            mesh.onCollideObservable.add((collider) => {
-                if (collider === this.player.getMesh()) {
+        if (mesh.physicsBody) {
+            mesh.physicsBody.getCollisionObservable().add((collider) => {
+                console.log(`Collision detected with ??`);
+                if (collider.collidedAgainst === this.player.mesh.physicsBody) {
                     console.log(`Collision detected with ${mesh.name}`);
                     object.accept(this);
                 }
             });
-        // }
+
+        }
     }
 
     public visitVictory(portal: VictoryCondition): void {

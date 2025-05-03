@@ -23,7 +23,7 @@ export class Player implements GameObject {
     }
 
     private isPlatform(mesh: AbstractMesh): boolean {
-        console.log("isPlatform", mesh.name);
+        // console.log("isPlatform", mesh.name);
         return mesh.name === "platform";
     }
 
@@ -55,13 +55,13 @@ export class Player implements GameObject {
 
         const ray = Vector3.Down(); // Downward ray
         const diameter = getMeshSize(this.mesh).x;
-        const rayLength = diameter; // Slightly below the player
+        const rayLength = diameter / 2; // Slightly below the player
         const rayOrigin = this.mesh.getAbsolutePosition().add(new Vector3(0, -diameter / 2, 0)); // Adjust ray origin to the bottom of the player
         const hit = this.scene.pickWithRay(new Ray(rayOrigin, ray, rayLength));
 
         const isGrounded = hit && hit.pickedMesh && this.isPlatform(hit.pickedMesh);
 
-        console.log("isGrounded", isGrounded, hit);
+        // console.log("isGrounded", isGrounded, hit);
         if (input.jump && isGrounded) {
             console.log("Jumping", this.jumpForce);
             physicsBody.applyImpulse(this.jumpForce, this.mesh.getAbsolutePosition());

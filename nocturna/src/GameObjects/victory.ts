@@ -189,7 +189,8 @@ export class VictoryConditionFactory implements GameObjectFactory {
     public create(config: GameObjectConfig): VictoryCondition {
         const mesh = this.createMesh(config);
         // add physic
-        new PhysicsAggregate(mesh, PhysicsShapeType.CYLINDER, { mass: 0, friction: 0, restitution: 0 }, config.scene);
+        const aggregate = new PhysicsAggregate(mesh, PhysicsShapeType.CYLINDER, { mass: 0, friction: 0, restitution: 0 }, config.scene);
+        aggregate.body.setCollisionCallbackEnabled(true);
 
         const victory = new VictoryCondition(mesh, config.scene);
         config.parent.addObserver(victory);
