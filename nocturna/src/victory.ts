@@ -3,7 +3,7 @@ import { SceneLoader } from '@babylonjs/core/Loading/sceneLoader';
 import "@babylonjs/loaders/glTF";
 import { Player } from './Player';
 import { ParentNode } from './ParentNode';
-import { GameObject, CharacterInput } from './types';
+import { GameObject, CharacterInput, getMeshSize } from './types';
 import { GameObjectConfig, GameObjectFactory, EditorObject, GameObjectVisitor } from './types';
 import { ParentNodeObserver } from './ParentNode';
 
@@ -44,11 +44,11 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
     //     return crystalMesh;
     // }
 
-    public displayWin(player: any, timer: number): void {
+    public displayWin(score: number, timer: number): void {
         // display win scrreen from html
         const winScreen = document.getElementById("win-screen") as HTMLElement;
         winScreen.classList.remove("hidden");
-        this.animateScore(player, timer);
+        this.animateScore(score, timer);
     }
 
     public animate() {
@@ -74,8 +74,7 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
         this.scene.beginAnimation(this.mesh, 0, 60, true);
     }
 
-    public animateScore(player: Player, time: number): void {
-        const targetScore = player.getScore();
+    public animateScore(targetScore: number, time: number): void {
         const duration = 2000;
         const interval = 20;
         const step = targetScore / (duration / interval);
@@ -162,7 +161,7 @@ export class VictoryConditionEditor extends VictoryCondition implements EditorOb
             type: VictoryCondition.Type,
             position: this.mesh.position,
             rotation: this.mesh.rotation,
-            size: this.mesh.scaling,
+            size: getMeshSize(this.mesh),
         };
         return data;
     }

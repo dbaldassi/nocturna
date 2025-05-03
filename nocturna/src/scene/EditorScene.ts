@@ -379,12 +379,12 @@ export class EditorScene extends BaseScene {
 
     public serializeScene(): void {
         const serializedObjects = this.editorObjects.map((obj) => obj.serialize());
-        const jsonScene = JSON.stringify(serializedObjects, null, 2); // Convertir en JSON formaté
-        jsonScene[Cube.Type] = JSON.stringify(this.cube.serialize());
-        jsonScene[ParentNode.Type] = JSON.stringify(this.parentNode.serialize());
+        const jsonScene = { objects : serializedObjects }; // Convertir en JSON formaté
+        jsonScene[Cube.Type] = this.cube.serialize();
+        jsonScene[ParentNode.Type] = this.parentNode.serialize();
     
         // Créer un Blob contenant le JSON
-        const blob = new Blob([jsonScene], { type: "application/json" });
+        const blob = new Blob([JSON.stringify(jsonScene)], { type: "application/json" });
     
         // Créer un lien de téléchargement
         const a = document.createElement("a");

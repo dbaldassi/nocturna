@@ -1,5 +1,5 @@
 import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, Mesh, Space, TransformNode, BoundingBox, Ray } from "@babylonjs/core";
-import { CharacterInput, EditorObject } from "./types";
+import { CharacterInput, EditorObject, getMeshSize } from "./types";
 import { GameObject, GameObjectConfig, GameObjectFactory } from "./types";
 
 export class Player implements GameObject {
@@ -149,7 +149,7 @@ export class PlayerEditor implements EditorObject {
             type: Player.Type,
             position: this.player.mesh.position,
             rotation: this.player.mesh.rotation,
-            size: this.player.mesh.scaling,
+            size: getMeshSize(this.player.mesh),
         };
         return data;
     }    

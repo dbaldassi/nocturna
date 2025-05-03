@@ -1,6 +1,6 @@
 import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, Texture, Mesh } from "@babylonjs/core";
 import { ParentNodeObserver } from "./ParentNode";
-import { CharacterInput, EditorObject, GameObject, GameObjectConfig, GameObjectFactory } from "./types";
+import { CharacterInput, EditorObject, GameObject, GameObjectConfig, GameObjectFactory, getMeshSize } from "./types";
 
 export class Platform implements GameObject {
 
@@ -111,7 +111,7 @@ export class PlatformEditorDelegate implements EditorObject {
         const data = {
             position: this.platform.getMesh().position,
             rotation: this.platform.getMesh().rotation,
-            size: this.platform.getMesh().scaling,
+            size: getMeshSize(this.platform.getMesh()),
         };
         return data;
     }
@@ -233,11 +233,10 @@ export class ParentedPlatformFactory implements GameObjectFactory {
 }
 
 export class FixedPlatformFactory implements GameObjectFactory {
-    public create(config: GameObjectConfig): Platform {
+    public createMesh(config: GameObjectConfig): Mesh {
         const mesh = MeshBuilder.CreateBox("platform", { width: config.size.x, height: config.size.y, depth: config.size.z }, config.scene);
         mesh.position = config.position;
         mesh.rotation = config.rotation;
-
         // Apply material
         const material = new StandardMaterial("platformMaterial", config.scene);
         // material.diffuseTexture = new Texture("images/wood.jpg", scene); // Replace with the path to your wood texture
@@ -245,13 +244,20 @@ export class FixedPlatformFactory implements GameObjectFactory {
         material.diffuseColor = Color3.Blue(); // Set the color to red
         mesh.material = material;
 
+        return mesh;
+    }
+
+    public create(config: GameObjectConfig): Platform {
+        const mesh = this.createMesh(config);
+        // Apply physics
+        new PhysicsAggregate(mesh, PhysicsShapeType.BOX, { mass: 0, friction: 10, restitution: 0 }, config.scene);
         const platform = new FixedPlatform(mesh, config.scene);
 
         return platform;
     }s
 
     public createForEditor(config: GameObjectConfig): EditorObject {
-        const actual_platform = this.create(config);
+        const actual_platform = new FixedPlatform(this.createMesh(config), config.scene);
         const platform = new ParentedPlatformEditor(config.scene, actual_platform);        
         return platform;
     }

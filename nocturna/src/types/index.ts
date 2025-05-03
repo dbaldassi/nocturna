@@ -55,3 +55,9 @@ export interface EditorObject {
     getMesh(): Mesh;
     serialize(): any;
 }
+
+export function getMeshSize(mesh: Mesh): Vector3 {
+    const boundingInfo = mesh.getBoundingInfo();
+    const boundingBox = boundingInfo.boundingBox;
+    return boundingBox.maximum.subtract(boundingBox.minimum);
+}
