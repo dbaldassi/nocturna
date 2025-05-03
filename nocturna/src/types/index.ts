@@ -1,4 +1,6 @@
-import { Mesh } from "@babylonjs/core";
+import { Mesh, Vector3, Scene } from "@babylonjs/core";
+import { VictoryCondition } from "../victory";
+import { ParentNode } from "../ParentNode";
 
 export interface CharacterInput {
     left: boolean;
@@ -6,6 +8,35 @@ export interface CharacterInput {
     up: boolean;
     down: boolean;
     jump: boolean;
+}
+
+export interface GameObject {
+    getMesh(): Mesh;
+    accept(visitor: GameObjectVisitor): void;
+    update(dt: number, input: CharacterInput): void;
+}
+
+export interface GameObjectVisitor {
+    // visitCoin(coin: Coin): void;
+    // visitEnemy(enemy: Enemy): void;
+    visitVictory(portal: VictoryCondition): void;
+}
+
+export interface GameObjectConfig {
+    size: Vector3;
+    position: Vector3;
+    rotation: Vector3;
+    parent?: ParentNode;
+    scene: Scene;
+}
+
+export interface GameObjectFactory {
+    /**
+     * Méthode abstraite pour créer une plateforme.
+     * Les sous-classes concrètes implémenteront cette méthode.
+     */
+    create(GameObjectConfig): GameObject;
+    createForEditor(GameObjectConfig): EditorObject;
 }
 
 export interface AbstractState {

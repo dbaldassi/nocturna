@@ -8,6 +8,7 @@ export interface ParentNodeObserver {
 }
 
 export class ParentNode {
+    public static readonly Type: string = "parent_node";
     private node: TransformNode;
     private isAnimating: boolean = false;
     private scene: Scene;
@@ -82,7 +83,10 @@ export class ParentNode {
         inputHandler.addAction("rotate_right_z", () => this.animateRotation("z", -Math.PI / 2));
     }
 
-    public update() {
-        // Update transform node position
+    public serialize(): any {
+        const data = {
+            position: this.node.position,
+        };
+        return data;
     }
 }

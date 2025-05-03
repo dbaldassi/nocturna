@@ -3,9 +3,11 @@ import { Engine, Vector3, FreeCamera, Mesh } from "@babylonjs/core";
 
 import { BaseScene } from "./BaseScene";import { ParentNode } from "../ParentNode";
 import { Cube } from "../Cube";
-import { CharacterInput, AbstractState, EditorObject } from "../types";
+import { CharacterInput, AbstractState, EditorObject, GameObjectFactory } from "../types";
 import { InputHandler } from "../InputHandler";
-import { Platform, FixedPlatformFactory, ParentedPlatformFactory, PlatformFactory } from "../Platform";
+import { Platform, FixedPlatformFactory, ParentedPlatformFactory } from "../Platform";
+import { Player, PlayerFactory } from "../Player";
+import { VictoryConditionFactory } from "../victory";
 
 const CUBE_SIZE = 3000;
 
@@ -71,7 +73,7 @@ abstract class EditorState implements AbstractState {
         this.inputHandler.removeAction("action_minus");
     }
 
-    update(dt: number, input: CharacterInput): AbstractState | null {
+    update(_: number, __: CharacterInput): AbstractState | null {
         if (this.goNextState || this.goPreviousState) 
             return EditorState.stateList[EditorState.currentStateIndex].clone();
 
@@ -82,12 +84,16 @@ abstract class EditorState implements AbstractState {
 class AdditionState extends EditorState {
     private fixedPlatformFactory: FixedPlatformFactory;
     private parentedPlatformFactory: ParentedPlatformFactory;
+    private playerFactory: PlayerFactory;
+    private victoryConditionFactory: VictoryConditionFactory;
 
     constructor(scene: EditorScene, inputHandler: InputHandler) {
         super(scene, inputHandler);
 
         this.fixedPlatformFactory = new FixedPlatformFactory();
         this.parentedPlatformFactory = new ParentedPlatformFactory(); 
+        this.playerFactory = new PlayerFactory();
+        this.victoryConditionFactory = new VictoryConditionFactory();
     }
 
     public name(): string {
@@ -101,10 +107,12 @@ class AdditionState extends EditorState {
     enter() {
         super.enter();
 
-        this.scene.showMenu(`${this.name()} -> 1: Fixed Platform 2: Parented Platform ${this.getModeChangeText()}`);
+        this.scene.showMenu(`${this.name()} -> 1: Fixed Platform 2: Parented Platform 3: Player 4: Victory ${this.getModeChangeText()}`);
 
         this.inputHandler.addAction("action_1", () => this.scene.addPlatform(this.fixedPlatformFactory));
         this.inputHandler.addAction("action_2", () => this.scene.addPlatform(this.parentedPlatformFactory));
+        this.inputHandler.addAction("action_3", () => this.scene.addPlatform(this.playerFactory));
+        this.inputHandler.addAction("action_4", () => this.scene.addPlatform(this.victoryConditionFactory));
     }
 
     exit() {
@@ -227,8 +235,7 @@ export class EditorScene extends BaseScene {
 
         scene.inputHandler.addAction("save", () => scene.serializeScene());
 
-        scene.cube = new Cube(scene.scene, CUBE_SIZE);
-        scene.cube.mesh.position = Vector3.Zero();
+        scene.cube = Cube.create(scene.scene);
 
         scene.camera = new FreeCamera("camera", new Vector3(0, 0, -500), scene.scene);
         scene.camera.attachControl(true); // Permet de contrôler la caméra avec la souris et le clavier
@@ -306,7 +313,7 @@ export class EditorScene extends BaseScene {
         }
     }
 
-    public addPlatform(factory: PlatformFactory) {
+    public addPlatform(factory: GameObjectFactory) {
         // Effectuer un raycast à partir de la position de la souris
         const pickResult = this.scene.pick(this.scene.pointerX, this.scene.pointerY);
     
@@ -362,8 +369,6 @@ export class EditorScene extends BaseScene {
     public update(dt: number) {
         const input = this.inputHandler.getInput();
 
-        this.parentNode.update();
-
         const nextState = this.currentState.update(dt, input);
         if (nextState) {
             this.currentState.exit();
@@ -375,6 +380,8 @@ export class EditorScene extends BaseScene {
     public serializeScene(): void {
         const serializedObjects = this.editorObjects.map((obj) => obj.serialize());
         const jsonScene = JSON.stringify(serializedObjects, null, 2); // Convertir en JSON formaté
+        jsonScene[Cube.Type] = JSON.stringify(this.cube.serialize());
+        jsonScene[ParentNode.Type] = JSON.stringify(this.parentNode.serialize());
     
         // Créer un Blob contenant le JSON
         const blob = new Blob([jsonScene], { type: "application/json" });

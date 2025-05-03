@@ -1,9 +1,10 @@
 import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, Mesh, Space, TransformNode, BoundingBox, Ray } from "@babylonjs/core";
-import { Cube } from "./Cube";
-import { Platform } from "./Platform";
-import { CharacterInput } from "./types";
+import { CharacterInput, EditorObject } from "./types";
+import { GameObject, GameObjectConfig, GameObjectFactory } from "./types";
 
-export class Player {
+export class Player implements GameObject {
+    public static readonly Type: string = "player";
+
     private scene: Scene;
     public mesh: Mesh;
     private diameter: number = 10;
@@ -14,26 +15,11 @@ export class Player {
     private score: number = 0;
     private jumpForce: Vector3 = undefined;
 
-    constructor(scene: Scene, position: Vector3) {
+    constructor(mesh: Mesh, scene: Scene) {
         this.scene = scene;
-        this.position = position;
         this.jumpForce = new Vector3(0, 100000, 0); // Force de saut initiale
 
-        this.mesh = this.createPlayer();
-    }
-
-    public createPlayer(): Mesh {
-        const sphere = MeshBuilder.CreateSphere("player", { diameter: this.diameter }, this.scene);
-        sphere.position = this.position;
-        sphere.position.y += this.diameter * 10;
-
-        const material = new StandardMaterial("playerMaterial", this.scene);
-        material.diffuseColor = Color3.Red();
-        sphere.material = material;
-        new PhysicsAggregate(sphere, PhysicsShapeType.SPHERE, { mass: 70, friction: 10, restitution: 0 }, this.scene);
-        // sphere.physicsBody.setMassProperties({ mass: 1 });
-
-        return sphere;
+        this.mesh = mesh;
     }
 
     public move(dt: number, input: CharacterInput) {
@@ -109,5 +95,89 @@ export class Player {
     public removePhysics() {
         this.mesh.physicsBody.dispose();
         this.mesh.physicsBody = null;
+    }
+
+    public accept(visitor: any): void {}
+
+}
+
+export class PlayerEditor implements EditorObject {
+    private player: Player;
+    private selected: boolean = false;
+    private originalEmissiveColor: Color3 | null = null; // Store the original color
+
+    constructor(player: Player) {
+        this.player = player;
+    }
+
+    public updatePosition(dt: number, input: CharacterInput): void {
+        this.player.mesh.position.x += (input.right ? 1 : input.left ? -1 : 0) * dt;
+        this.player.mesh.position.z += (input.up ? 1 : input.down ? -1 : 0) * dt;
+    }
+
+    public updateRotation(dt: number, input: CharacterInput): void {}
+
+    public updateScale(dt: number, input: CharacterInput): void {}
+
+    public setSelected(selected: boolean): void {
+        const material = this.player.mesh.material as StandardMaterial;
+        if (!material) return;
+
+        if (selected) {
+            // Save the original color
+            this.originalEmissiveColor = material.emissiveColor.clone();
+            this.player.mesh.scaling.x *= 1.1;
+            this.player.mesh.scaling.y *= 1.1;
+            material.emissiveColor = Color3.Yellow(); // Yellow
+        } else {
+            this.player.mesh.scaling.x /= 1.1;
+            this.player.mesh.scaling.y /= 1.1;
+            material.emissiveColor = this.originalEmissiveColor; // White
+        }
+    }
+
+    public isSelected(): boolean {
+        return this.selected;
+    }
+
+    public getMesh(): Mesh {
+        return this.player.mesh;
+    }
+
+    public serialize(): any {
+        const data = {
+            type: Player.Type,
+            position: this.player.mesh.position,
+            rotation: this.player.mesh.rotation,
+            size: this.player.mesh.scaling,
+        };
+        return data;
+    }    
+}
+
+export class PlayerFactory implements GameObjectFactory {
+    private createMesh(config: GameObjectConfig): Mesh {
+        const sphere = MeshBuilder.CreateSphere("player", { diameter: config.size.x }, config.scene);
+        sphere.position = config.position;
+
+        const material = new StandardMaterial("playerMaterial", config.scene);
+        material.diffuseColor = Color3.Red();
+        sphere.material = material;
+
+        return sphere;
+    }
+
+    public create(config: GameObjectConfig): Player {
+        const mesh = this.createMesh(config);
+        new PhysicsAggregate(mesh, PhysicsShapeType.SPHERE, { mass: 70, friction: 10, restitution: 0 }, config.scene);
+        const player = new Player(mesh, config.scene);
+
+        return player;
+    }
+
+    public createForEditor(config: GameObjectConfig): PlayerEditor {
+        const mesh = this.createMesh(config);
+        const player = new Player(mesh, config.scene);
+        return new PlayerEditor(player);
     }
 }

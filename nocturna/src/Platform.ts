@@ -1,8 +1,8 @@
 import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, Texture, Mesh } from "@babylonjs/core";
-import { ParentNodeObserver, ParentNode } from "./ParentNode";
-import { CharacterInput, EditorObject } from "./types";
+import { ParentNodeObserver } from "./ParentNode";
+import { CharacterInput, EditorObject, GameObject, GameObjectConfig, GameObjectFactory } from "./types";
 
-export class Platform  {
+export class Platform implements GameObject {
 
     protected mesh: Mesh;
     protected scene: Scene;
@@ -16,7 +16,10 @@ export class Platform  {
         return this.mesh;
     }
 
-    public update(dt: number) {
+    public accept(_: any): void {
+    }
+
+    public update(_: number, __: CharacterInput): void {
     }
 }
 
@@ -192,26 +195,9 @@ export class ParentedPlatformEditor extends ParentedPlatform implements EditorOb
     }
 }
 
-export interface PlatformConfig {
-    size: Vector3;
-    position: Vector3;
-    rotation: Vector3;
-    parent?: ParentNode;
-    scene: Scene;
-}
+export class ParentedPlatformFactory implements GameObjectFactory {
 
-export interface PlatformFactory {
-    /**
-     * Méthode abstraite pour créer une plateforme.
-     * Les sous-classes concrètes implémenteront cette méthode.
-     */
-    create(PlatformConfig): Platform;
-    createForEditor(PlatformConfig): EditorObject;
-}
-
-export class ParentedPlatformFactory implements PlatformFactory {
-
-    private createWithoutPhysics(config: PlatformConfig): ParentedPlatform {
+    private createWithoutPhysics(config: GameObjectConfig): ParentedPlatform {
         const mesh = MeshBuilder.CreateBox("platform", { width: config.size.x, height: config.size.y, depth: config.size.z }, config.scene);
         mesh.position = config.position;
         mesh.rotation = config.rotation;
@@ -228,7 +214,7 @@ export class ParentedPlatformFactory implements PlatformFactory {
         return platform;
     }
 
-    public create(config: PlatformConfig): Platform {
+    public create(config: GameObjectConfig): Platform {
         const platform = this.createWithoutPhysics(config);
 
         // Add physics to the platform
@@ -238,7 +224,7 @@ export class ParentedPlatformFactory implements PlatformFactory {
         return platform;
     }
 
-    public createForEditor(config: PlatformConfig): EditorObject {
+    public createForEditor(config: GameObjectConfig): EditorObject {
         const actual_platform = this.createWithoutPhysics(config);
 
         const platform = new FixedPlatformEditor(config.scene, actual_platform);        
@@ -246,8 +232,8 @@ export class ParentedPlatformFactory implements PlatformFactory {
     }
 }
 
-export class FixedPlatformFactory implements PlatformFactory {
-    public create(config: PlatformConfig): Platform {
+export class FixedPlatformFactory implements GameObjectFactory {
+    public create(config: GameObjectConfig): Platform {
         const mesh = MeshBuilder.CreateBox("platform", { width: config.size.x, height: config.size.y, depth: config.size.z }, config.scene);
         mesh.position = config.position;
         mesh.rotation = config.rotation;
@@ -262,9 +248,9 @@ export class FixedPlatformFactory implements PlatformFactory {
         const platform = new FixedPlatform(mesh, config.scene);
 
         return platform;
-    }
+    }s
 
-    public createForEditor(config: PlatformConfig): EditorObject {
+    public createForEditor(config: GameObjectConfig): EditorObject {
         const actual_platform = this.create(config);
         const platform = new ParentedPlatformEditor(config.scene, actual_platform);        
         return platform;

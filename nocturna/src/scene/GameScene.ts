@@ -28,8 +28,7 @@ export class GameScene extends BaseScene {
         await scene.addPhysic();
 
         // Create the main cube
-        scene.cube = new Cube(scene.scene, CUBE_SIZE);
-        scene.cube.mesh.position = new Vector3(0, CUBE_SIZE / 2, 0);
+        scene.cube = Cube.create(scene.scene);
         // Create the parent node
         scene.parent = new ParentNode(Vector3.Zero(), scene.scene);
         scene.parent.setupKeyActions(scene.inputHandler);

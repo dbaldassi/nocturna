@@ -3,20 +3,32 @@ import { SceneLoader } from '@babylonjs/core/Loading/sceneLoader';
 import "@babylonjs/loaders/glTF";
 import { Player } from './Player';
 import { ParentNode } from './ParentNode';
+import { GameObject, CharacterInput } from './types';
+import { GameObjectConfig, GameObjectFactory, EditorObject, GameObjectVisitor } from './types';
+import { ParentNodeObserver } from './ParentNode';
 
-export class VictoryCondition {
+export class VictoryCondition implements GameObject, ParentNodeObserver {
+    public static readonly Type: string = "victory_condition";
     private scene: Scene;
     public mesh: Mesh;
-    private diameter: number = 10;
-    private position: Vector3;
-    private parent: ParentNode;
 
-    constructor(scene: Scene, position: Vector3, parent: ParentNode) {
+    constructor(mesh: Mesh, scene: Scene) {
         this.scene = scene;
-        this.position = position;
-        this.parent = parent;
-        this.mesh = this.createCoin();
-        this.animateCoin();
+        this.mesh = mesh;
+
+        this.animate();
+    }
+
+    public onRotationChange() : void {
+        this.recreatePhysicsBody();
+    }
+    public recreatePhysicsBody() : void {
+        // Supprimez l'ancien corps physique
+        if (this.mesh.physicsBody) {
+            this.mesh.physicsBody.dispose();
+        }
+        // Créez un nouveau corps physique avec les nouvelles transformations
+        new PhysicsAggregate(this.mesh, PhysicsShapeType.CYLINDER, { mass: 0, friction: 10, restitution: 0 }, this.scene);
     }
 
     // public createCoin(): Mesh {
@@ -32,40 +44,21 @@ export class VictoryCondition {
     //     return crystalMesh;
     // }
 
-    public createCoin(): Mesh {
-        // create a coin shape
-        const coin = MeshBuilder.CreateCylinder("coin", { diameter: this.diameter, height: 0.5 }, this.scene);
-        coin.position = this.position;
-        coin.position.y += this.diameter * 4;
-        // this.parent.addChild(coin);
-        coin.material = new StandardMaterial("coinMaterial", this.scene);
-        (coin.material as StandardMaterial).diffuseColor = new Color3(1, 1, 0); // Gold color
-
-        coin.rotation.x = Math.PI / 2;
-        return coin;
+    public displayWin(player: any, timer: number): void {
+        // display win scrreen from html
+        const winScreen = document.getElementById("win-screen") as HTMLElement;
+        winScreen.classList.remove("hidden");
+        this.animateScore(player, timer);
     }
 
-    public checkWin(player: any, timer: number): void {
-        // Check if the player is close to the coin
-        const distance = Vector3.Distance(player.mesh.position, this.mesh.position);
-        if (distance < this.diameter) {
-            player.setWin(true);
-            player.removePhysics();
-            // display win scrreen from html
-            const winScreen = document.getElementById("win-screen") as HTMLElement;
-            winScreen.classList.remove("hidden");
-            this.animateScore(player, timer);
-        }
-    }
-
-    public animateCoin() {
+    public animate() {
         const animationY = new Animation("coinAnimationY", "position.y", 30, Animation.ANIMATIONTYPE_FLOAT, Animation.ANIMATIONLOOPMODE_CYCLE);
         animationY.dataType = Animation.ANIMATIONTYPE_FLOAT;
         animationY.loopMode = Animation.ANIMATIONLOOPMODE_CYCLE;
         const keysY = [
-            { frame: 0, value: this.position.y },
-            { frame: 30, value: this.position.y + 2 },
-            { frame: 60, value: this.position.y },
+            { frame: 0, value: this.mesh.position.y },
+            { frame: 30, value: this.mesh.position.y + 2 },
+            { frame: 60, value: this.mesh.position.y },
         ];
         animationY.setKeys(keysY);
         this.mesh.animations.push(animationY);
@@ -117,4 +110,94 @@ export class VictoryCondition {
         });
     }
 
+    public getMesh(): Mesh {
+        return this.mesh;
+    }
+
+    public update(dt: number, input: CharacterInput): void {
+
+    }
+
+    public accept(visitor: GameObjectVisitor): void {
+        visitor.visitVictory(this);
+    }
+}
+
+export class VictoryConditionEditor extends VictoryCondition implements EditorObject {
+    private originalEmissiveColor: Color3;
+
+    public constructor(mesh: Mesh, scene: Scene) {
+        super(mesh, scene);
+    }
+    public updatePosition(dt: number, input: CharacterInput): void {
+        this.mesh.position.x += (input.right ? 1 : input.left ? -1 : 0) * dt;
+        this.mesh.position.z += (input.up ? 1 : input.down ? -1 : 0) * dt;
+    }
+    public updateRotation(dt: number, input: CharacterInput): void {
+    }
+    public updateScale(dt: number, input: CharacterInput): void {
+    }
+    public setSelected(selected: boolean): void {
+        const material = this.mesh.material as StandardMaterial;
+        if (!material) return;
+
+        if (selected) {
+            // save the original color
+            this.originalEmissiveColor = material.emissiveColor.clone();
+            this.mesh.scaling.x *= 1.1;
+            this.mesh.scaling.y *= 1.1;
+            material.emissiveColor = Color3.Yellow(); // Jaune
+        } else {
+            this.mesh.scaling.x /= 1.1;
+            this.mesh.scaling.y /= 1.1;
+            material.emissiveColor = this.originalEmissiveColor; // Blanc
+        }
+    }
+    public isSelected(): boolean {
+        return this.mesh.scaling.x > 1;
+    }
+
+    public serialize(): any {
+        const data = {
+            type: VictoryCondition.Type,
+            position: this.mesh.position,
+            rotation: this.mesh.rotation,
+            size: this.mesh.scaling,
+        };
+        return data;
+    }
+}
+
+export class VictoryConditionFactory implements GameObjectFactory {
+    private createMesh(config: GameObjectConfig): Mesh {
+        const mesh = MeshBuilder.CreateCylinder("coin", { diameter: config.size.x, height: config.size.y }, config.scene);
+        mesh.position = config.position;
+        mesh.rotation.x = Math.PI / 2;
+
+        // this.parent.addChild(coin);
+        const material = new StandardMaterial("coinMaterial", config.scene);
+        material.diffuseColor = Color3.Green(); // Gold color
+        mesh.material = material;
+
+        return mesh;
+    }
+
+    public create(config: GameObjectConfig): VictoryCondition {
+        const mesh = this.createMesh(config);
+        // add physic
+        new PhysicsAggregate(mesh, PhysicsShapeType.CYLINDER, { mass: 0, friction: 10, restitution: 0 }, config.scene);
+
+        const victory = new VictoryCondition(mesh, config.scene);
+        config.parent.addObserver(victory);
+        config.parent.addChild(mesh);
+    
+        return victory;
+    }
+
+    public createForEditor(config: GameObjectConfig): VictoryConditionEditor {
+        const mesh = this.createMesh(config);
+        config.parent.addChild(mesh);
+
+        return new VictoryConditionEditor(mesh, config.scene);
+    }
 }
