@@ -35,15 +35,22 @@ class PlayerAbstractFactory implements GameObjectFactory {
     }
 }
 
+export interface AbstractFactory {
+    create(factory: GameObjectFactory, config: GameObjectConfig): GameObject|EditorObject;
+}
+
 export class LevelLoader {
 
     private observer: LevelLoaderObserver;
     private scene: Scene;
     private factories : Map<string, GameObjectFactory>;
+    private abstractFactory: AbstractFactory;
 
-    constructor(scene: Scene, observer: LevelLoaderObserver) {
+    constructor(scene: Scene, observer: LevelLoaderObserver, abstractFactory: AbstractFactory) {
         this.observer = observer;
         this.scene = scene;
+        this.abstractFactory = abstractFactory;
+
         this.factories = new Map<string, GameObjectFactory>();
         this.factories.set(ParentedPlatform.Type, new ParentedPlatformFactory());
         this.factories.set(FixedPlatform.Type, new FixedPlatformFactory());
@@ -95,7 +102,7 @@ export class LevelLoader {
                     parent: parent
                 };
                 console.log("config", config);
-                const gameObject = factory.create(config);
+                const gameObject = this.abstractFactory.create(factory, config);
                 this.observer.onObjectCreated(gameObject);
             } else {
                 console.warn(`No factory found for type: ${object.type}`);

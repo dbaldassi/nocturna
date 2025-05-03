@@ -8,8 +8,8 @@ import { Cube } from "../Cube";
 import { ParentNode } from "../ParentNode";
 import { InputHandler } from "../InputHandler";
 import { Player } from "../GameObjects/Player";
-import { GameObject, GameObjectVisitor } from "../types";
-import { LevelLoaderObserver, LevelLoader } from "../LevelLoader";
+import { GameObject, GameObjectFactory, GameObjectVisitor, GameObjectConfig } from "../types";
+import { LevelLoaderObserver, LevelLoader, AbstractFactory } from "../LevelLoader";
 import { VictoryCondition } from "../GameObjects/victory";
 import { LooseCondition } from "../loose";
 
@@ -34,7 +34,8 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
 
     constructor(engine: Engine, inputHandler: InputHandler) {
         super(engine, inputHandler);
-        this.levelLoader = new LevelLoader(this.scene, this);
+        this.levelLoader = new LevelLoader(this.scene, this, 
+            { create: (factory: GameObjectFactory, config: GameObjectConfig) => factory.create(config) } );
     }
 
     static async createScene(engine: Engine, inputHandler: InputHandler): Promise<BaseScene> {

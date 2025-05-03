@@ -8,6 +8,7 @@ import { InputHandler } from "../InputHandler";
 import { Platform, FixedPlatformFactory, ParentedPlatformFactory } from "../GameObjects/Platform";
 import { Player, PlayerFactory } from "../GameObjects/Player";
 import { VictoryConditionFactory } from "../GameObjects/victory";
+import { LevelLoader, LevelLoaderObserver } from "../LevelLoader";
 
 const CUBE_SIZE = 3000;
 
@@ -207,7 +208,21 @@ class ResizeState extends EditorState {
     }
 }
 
-export class EditorScene extends BaseScene {
+class InitState implements AbstractState {
+    
+    public name(): string {
+        return "Init state";
+    }
+
+    enter() {}
+    exit() {}
+
+    update(_: number, __: CharacterInput): AbstractState | null {
+        return null;
+    }
+}
+
+export class EditorScene extends BaseScene implements LevelLoaderObserver {
 
     private parentNode: ParentNode;
     private cube: Cube;
@@ -216,9 +231,12 @@ export class EditorScene extends BaseScene {
     private guiTexture: AdvancedDynamicTexture | null = null;
     private currentSelection: EditorObject | null = null;
     private editorObjects: EditorObject[] = [];
+    private levelLoader: LevelLoader;
 
     constructor(engine: Engine, inputHandler: InputHandler) {
         super(engine, inputHandler);
+
+        this.levelLoader = new LevelLoader(this.scene, this, { create: (factory: GameObjectFactory, config: any) => factory.createForEditor(config) });
 
         EditorState.clearState();
         EditorState.addState(new AdditionState(this, this.inputHandler),
@@ -230,12 +248,12 @@ export class EditorScene extends BaseScene {
 
     static async createScene(engine: Engine, inputHandler: InputHandler): Promise<BaseScene> {
         const scene = new EditorScene(engine, inputHandler);
-        scene.parentNode = new ParentNode(Vector3.Zero(), scene.scene);
-        scene.parentNode.setupKeyActions(scene.inputHandler);
+        // scene.parentNode = new ParentNode(Vector3.Zero(), scene.scene);
+        // scene.parentNode.setupKeyActions(scene.inputHandler);
 
         scene.inputHandler.addAction("save", () => scene.serializeScene());
 
-        scene.cube = Cube.create(scene.scene);
+        // scene.cube = Cube.create(scene.scene);
 
         scene.camera = new FreeCamera("camera", new Vector3(0, 0, -500), scene.scene);
         scene.camera.attachControl(true); // Permet de contrôler la caméra avec la souris et le clavier
@@ -243,12 +261,27 @@ export class EditorScene extends BaseScene {
 
         scene.scene.activeCamera = scene.camera;
 
-        scene.currentState = new AdditionState(scene, scene.inputHandler);
-        scene.currentState.enter();
-
         scene.setupClickListener();
 
+        scene.currentState = new InitState();
+        scene.levelLoader.loadLevel("scene");
+
         return scene;
+    }
+
+    public onCube(cube: Cube): void {
+        this.cube = cube;
+    }
+    public onPlayer(_: Player): void {}
+    public onParent(parent: ParentNode): void {
+        this.parentNode = parent;
+    }
+    public onLevelLoaded(): void {
+        this.currentState = new AdditionState(this, this.inputHandler);
+        this.currentState.enter();
+    }
+    public onObjectCreated(object: EditorObject): void {
+        this.editorObjects.push(object);
     }
 
     private getEditorObjectByMesh(mesh: Mesh): EditorObject | null {
