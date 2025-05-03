@@ -112,10 +112,13 @@ export class PlayerEditor implements EditorObject {
 
     public updatePosition(dt: number, input: CharacterInput): void {
         this.player.mesh.position.x += (input.right ? 1 : input.left ? -1 : 0) * dt;
-        this.player.mesh.position.z += (input.up ? 1 : input.down ? -1 : 0) * dt;
+        this.player.mesh.position.y += (input.up ? 1 : input.down ? -1 : 0) * dt;
     }
 
-    public updateRotation(dt: number, input: CharacterInput): void {}
+    public updateRotation(dt: number, input: CharacterInput): void {
+        this.player.mesh.rotation.x += (input.right ? 1 : input.left ? -1 : 0) * dt / 1000;
+        this.player.mesh.rotation.y += (input.up ? 1 : input.down ? -1 : 0) * dt / 1000;
+    }
 
     public updateScale(dt: number, input: CharacterInput): void {}
 
@@ -159,6 +162,7 @@ export class PlayerFactory implements GameObjectFactory {
     private createMesh(config: GameObjectConfig): Mesh {
         const sphere = MeshBuilder.CreateSphere("player", { diameter: config.size.x }, config.scene);
         sphere.position = config.position;
+        sphere.rotation = config.rotation;
 
         const material = new StandardMaterial("playerMaterial", config.scene);
         material.diffuseColor = Color3.Red();

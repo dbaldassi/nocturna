@@ -32,6 +32,7 @@ export class InputHandler {
         action_minus: ["-"],
         action_plus: ["+"],
         save: ["Enter"],
+        delete: ["Backspace"],
     };
     private keybindManager: KeybindsManager;
     // Store actions, which call a function when the key is pressed
@@ -85,7 +86,6 @@ export class InputHandler {
 
     public run_actions() {
         for (const key in this.actions) {
-            console.log("key", key);
             if (this.isKeyPressed(key)) {
                 this.actions[key]();
             }

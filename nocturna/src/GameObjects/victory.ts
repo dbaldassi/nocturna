@@ -13,7 +13,9 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
     constructor(mesh: Mesh, scene: Scene) {
         this.scene = scene;
         this.mesh = mesh;
+    }
 
+    public startAnimation(): void {
         this.animate();
     }
 
@@ -26,7 +28,7 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
             this.mesh.physicsBody.dispose();
         }
         // Créez un nouveau corps physique avec les nouvelles transformations
-        new PhysicsAggregate(this.mesh, PhysicsShapeType.CYLINDER, { mass: 0, friction: 10, restitution: 0 }, this.scene);
+        new PhysicsAggregate(this.mesh, PhysicsShapeType.CYLINDER, { mass: 0, friction: 0, restitution: 0 }, this.scene);
     }
 
     // public createCoin(): Mesh {
@@ -128,7 +130,11 @@ export class VictoryConditionEditor extends VictoryCondition implements EditorOb
     }
     public updatePosition(dt: number, input: CharacterInput): void {
         this.mesh.position.x += (input.right ? 1 : input.left ? -1 : 0) * dt;
-        this.mesh.position.z += (input.up ? 1 : input.down ? -1 : 0) * dt;
+        this.mesh.position.y += (input.up ? 1 : input.down ? -1 : 0) * dt;
+
+        console.log(input.down, input.up);
+
+        console.log(this.mesh.position);
     }
     public updateRotation(dt: number, input: CharacterInput): void {
     }
@@ -170,7 +176,7 @@ export class VictoryConditionFactory implements GameObjectFactory {
     private createMesh(config: GameObjectConfig): Mesh {
         const mesh = MeshBuilder.CreateCylinder("coin", { diameter: config.size.x, height: config.size.y }, config.scene);
         mesh.position = config.position;
-        mesh.rotation.x = Math.PI / 2;
+        mesh.rotation = config.rotation;
 
         // this.parent.addChild(coin);
         const material = new StandardMaterial("coinMaterial", config.scene);
@@ -183,11 +189,13 @@ export class VictoryConditionFactory implements GameObjectFactory {
     public create(config: GameObjectConfig): VictoryCondition {
         const mesh = this.createMesh(config);
         // add physic
-        new PhysicsAggregate(mesh, PhysicsShapeType.CYLINDER, { mass: 0, friction: 10, restitution: 0 }, config.scene);
+        new PhysicsAggregate(mesh, PhysicsShapeType.CYLINDER, { mass: 0, friction: 0, restitution: 0 }, config.scene);
 
         const victory = new VictoryCondition(mesh, config.scene);
         config.parent.addObserver(victory);
         config.parent.addChild(mesh);
+
+        victory.startAnimation();
     
         return victory;
     }

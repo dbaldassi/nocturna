@@ -114,12 +114,16 @@ class AdditionState extends EditorState {
         this.inputHandler.addAction("action_2", () => this.scene.addPlatform(this.parentedPlatformFactory));
         this.inputHandler.addAction("action_3", () => this.scene.addPlatform(this.playerFactory));
         this.inputHandler.addAction("action_4", () => this.scene.addPlatform(this.victoryConditionFactory));
+        this.inputHandler.addAction("delete", () => this.scene.deleteSelection());
     }
 
     exit() {
         super.exit();
         this.inputHandler.removeAction("action_1");
         this.inputHandler.removeAction("action_2");
+        this.inputHandler.removeAction("action_3");
+        this.inputHandler.removeAction("action_4");
+        this.inputHandler.removeAction("delete");
         this.scene.hideMenu();
     }
 
@@ -396,6 +400,19 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
     public rotateSelection(dt: number, input: CharacterInput) {
         if (this.currentSelection) {
             this.currentSelection.updateRotation(dt, input);
+        }
+    }
+
+    public deleteSelection() {
+        console.log("Deleting selection");
+
+        if (this.currentSelection) {
+            const index = this.editorObjects.indexOf(this.currentSelection);
+            if (index > -1) {
+                this.editorObjects.splice(index, 1);
+                this.currentSelection.getMesh().dispose();
+                this.currentSelection = null;
+            }
         }
     }
 
