@@ -7,6 +7,7 @@ import { CharacterInput } from "./types";
 import { VictoryCondition } from "./GameObjects/victory";
 import { ParentNode } from "./ParentNode";
 import { LooseCondition } from "./loose";
+import { Rocket } from "./ennemies";
 
 export class Level {
     private scene: Scene;
@@ -76,6 +77,8 @@ export class Level {
         this.victoryCondition = new VictoryCondition(this.scene, new Vector3(-100, 25, 0), this.parent); // Set the position of the coin to the first platform
         // this.victoryCondition.setCoinPosition(new Vector3(0, 100, 0)); // Set the coin position to the first platform
         this.loseCondition = new LooseCondition(this.player, this.scene); // Initialize the lose condition
+
+        Rocket.createEnnemi(this.scene, new Vector3(0, 3000, 0)); // Create a rocket enemy
         // start a timer from 0 to infinity
         this.startTimer();
     }
