@@ -4,7 +4,7 @@ import { ParentedPlatformFactory, Platform } from "./Platform";
 import { Player } from "./Player";
 
 import { CharacterInput } from "./types";
-import { VictoryCondition } from "./victory";
+import { VictoryCondition } from "./GameObjects/victory";
 import { ParentNode } from "./ParentNode";
 import { LooseCondition } from "./loose";
 import { Rocket } from "./ennemies";
@@ -63,8 +63,8 @@ export class Level {
 
         // Create cameras
         this.cameras = [
-            new FollowCamera("rightCamera", new Vector3(this.cube.mesh.position.x + this.cubeSize / 3, this.cube.mesh.position.y, this.cube.mesh.position.z), this.scene, this.player.mesh),
-            new FollowCamera("topRightCamera", new Vector3(this.cube.mesh.position.x + this.cubeSize / 3, this.cube.mesh.position.y + this.cubeSize / 6, this.cube.mesh.position.z), this.scene, this.player.mesh),
+            new FollowCamera("rightCamera", this.player.mesh.position, this.scene, this.player.mesh),
+            new FollowCamera("topRightCamera", this.player.mesh.position, this.scene, this.player.mesh),
         ];
 
         this.cameras[0].radius = 500;
@@ -92,12 +92,8 @@ export class Level {
         if (this.player.hasWon() || this.player.hasLost()) {
             return; // Prevent further updates if the game is won
         }
-        /*if (input.pov) {
-            this.changePov();
-        }*/
 
         this.player.update(dt, input);
-        this.parent.update();
 
         this.victoryCondition.checkWin(this.player, this.timer); // Check if the player has won
         this.loseCondition.checkLoose(this.timer); // Check if the player has lost

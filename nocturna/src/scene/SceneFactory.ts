@@ -4,7 +4,6 @@ import { BaseScene } from "./BaseScene";
 import { GameScene } from "./GameScene";
 import { EditorScene } from "./EditorScene";
 import { InputHandler } from "../InputHandler";
-// import { AnotherScene } from "./AnotherScene"; // Exemple d'autres scènes
 
 export class SceneFactory {
     private static scenes: { [key: string]: (engine: Engine, inputHandler: InputHandler) => Promise<BaseScene> } = {

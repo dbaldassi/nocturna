@@ -1,24 +1,32 @@
-import { Scene, TransformNode, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, Animation } from "@babylonjs/core";
+import { Scene, Vector3, MeshBuilder, Color3 } from "@babylonjs/core";
 import { Face } from "./Face";
-import { Platform } from "./Platform";
 import { CharacterInput } from "./types";
 
 export class Cube {
     private scene: Scene;
     private size: number;
     private faces: Face[] = [];
-    public mesh: any;
+    private mesh: any;
+
+    public static readonly Type: string = "Cube";
+    public static readonly DefaultSize: number = 3000;
 
     constructor(scene: Scene, size: number) {
         this.scene = scene;
         this.size = size;
-        // Initialize the cube mesh
-        const mesh = MeshBuilder.CreateBox("cubeMesh", { size: this.size }, this.scene);
-        this.mesh = mesh; 
-        this.mesh.isVisible = false;
+    }
 
-        // Initialize the cube faces
-        this.createPlanes();
+    public static create(scene: Scene, position: Vector3 = Vector3.Zero(), size: number = Cube.DefaultSize): Cube {
+        const cube = new Cube(scene, size);
+
+        const mesh = MeshBuilder.CreateBox("cubeMesh", { size: size }, scene);
+        mesh.position = position;
+        mesh.isVisible = false;
+        cube.mesh = mesh; 
+
+        cube.createPlanes();
+
+        return cube;
     }
 
     private createPlanes() {
@@ -60,10 +68,6 @@ export class Cube {
         }
     }
 
-    public update(_: number, __: CharacterInput) {
-
-    }
-
     public getMesh(): any {
         return this.mesh;
     }
@@ -72,4 +76,11 @@ export class Cube {
         return this.faces;
     }
 
+    public serialize(): any {
+        const data = {
+            position: this.mesh.position,
+            size: this.size,
+        };
+        return data;
+    }
 }

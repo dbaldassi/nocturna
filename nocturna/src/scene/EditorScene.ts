@@ -1,102 +1,232 @@
 import { AdvancedDynamicTexture, TextBlock, Control } from "@babylonjs/gui";
-import { Engine, Vector3, FreeCamera, MeshBuilder } from "@babylonjs/core";
+import { Engine, Vector3, FreeCamera, Mesh } from "@babylonjs/core";
 
 import { BaseScene } from "./BaseScene";import { ParentNode } from "../ParentNode";
 import { Cube } from "../Cube";
-import { CharacterInput, AbstractState, EditorObject } from "../types";
+import { CharacterInput, AbstractState, EditorObject, GameObjectFactory } from "../types";
 import { InputHandler } from "../InputHandler";
-import { Platform, FixedPlatformFactory, ParentedPlatformFactory, PlatformFactory } from "../Platform";
+import { Platform, FixedPlatformFactory, ParentedPlatformFactory } from "../GameObjects/Platform";
+import { Player, PlayerFactory } from "../GameObjects/Player";
+import { VictoryConditionFactory } from "../GameObjects/victory";
+import { LevelLoader, LevelLoaderObserver } from "../LevelLoader";
 
 const CUBE_SIZE = 3000;
 
-class AdditionState implements AbstractState {
-    private scene: EditorScene;
-    private nextState: boolean = false;
-    private inputHandler: InputHandler;
-    private fixedPlatformFactory: FixedPlatformFactory;
-    private parentedPlatformFactory: ParentedPlatformFactory;
+
+abstract class EditorState implements AbstractState {
+    protected scene: EditorScene;
+    protected inputHandler: InputHandler;
+    private goNextState: boolean = false;
+    private goPreviousState: boolean = false;
+
+    private static stateList: EditorState[] = [];
+    private static currentStateIndex: number = 0;
 
     constructor(scene: EditorScene, inputHandler: InputHandler) {
         this.scene = scene;
         this.inputHandler = inputHandler;
+    }
+
+    public static addState(...states: EditorState[]) : void {
+        this.stateList.push(...states);
+    }
+
+    public static clearState() : void {
+        this.stateList = []
+        this.currentStateIndex = 0;
+    }
+
+    private static nextIndex() : number {
+        return (EditorState.currentStateIndex + 1) % EditorState.stateList.length;
+    }
+
+    private static previousIndex() : number {
+        return (EditorState.currentStateIndex - 1 + EditorState.stateList.length) % EditorState.stateList.length;
+    }
+
+    protected getModeChangeText() : string {
+        const next = EditorState.nextIndex();
+        const previous = EditorState.previousIndex();
+
+        return `+: ${EditorState.stateList[next].name()} -: ${EditorState.stateList[previous].name()}`;
+    }
+
+    public abstract name(): string;
+    public abstract clone(): EditorState;
+
+    enter() {
+        this.inputHandler.addAction("action_plus", () => {
+            if(!this.goPreviousState) {
+                EditorState.currentStateIndex = EditorState.nextIndex();
+                this.goNextState = true;
+            }
+        });
+        this.inputHandler.addAction("action_minus", () => {
+            if(!this.goNextState) {
+                EditorState.currentStateIndex = EditorState.previousIndex();
+                this.goPreviousState = true;
+            }
+        });
+    }
+
+    exit() {
+        this.inputHandler.removeAction("action_plus");
+        this.inputHandler.removeAction("action_minus");
+    }
+
+    update(_: number, __: CharacterInput): AbstractState | null {
+        if (this.goNextState || this.goPreviousState) 
+            return EditorState.stateList[EditorState.currentStateIndex].clone();
+
+        return null;
+    }
+}
+
+class AdditionState extends EditorState {
+    private fixedPlatformFactory: FixedPlatformFactory;
+    private parentedPlatformFactory: ParentedPlatformFactory;
+    private playerFactory: PlayerFactory;
+    private victoryConditionFactory: VictoryConditionFactory;
+
+    constructor(scene: EditorScene, inputHandler: InputHandler) {
+        super(scene, inputHandler);
 
         this.fixedPlatformFactory = new FixedPlatformFactory();
         this.parentedPlatformFactory = new ParentedPlatformFactory(); 
+        this.playerFactory = new PlayerFactory();
+        this.victoryConditionFactory = new VictoryConditionFactory();
+    }
+
+    public name(): string {
+        return "Addition Mode";
+    }
+
+    public clone(): EditorState{
+        return new AdditionState(this.scene, this.inputHandler);
     }
 
     enter() {
-        console.log("Entering Addition State");
-        this.scene.showMenu("Addition mode -> 1: Platform 0: Move Mode");
+        super.enter();
 
-        this.inputHandler.addAction("action_1", () => {
-            // add platform
-            this.scene.addPlatform(this.fixedPlatformFactory);
-        });
-        this.inputHandler.addAction("action_2", () => {
-            // add platform
-            this.scene.addPlatform(this.parentedPlatformFactory);
-        });
-        this.inputHandler.addAction("action_0", () => {
-            this.nextState = true;
-        });
+        this.scene.showMenu(`${this.name()} -> 1: Fixed Platform 2: Parented Platform 3: Player 4: Victory ${this.getModeChangeText()}`);
+
+        this.inputHandler.addAction("action_1", () => this.scene.addPlatform(this.fixedPlatformFactory));
+        this.inputHandler.addAction("action_2", () => this.scene.addPlatform(this.parentedPlatformFactory));
+        this.inputHandler.addAction("action_3", () => this.scene.addPlatform(this.playerFactory));
+        this.inputHandler.addAction("action_4", () => this.scene.addPlatform(this.victoryConditionFactory));
+        this.inputHandler.addAction("delete", () => this.scene.deleteSelection());
     }
 
     exit() {
+        super.exit();
         this.inputHandler.removeAction("action_1");
-        this.inputHandler.removeAction("action_0");
-
-        console.log("Exiting Addition State");
+        this.inputHandler.removeAction("action_2");
+        this.inputHandler.removeAction("action_3");
+        this.inputHandler.removeAction("action_4");
+        this.inputHandler.removeAction("delete");
         this.scene.hideMenu();
     }
 
     update(dt: number, input: CharacterInput): AbstractState | null {
-        // Logic for addition state
-
-        if(this.nextState) {
-            return new MoveState(this.scene, this.inputHandler);
-        }
-
         this.scene.moveCamera(dt, input);
-        return null;
+        return super.update(dt, input);
     }
 }
 
-class MoveState implements AbstractState {
-    private scene: EditorScene;
-    private nextState: boolean = false;
-    private inputHandler: InputHandler;
-
+class MoveState extends EditorState {
     constructor(scene: EditorScene, inputHandler: InputHandler) {
-        this.inputHandler = inputHandler;
-        this.scene = scene;
+        super(scene, inputHandler);
+    }
+
+    public clone(): EditorState {
+        return new MoveState(this.scene, this.inputHandler);
+    }
+
+    public name(): string {
+        return "Move mode";
     }
 
     enter() {
-        console.log("Entering Move State");
-        this.scene.showMenu("Move mode -> WASD: Move Selection 0: Resize Mode");
-        this.inputHandler.addAction("action_0", () => {
-            this.nextState = true;
-        });
+        super.enter();
+        this.scene.showMenu(`${this.name()} -> WASD: Move Selection ${this.getModeChangeText()}`);
     }
     exit() {
-        this.inputHandler.removeAction("action_0");
-        console.log("Exiting Move State");
+        super.exit();
         this.scene.hideMenu();
     }
 
     update(dt: number, input: CharacterInput): AbstractState | null {
-        // Logic for move state
-        if(this.nextState) {
-            return new AdditionState(this.scene, this.inputHandler);
-        }
-       
         this.scene.moveSelection(dt,input);
+        return super.update(dt, input);
+    }
+}
 
+class RotationState extends EditorState {
+    constructor(scene: EditorScene, inputHandler: InputHandler) {
+        super(scene, inputHandler);
+    }
+    enter() {
+        super.enter();
+        this.scene.showMenu(`${this.name()} -> WASD: Move Selection ${this.getModeChangeText()}`);
+    }
+    exit() {
+        super.exit();
+        this.scene.hideMenu();
+    }
+    update(dt: number, input: CharacterInput): AbstractState | null {
+        this.scene.rotateSelection(dt,input);
+        return super.update(dt, input);
+    }
+    public clone(): EditorState {
+        return new RotationState(this.scene, this.inputHandler);
+    }
+
+    public name(): string {
+        return "Rotation mode";
+    }
+
+}
+
+class ResizeState extends EditorState {
+    constructor(scene: EditorScene, inputHandler: InputHandler) {
+        super(scene, inputHandler);
+    }
+    enter() {
+        super.enter();
+        this.scene.showMenu(`${this.name()} -> WASD: Move Selection ${this.getModeChangeText()}`);
+    }
+    exit() {
+        super.exit();
+        this.scene.hideMenu();
+    }
+    update(dt: number, input: CharacterInput): AbstractState | null {
+        this.scene.resizeSelection(dt,input);
+        return super.update(dt, input);
+    }
+    public clone(): EditorState {
+        return new ResizeState(this.scene, this.inputHandler);
+    }
+
+    public name(): string {
+        return "Resize mode";
+    }
+}
+
+class InitState implements AbstractState {
+    
+    public name(): string {
+        return "Init state";
+    }
+
+    enter() {}
+    exit() {}
+
+    update(_: number, __: CharacterInput): AbstractState | null {
         return null;
     }
 }
 
-export class EditorScene extends BaseScene {
+export class EditorScene extends BaseScene implements LevelLoaderObserver {
 
     private parentNode: ParentNode;
     private cube: Cube;
@@ -104,33 +234,96 @@ export class EditorScene extends BaseScene {
     private currentState: AbstractState;
     private guiTexture: AdvancedDynamicTexture | null = null;
     private currentSelection: EditorObject | null = null;
+    private editorObjects: EditorObject[] = [];
+    private levelLoader: LevelLoader;
 
     constructor(engine: Engine, inputHandler: InputHandler) {
         super(engine, inputHandler);
+
+        this.levelLoader = new LevelLoader(this.scene, this, { create: (factory: GameObjectFactory, config: any) => factory.createForEditor(config) });
+
+        EditorState.clearState();
+        EditorState.addState(new AdditionState(this, this.inputHandler),
+            new MoveState(this, this.inputHandler),
+            new RotationState(this, this.inputHandler),
+            new ResizeState(this, this.inputHandler)
+        );
     }
 
     static async createScene(engine: Engine, inputHandler: InputHandler): Promise<BaseScene> {
         const scene = new EditorScene(engine, inputHandler);
-        scene.parentNode = new ParentNode(Vector3.Zero(), scene.scene);
-        scene.parentNode.setupKeyActions(scene.inputHandler);
-        scene.cube = new Cube(scene.scene, CUBE_SIZE);
-        scene.cube.mesh.position = new Vector3(0, CUBE_SIZE / 2, 0);
+        // scene.parentNode = new ParentNode(Vector3.Zero(), scene.scene);
+        // scene.parentNode.setupKeyActions(scene.inputHandler);
 
-        // const ground = MeshBuilder.CreateGround("ground", { width: 1000, height: 1000 }, scene.scene);
-        // ground.isPickable = true; // Permet au raycast de détecter ce plan
-        // ground.visibility = 0; // Rendre le plan invisible
+        scene.inputHandler.addAction("save", () => scene.serializeScene());
+
+        // scene.cube = Cube.create(scene.scene);
 
         scene.camera = new FreeCamera("camera", new Vector3(0, 0, -500), scene.scene);
-        // scene.camera.setTarget(Vector3.Zero()); // La caméra regarde vers l'origine
         scene.camera.attachControl(true); // Permet de contrôler la caméra avec la souris et le clavier
         scene.camera.speed = 2; // Vitesse de la caméra
 
         scene.scene.activeCamera = scene.camera;
 
-        scene.currentState = new AdditionState(scene, scene.inputHandler);
-        scene.currentState.enter();
+        scene.setupClickListener();
+
+        scene.currentState = new InitState();
+        scene.levelLoader.loadLevel("scene");
 
         return scene;
+    }
+
+    public onCube(cube: Cube): void {
+        this.cube = cube;
+    }
+    public onPlayer(_: Player): void {}
+    public onParent(parent: ParentNode): void {
+        this.parentNode = parent;
+    }
+    public onLevelLoaded(): void {
+        this.currentState = new AdditionState(this, this.inputHandler);
+        this.currentState.enter();
+    }
+    public onObjectCreated(object: EditorObject): void {
+        this.editorObjects.push(object);
+    }
+
+    private getEditorObjectByMesh(mesh: Mesh): EditorObject | null {
+        // Parcourir tous les objets EditorObject pour trouver celui qui correspond au mesh
+        return this.editorObjects.find((obj) => obj.getMesh() === mesh) || null;
+    }
+
+    private selectEditorObject(object: EditorObject) {
+        // Désélectionner l'objet actuel
+        if (this.currentSelection) {
+            this.currentSelection.setSelected(false);
+        }
+    
+        // Sélectionner le nouvel objet
+        this.currentSelection = object;
+        this.currentSelection.setSelected(true);
+    }
+
+    private deselectCurrentSelection() {
+        if (this.currentSelection) {
+            this.currentSelection.setSelected(false);
+            this.currentSelection = null;
+        }
+    }
+
+    public setupClickListener() {
+        this.scene.onPointerDown = (evt, pickResult) => {
+            if (pickResult?.hit && pickResult.pickedMesh) {
+                // Vérifier si le mesh appartient à un EditorObject
+                const selectedObject = this.getEditorObjectByMesh(pickResult.pickedMesh);
+                if (selectedObject) {
+                    this.selectEditorObject(selectedObject);
+                } else {
+                    // Si aucun objet n'est sélectionné, désélectionner l'objet actuel
+                    this.deselectCurrentSelection();
+                }
+            }
+        };
     }
 
     public showMenu(text: string) {
@@ -139,7 +332,7 @@ export class EditorScene extends BaseScene {
     
         // Créer un bloc de texte pour les instructions
         const instructions = new TextBlock();
-        instructions.text = text;
+        instructions.text = `${text} enter: Save Scene`;
         instructions.color = "black";
         instructions.fontSize = 24;
         instructions.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
@@ -157,14 +350,14 @@ export class EditorScene extends BaseScene {
         }
     }
 
-    public addPlatform(factory: PlatformFactory) {
+    public addPlatform(factory: GameObjectFactory) {
         // Effectuer un raycast à partir de la position de la souris
         const pickResult = this.scene.pick(this.scene.pointerX, this.scene.pointerY);
     
         if (pickResult?.hit && pickResult.pickedPoint) {
             // Récupérer la position où la souris pointe
             const position = pickResult.pickedPoint;
-            // position.z = 0;
+            position.z -= 50/2;
     
             // Configurer les paramètres de la plateforme
             const config = {
@@ -177,7 +370,8 @@ export class EditorScene extends BaseScene {
     
             // Créer la plateforme avec la factory
             const platform = factory.createForEditor(config);
-            this.currentSelection = platform;
+            this.editorObjects.push(platform);
+            this.selectEditorObject(platform);
     
             console.log("Platform created at:", position);
         } else {
@@ -197,10 +391,33 @@ export class EditorScene extends BaseScene {
         }
     }
 
+    public resizeSelection(dt: number, input: CharacterInput) {
+        if (this.currentSelection) {
+            this.currentSelection.updateScale(dt, input);
+        }
+    }
+
+    public rotateSelection(dt: number, input: CharacterInput) {
+        if (this.currentSelection) {
+            this.currentSelection.updateRotation(dt, input);
+        }
+    }
+
+    public deleteSelection() {
+        console.log("Deleting selection");
+
+        if (this.currentSelection) {
+            const index = this.editorObjects.indexOf(this.currentSelection);
+            if (index > -1) {
+                this.editorObjects.splice(index, 1);
+                this.currentSelection.getMesh().dispose();
+                this.currentSelection = null;
+            }
+        }
+    }
+
     public update(dt: number) {
         const input = this.inputHandler.getInput();
-
-        this.parentNode.update();
 
         const nextState = this.currentState.update(dt, input);
         if (nextState) {
@@ -208,5 +425,30 @@ export class EditorScene extends BaseScene {
             this.currentState = nextState;
             this.currentState.enter();
         }
+    }
+
+    public serializeScene(): void {
+        const serializedObjects = this.editorObjects.map((obj) => obj.serialize());
+        const jsonScene = { objects : serializedObjects }; // Convertir en JSON formaté
+        jsonScene[Cube.Type] = this.cube.serialize();
+        jsonScene[ParentNode.Type] = this.parentNode.serialize();
+    
+        // Créer un Blob contenant le JSON
+        const blob = new Blob([JSON.stringify(jsonScene)], { type: "application/json" });
+    
+        // Créer un lien de téléchargement
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "scene.json"; // Nom du fichier téléchargé
+        a.style.display = "none";
+    
+        // Ajouter le lien au document et déclencher le clic
+        document.body.appendChild(a);
+        a.click();
+    
+        // Nettoyer le DOM
+        document.body.removeChild(a);
+    
+        console.log("Scene serialized and download triggered.");
     }
 }
