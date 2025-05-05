@@ -6,6 +6,8 @@ import { Scene, Vector3 } from "@babylonjs/core";
 import { GameObjectFactory, GameObjectConfig, EditorObject, GameObject } from "./types";
 import { ParentedPlatform, ParentedPlatformFactory, FixedPlatform, FixedPlatformFactory } from "./GameObjects/Platform";
 import { VictoryCondition, VictoryConditionFactory } from "./GameObjects/victory";
+import { FixedRocket, FixedRocketFactory } from "./GameObjects/Rocket";
+import { SpikeTrapFactory, SpikeTrapObject } from "./GameObjects/SpikeTrap";
 
 export interface LevelLoaderObserver {
     onCube(cube : Cube): void;
@@ -56,6 +58,8 @@ export class LevelLoader {
         this.factories.set(FixedPlatform.Type, new FixedPlatformFactory());
         this.factories.set(VictoryCondition.Type, new VictoryConditionFactory());
         this.factories.set(Player.Type, new PlayerAbstractFactory(observer));
+        this.factories.set(FixedRocket.Type, new FixedRocketFactory());
+        this.factories.set(SpikeTrapObject.Type, new SpikeTrapFactory());
     }
 
     public loadLevel(level: string): void {

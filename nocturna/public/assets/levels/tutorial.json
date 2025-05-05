@@ -22,6 +22,27 @@
             }
         },
         {
+            "type": "fixed_rocket",
+            "position": {
+                "_isDirty": false,
+                "_x": -50,
+                "_y": 1000,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 5,
+                "_y": 10,
+                "_z": 5
+            }
+        },
+        {
             "type": "fixed_platform",
             "position": {
                 "_isDirty": false,
@@ -39,6 +60,27 @@
                 "_isDirty": true,
                 "_x": 50,
                 "_y": 5,
+                "_z": 50
+            }
+        },
+        {
+            "type": "spike_trap",
+            "position": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": -15,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 50,
+                "_y": 1,
                 "_z": 50
             }
         },

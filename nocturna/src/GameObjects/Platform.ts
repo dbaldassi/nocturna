@@ -1,6 +1,7 @@
 import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, Texture, Mesh } from "@babylonjs/core";
 import { ParentNodeObserver } from "../ParentNode";
 import { CharacterInput, EditorObject, GameObject, GameObjectConfig, GameObjectFactory, getMeshSize } from "../types";
+import { RocketObject } from "./Rocket";
 
 export class Platform implements GameObject {
 
