@@ -239,7 +239,7 @@ export class FixedPlatformFactory implements GameObjectFactory {
         mesh.rotation = config.rotation;
         // Apply material
         const material = new StandardMaterial("platformMaterial", config.scene);
-        // material.diffuseTexture = new Texture("images/wood.jpg", scene); // Replace with the path to your wood texture
+        // material.diffuseTexture = new Texture("images/wood.jpg", config.scene); // Replace with the path to your wood texture
         // material.backFaceCulling = false; // Ensure the texture is visible from all sides
         material.diffuseColor = Color3.Blue(); // Set the color to red
         mesh.material = material;

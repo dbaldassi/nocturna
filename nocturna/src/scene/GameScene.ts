@@ -151,11 +151,13 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     }
 
     public visitVictory(portal: VictoryCondition): void {
+        this.player.setWin();
         portal.displayWin(this.score, this.timer);
+        this.scene.getPhysicsEngine().dispose();
     }
 
     public update(dt: number) {
-        if (!this.started) {
+        if (!this.started || this.player.hasWon() || this.player.hasLost()) {
             return; // Prevent further updates if the game is not started
         }
 
