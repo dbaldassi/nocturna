@@ -22,6 +22,7 @@
             }
         },
         {
+<<<<<<< HEAD
             "type": "fixed_rocket",
             "position": {
                 "_isDirty": false,
@@ -43,6 +44,8 @@
             }
         },
         {
+=======
+>>>>>>> 4ec298a (add tutorial scene and fix issues)
             "type": "fixed_platform",
             "position": {
                 "_isDirty": false,
