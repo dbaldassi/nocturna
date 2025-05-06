@@ -255,7 +255,7 @@ export class FixedPlatformFactory implements GameObjectFactory {
         const platform = new FixedPlatform(mesh, config.scene);
 
         return platform;
-    }s
+    }
 
     public createForEditor(config: GameObjectConfig): EditorObject {
         const actual_platform = new FixedPlatform(this.createMesh(config), config.scene);

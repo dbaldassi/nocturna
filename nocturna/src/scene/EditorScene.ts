@@ -279,6 +279,7 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
     public onPlayer(_: Player): void {}
     public onParent(parent: ParentNode): void {
         this.parentNode = parent;
+        this.parentNode.setupKeyActions(this.inputHandler);
     }
     public onLevelLoaded(): void {
         this.currentState = new AdditionState(this, this.inputHandler);
