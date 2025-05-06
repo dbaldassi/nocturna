@@ -1,6 +1,6 @@
-import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, Texture, Mesh, SceneLoader } from "@babylonjs/core";
+import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, Texture, Mesh } from "@babylonjs/core";
 import { ParentNodeObserver } from "../ParentNode";
-import { CharacterInput, EditorObject, GameObject, GameObjectConfig, GameObjectFactory, getMeshSize } from "../types";
+import { CharacterInput, EditorObject, GameObject, GameObjectConfig, GameObjectFactory, getMeshBoxSize } from "../types";
 import { RocketObject } from "./Rocket";
 
 export class Platform implements GameObject {
@@ -41,14 +41,14 @@ export class ParentedPlatform extends Platform implements ParentNodeObserver {
         if (this.mesh.physicsBody) {
             this.mesh.physicsBody.dispose();
         }
-
+    
         // Créez un nouveau corps physique avec les nouvelles transformations
         new PhysicsAggregate(this.mesh, PhysicsShapeType.BOX, { mass: 0, friction: 10, restitution: 0 }, this.scene);
     }
 
 }
 
-export class FixedPlatform extends Platform {
+export class FixedPlatform extends Platform  {
     public static readonly Type: string = "fixed_platform";
 
     constructor(mesh: Mesh, scene: Scene) {
@@ -56,7 +56,7 @@ export class FixedPlatform extends Platform {
     }
 }
 
-export class PlatformEditorDelegate implements EditorObject {
+export class PlatformEditorDelegate implements EditorObject { 
     private platform: Platform;
     private selected: boolean = false;
     private readonly lateralspeed: number = 0.5;
@@ -112,14 +112,14 @@ export class PlatformEditorDelegate implements EditorObject {
         const data = {
             position: this.platform.getMesh().position,
             rotation: this.platform.getMesh().rotation,
-            size: getMeshSize(this.platform.getMesh()),
+            size: getMeshBoxSize(this.platform.getMesh()),
         };
         return data;
     }
 }
 
-export class FixedPlatformEditor extends FixedPlatform implements EditorObject {
-    private platform: FixedPlatform;
+export class FixedPlatformEditor extends FixedPlatform  implements EditorObject {
+    private platform:  FixedPlatform;
     private delegate: PlatformEditorDelegate;
 
     constructor(scene: Scene, platform: Platform) {
@@ -158,7 +158,7 @@ export class FixedPlatformEditor extends FixedPlatform implements EditorObject {
 }
 
 export class ParentedPlatformEditor extends ParentedPlatform implements EditorObject {
-    private platform: ParentedPlatform;
+    private platform:  ParentedPlatform;
     private delegate: PlatformEditorDelegate;
 
     constructor(scene: Scene, platform: Platform) {
@@ -228,7 +228,7 @@ export class ParentedPlatformFactory implements GameObjectFactory {
     public createForEditor(config: GameObjectConfig): EditorObject {
         const actual_platform = this.createWithoutPhysics(config);
 
-        const platform = new FixedPlatformEditor(config.scene, actual_platform);
+        const platform = new FixedPlatformEditor(config.scene, actual_platform);        
         return platform;
     }
 }
@@ -248,21 +248,6 @@ export class FixedPlatformFactory implements GameObjectFactory {
         return mesh;
     }
 
-    public createPlatform(config: GameObjectConfig): void {
-        // Load the mesh from the 3D model file
-        SceneLoader.ImportMesh(
-            null,
-            "models/",
-            "platform1.glb",
-            config.scene,
-            (meshes) => {
-                const mainMesh = meshes[0] as Mesh;
-                mainMesh.scaling = new Vector3(10, 10, 10); // Scale the mesh
-                mainMesh.position = new Vector3(50,50,50) // Set the position
-            },
-        );
-    }
-
     public create(config: GameObjectConfig): Platform {
         const mesh = this.createMesh(config);
         // Apply physics
@@ -274,7 +259,7 @@ export class FixedPlatformFactory implements GameObjectFactory {
 
     public createForEditor(config: GameObjectConfig): EditorObject {
         const actual_platform = new FixedPlatform(this.createMesh(config), config.scene);
-        const platform = new ParentedPlatformEditor(config.scene, actual_platform);
+        const platform = new ParentedPlatformEditor(config.scene, actual_platform);        
         return platform;
     }
 }

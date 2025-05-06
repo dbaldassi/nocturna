@@ -1,5 +1,5 @@
 import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, Mesh } from "@babylonjs/core";
-import { GameObject, GameObjectConfig, GameObjectFactory, EditorObject, getMeshSize, CharacterInput } from "../types";
+import { GameObject, GameObjectConfig, GameObjectFactory, EditorObject, getMeshBoxSize, CharacterInput } from "../types";
 
 export class SpikeTrapObject implements GameObject {
     public static readonly Type: string = "spike_trap";
@@ -85,7 +85,7 @@ export class SpikeTrapEditorDelegate implements EditorObject {
         const data = {
             position: this.spikeTrap.getMesh().position,
             rotation: this.spikeTrap.getMesh().rotation,
-            size: getMeshSize(this.spikeTrap.getMesh()),
+            size: getMeshBoxSize(this.spikeTrap.getMesh()),
         };
         return data;
     }

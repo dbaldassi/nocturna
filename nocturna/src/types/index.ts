@@ -1,4 +1,4 @@
-import { Mesh, Vector3, Scene } from "@babylonjs/core";
+import { Mesh, Vector3, Scene, AssetsManager } from "@babylonjs/core";
 import { VictoryCondition } from "../GameObjects/victory";
 import { ParentNode } from "../ParentNode";
 
@@ -28,6 +28,7 @@ export interface GameObjectConfig {
     rotation: Vector3;
     parent?: ParentNode;
     scene: Scene;
+    assetsManager: AssetsManager;
 }
 
 export interface GameObjectFactory {
@@ -56,8 +57,14 @@ export interface EditorObject {
     serialize(): any;
 }
 
-export function getMeshSize(mesh: Mesh): Vector3 {
+export function getMeshBoxSize(mesh: Mesh): Vector3 {
     const boundingInfo = mesh.getBoundingInfo();
     const boundingBox = boundingInfo.boundingBox;
     return boundingBox.maximum.subtract(boundingBox.minimum);
+}
+
+export function getMeshSphereSize(mesh: Mesh): number {
+    const boundingInfo = mesh.getBoundingInfo();
+    const boundingSphere = boundingInfo.boundingSphere;
+    return boundingSphere.radius;
 }

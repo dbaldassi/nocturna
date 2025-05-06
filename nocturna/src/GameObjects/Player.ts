@@ -1,5 +1,5 @@
-import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, AbstractMesh, SceneLoader, Mesh, Ray } from "@babylonjs/core";
-import { CharacterInput, EditorObject, getMeshSize, GameObject, GameObjectConfig, GameObjectFactory, AbstractState } from "../types";
+import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, AbstractMesh, SceneLoader, Mesh, Ray, AssetsManager, ImportMeshAsync, BoundingBox } from "@babylonjs/core";
+import { CharacterInput, EditorObject, getMeshSphereSize, GameObject, GameObjectConfig, GameObjectFactory, AbstractState } from "../types";
 
 // ========================= PLAYER =========================
 // This section contains the Player class, which represents the
@@ -38,8 +38,9 @@ export class Player implements GameObject {
 
     public isGrounded(): boolean {
         const ray = Vector3.Down(); // Downward ray
-        const diameter = getMeshSize(this.mesh).x;
-        const rayLength = diameter / 2; // Slightly below the player
+        const diameter = getMeshSphereSize(this.mesh) * this.mesh.scaling.x;
+        console.log("Diameter", diameter, getMeshSphereSize(this.mesh));
+        const rayLength = diameter; // Slightly below the player
         const rayOrigin = this.mesh.getAbsolutePosition().add(new Vector3(0, -diameter / 2, 0)); // Adjust ray origin to the bottom of the player
         const hit = this.scene.pickWithRay(new Ray(rayOrigin, ray, rayLength));
 
@@ -160,7 +161,7 @@ export class PlayerEditor implements EditorObject {
             type: Player.Type,
             position: this.player.mesh.position,
             rotation: this.player.mesh.rotation,
-            size: getMeshSize(this.player.mesh),
+            size: this.player.mesh.scaling,
         };
         return data;
     }
@@ -186,26 +187,33 @@ export class PlayerFactory implements GameObjectFactory {
         return sphere;
     }
 
-    public createCrystal(config: GameObjectConfig): void {
-        // Load the mesh from the 3D model file
-        SceneLoader.ImportMesh(
-            null,
-            "models/",
-            "sphere.glb",
-            config.scene,
-            (meshes) => {
-                const mainMesh = meshes[0] as Mesh;
-                mainMesh.scaling = new Vector3(10,10,10); // Scale the mesh
-                mainMesh.position = config.position // Set the position
-            },
-        );
-    }
-
     public create(config: GameObjectConfig): Player {
-        const mesh = this.createMesh(config);
-        // this.createCrystal(config);
-        new PhysicsAggregate(mesh, PhysicsShapeType.SPHERE, { mass: 70, friction: 10, restitution: 0 }, config.scene);
-        const player = new Player(mesh, config.scene);
+        // const mesh = this.createMesh(config);
+        // const player = new Player(mesh, config.scene);
+        const player = new Player(null, config.scene);
+
+        const task = config.assetsManager.addMeshTask("player", "", "models/", "sphere.glb");
+        task.onSuccess = (task) => {
+            const meshes = task.loadedMeshes;
+
+            task.loadedMeshes.forEach((mesh, index) => {
+                console.log(`Mesh ${index}:`);
+                console.log("Name:", mesh.name);
+                console.log("Type:", mesh.getClassName());
+                console.log("Bounding Info:", mesh.getBoundingInfo());
+            });
+
+            const mesh = meshes[0] as Mesh;
+            mesh.position = config.position;
+            mesh.rotation = config.rotation;
+            mesh.scaling = new Vector3(10,10,10);
+            mesh.setBoundingInfo(meshes[1].getBoundingInfo());
+            mesh.refreshBoundingInfo();
+            
+            new PhysicsAggregate(mesh, PhysicsShapeType.SPHERE, { mass: 70, friction: 10, restitution: 0 }, config.scene);
+
+            player.mesh = mesh;
+        };
 
         return player;
     }
@@ -232,6 +240,7 @@ class JumpingState implements AbstractState {
     }
 
     public enter(): void {
+        console.log("JumpingState enter");
         // Set jumping animation
     }
     public exit(): void {
@@ -265,6 +274,7 @@ class MovingState implements AbstractState {
     }
 
     public enter(): void {
+        console.log("MovingState enter");
         // Set moving animation
     }
     public exit(): void {
@@ -300,6 +310,7 @@ class IdleState implements AbstractState {
         this.player = player;
     }
     public enter(): void {
+        console.log("IdleState enter");
     }
     public exit(): void {
         // Stop idle animation

@@ -91,6 +91,12 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     }
     public onPlayer(player: Player): void {
         this.player = player;
+    }
+    public onParent(parent: ParentNode): void {
+        this.parent = parent;
+        this.parent.setupKeyActions(this.inputHandler);
+    }
+    public onLevelLoaded(): void {
         // Create cameras
         this.cameras = [
             new FollowCamera("rightCamera", this.player.mesh.position, this.scene, this.player.mesh),
@@ -105,12 +111,22 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         
         this.scene.activeCamera = this.cameras[this.activeCameraIndex];
         this.scene.activeCamera.attachControl(this.scene.getEngine().getRenderingCanvas(), true);
-    }
-    public onParent(parent: ParentNode): void {
-        this.parent = parent;
-        this.parent.setupKeyActions(this.inputHandler);
-    }
-    public onLevelLoaded(): void {
+
+        this.gameObjects.forEach((object) => {
+            const mesh = object.getMesh();
+
+            if (mesh.physicsBody) {
+                mesh.physicsBody.getCollisionObservable().add((collider) => {
+                    console.log(`Collision detected with ??`);
+                    if (collider.collidedAgainst === this.player.mesh.physicsBody) {
+                        console.log(`Collision detected with ${mesh.name}`);
+                        object.accept(this);
+                    }
+                });
+
+            }
+        });
+
         // start a timer from 0 to infinity
         this.startTimer();
         this.loseCondition = new LooseCondition(this.player, this.scene); // Initialize the lose condition
@@ -138,18 +154,6 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
 
     public onObjectCreated(object: GameObject): void {
         this.gameObjects.push(object);
-        const mesh = object.getMesh();
-
-        if (mesh.physicsBody) {
-            mesh.physicsBody.getCollisionObservable().add((collider) => {
-                console.log(`Collision detected with ??`);
-                if (collider.collidedAgainst === this.player.mesh.physicsBody) {
-                    console.log(`Collision detected with ${mesh.name}`);
-                    object.accept(this);
-                }
-            });
-
-        }
     }
 
     public visitVictory(portal: VictoryCondition): void {

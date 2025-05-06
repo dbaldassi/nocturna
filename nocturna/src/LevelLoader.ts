@@ -2,7 +2,7 @@
 import { Cube } from "./Cube";
 import { ParentNode } from "./ParentNode";
 import { Player, PlayerEditor, PlayerFactory } from "./GameObjects/Player";
-import { Scene, Vector3 } from "@babylonjs/core";
+import { AssetsManager, Scene, Vector3 } from "@babylonjs/core";
 import { GameObjectFactory, GameObjectConfig, EditorObject, GameObject } from "./types";
 import { ParentedPlatform, ParentedPlatformFactory, FixedPlatform, FixedPlatformFactory } from "./GameObjects/Platform";
 import { VictoryCondition, VictoryConditionFactory } from "./GameObjects/victory";
@@ -47,11 +47,13 @@ export class LevelLoader {
     private scene: Scene;
     private factories : Map<string, GameObjectFactory>;
     private abstractFactory: AbstractFactory;
+    private assetManager: AssetsManager;
 
     constructor(scene: Scene, observer: LevelLoaderObserver, abstractFactory: AbstractFactory) {
         this.observer = observer;
         this.scene = scene;
         this.abstractFactory = abstractFactory;
+        this.assetManager = new AssetsManager(scene);
 
         this.factories = new Map<string, GameObjectFactory>();
         this.factories.set(ParentedPlatform.Type, new ParentedPlatformFactory());
@@ -103,7 +105,8 @@ export class LevelLoader {
                     position: this.createVector3(object.position),
                     size: this.createVector3(object.size),
                     rotation: this.createVector3(object.rotation),
-                    parent: parent
+                    parent: parent,
+                    assetsManager: this.assetManager
                 };
                 console.log("config", config);
                 const gameObject = this.abstractFactory.create(factory, config);
@@ -113,8 +116,13 @@ export class LevelLoader {
             }
         });
 
-        // Notify that the level has been loaded
-        this.observer.onLevelLoaded();
+        this.assetManager.load();
+        this.assetManager.onFinish = () => {
+            // All assets are loaded, you can start the scene or do other things here
+            console.log("All assets loaded");
+            // Notify that the level has been loaded
+            this.observer.onLevelLoaded();
+        };
     }
 
 }
