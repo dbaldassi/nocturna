@@ -38,7 +38,7 @@ export class TutorialScene extends BaseScene implements LevelLoaderObserver, Gam
 
     public visitVictory(coin: VictoryCondition): void {
         console.log("Victory condition reached!");
-        // Add logic for handling victory condition
+        this.endTutorial();
     }
 
     public static async createScene(engine: Engine, inputHandler: InputHandler): Promise<TutorialScene> {

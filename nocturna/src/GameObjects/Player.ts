@@ -1,7 +1,8 @@
-import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, AbstractMesh, Mesh, Ray } from "@babylonjs/core";
+import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, AbstractMesh, Mesh, Ray, SceneLoader } from "@babylonjs/core";
 import { CharacterInput, EditorObject, getMeshSize } from "../types";
 import { GameObject, GameObjectConfig, GameObjectFactory } from "../types";
 import { FixedPlatform, ParentedPlatform } from "./Platform";
+import "@babylonjs/loaders";
 
 export class Player implements GameObject {
     public static readonly Type: string = "player";
@@ -105,7 +106,7 @@ export class Player implements GameObject {
         this.mesh.physicsBody = null;
     }
 
-    public accept(visitor: any): void {}
+    public accept(visitor: any): void { }
 
 }
 
@@ -128,7 +129,7 @@ export class PlayerEditor implements EditorObject {
         this.player.mesh.rotation.y += (input.up ? 1 : input.down ? -1 : 0) * dt / 1000;
     }
 
-    public updateScale(dt: number, input: CharacterInput): void {}
+    public updateScale(dt: number, input: CharacterInput): void { }
 
     public setSelected(selected: boolean): void {
         const material = this.player.mesh.material as StandardMaterial;
@@ -163,7 +164,7 @@ export class PlayerEditor implements EditorObject {
             size: getMeshSize(this.player.mesh),
         };
         return data;
-    }    
+    }
 }
 
 export class PlayerFactory implements GameObjectFactory {
@@ -179,8 +180,24 @@ export class PlayerFactory implements GameObjectFactory {
         return sphere;
     }
 
+    public createCrystal(config: GameObjectConfig): void {
+        // Load the mesh from the 3D model file
+        SceneLoader.ImportMesh(
+            null,
+            "models/",
+            "sphere.glb",
+            config.scene,
+            (meshes) => {
+                const mainMesh = meshes[0] as Mesh;
+                mainMesh.scaling = new Vector3(10,10,10); // Scale the mesh
+                mainMesh.position = config.position // Set the position
+            },
+        );
+    }
+
     public create(config: GameObjectConfig): Player {
         const mesh = this.createMesh(config);
+        // this.createCrystal(config);
         new PhysicsAggregate(mesh, PhysicsShapeType.SPHERE, { mass: 70, friction: 10, restitution: 0 }, config.scene);
         const player = new Player(mesh, config.scene);
 
