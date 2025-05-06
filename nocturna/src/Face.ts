@@ -32,7 +32,7 @@ export class Face {
 
         // Adjust the position to be relative to the parent cube
         const cloudMaterial = new StandardMaterial(this.cubeFace + "Material", this.scene);
-        cloudMaterial.diffuseTexture = new Texture("images/clouds.jpg", this.scene); // Replace with your cloud texture path
+        // cloudMaterial.diffuseTexture = new Texture("images/clouds.jpg", this.scene); // Replace with your cloud texture path
         cloudMaterial.backFaceCulling = false; // Ensure the texture is visible from all angles
         plane.material = cloudMaterial;
 

@@ -1,9 +1,9 @@
 import { Animation, Color3, int, Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, Scene, StandardMaterial, TransformNode, Vector3 } from '@babylonjs/core';
 import { SceneLoader } from '@babylonjs/core/Loading/sceneLoader';
-import "@babylonjs/loaders/glTF";
 import { GameObject, CharacterInput, getMeshSize } from '../types';
 import { GameObjectConfig, GameObjectFactory, EditorObject, GameObjectVisitor } from '../types';
 import { ParentNodeObserver } from '../ParentNode';
+import "@babylonjs/loaders";
 
 export class VictoryCondition implements GameObject, ParentNodeObserver {
     public static readonly Type: string = "victory_condition";
@@ -19,10 +19,10 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
         this.animate();
     }
 
-    public onRotationChange() : void {
+    public onRotationChange(): void {
         this.recreatePhysicsBody();
     }
-    public recreatePhysicsBody() : void {
+    public recreatePhysicsBody(): void {
         // Supprimez l'ancien corps physique
         if (this.mesh.physicsBody) {
             this.mesh.physicsBody.dispose();
@@ -31,18 +31,6 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
         new PhysicsAggregate(this.mesh, PhysicsShapeType.CYLINDER, { mass: 0, friction: 0, restitution: 0 }, this.scene);
     }
 
-    // public createCoin(): Mesh {
-    //     // Load the mesh from the 3D model file
-    //     let crystalMesh: Mesh;
-    //     SceneLoader.ImportMesh("", "/3Dmodel/", "crystal.glb", this.scene, (meshes) => {
-    //         crystalMesh = meshes[0] as Mesh;
-    //         crystalMesh.parent = this.parent;
-    //         crystalMesh.position = this.position;
-
-    //         crystalMesh.scaling = new Vector3(10,10,10); // Scale the mesh to the desired size
-    //     });
-    //     return crystalMesh;
-    // }
 
     public displayWin(score: number, timer: number): void {
         // display win scrreen from html
@@ -62,14 +50,6 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
         ];
         animationY.setKeys(keysY);
         this.mesh.animations.push(animationY);
-
-        const animationRotation = new Animation("coinRotation", "rotation.y", 30, Animation.ANIMATIONTYPE_FLOAT, Animation.ANIMATIONLOOPMODE_CYCLE);
-        const keysRotation = [
-            { frame: 0, value: 0 },
-            { frame: 60, value: 2 * Math.PI },
-        ];
-        animationRotation.setKeys(keysRotation);
-        this.mesh.animations.push(animationRotation);
 
         this.scene.beginAnimation(this.mesh, 0, 60, true);
     }
@@ -105,7 +85,7 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
             window.location.reload();
         });
         menuButton.addEventListener("click", () => {
-            window.location.reload(); 
+            window.location.reload();
         });
     }
 
@@ -186,8 +166,26 @@ export class VictoryConditionFactory implements GameObjectFactory {
         return mesh;
     }
 
+    public async createCrystal(config: GameObjectConfig): Promise<Mesh> {
+        return new Promise((resolve) => {
+            SceneLoader.ImportMesh(
+                null,
+                "models/",
+                "crystal.glb",
+                config.scene,
+                (meshes) => {
+                    const mainMesh = meshes[0] as Mesh;
+                    mainMesh.scaling = new Vector3(20, 20, 20);
+                    mainMesh.position = config.position;
+                    resolve(mainMesh); // Resolve with the main mesh
+                },
+            );
+        });
+    }
+
     public create(config: GameObjectConfig): VictoryCondition {
         const mesh = this.createMesh(config);
+        // this.createCrystal(config);
         // add physic
         const aggregate = new PhysicsAggregate(mesh, PhysicsShapeType.CYLINDER, { mass: 0, friction: 0, restitution: 0 }, config.scene);
         aggregate.body.setCollisionCallbackEnabled(true);
@@ -197,7 +195,7 @@ export class VictoryConditionFactory implements GameObjectFactory {
         config.parent.addChild(mesh);
 
         victory.startAnimation();
-    
+
         return victory;
     }
 

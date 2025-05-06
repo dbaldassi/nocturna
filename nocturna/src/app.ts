@@ -4,6 +4,7 @@ import { Engine } from "@babylonjs/core";
 import { BaseScene } from "./scene/BaseScene";
 import { SceneFactory } from "./scene/SceneFactory";
 import { InputHandler } from "./InputHandler";
+import { TutorialScene } from "./scene/TutorialScene";
 
 export class App {
     private engine: Engine;
@@ -70,7 +71,7 @@ export class App {
         // initialize babylon scene and engine
         this.engine = new Engine(this.canvas, true);
         this.scene = await SceneFactory.createScene(mode, this.engine, this.inputHandler);
-
+        // if scene is tutorial call initUI
         this.gameLoop();
     }
 
