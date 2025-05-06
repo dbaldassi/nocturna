@@ -31,6 +31,8 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     private activeCameraIndex: number = 0;
     private loseCondition: LooseCondition; // Replace with the actual type if available
     private started: boolean = false;
+    private won: boolean = false;
+    private lost: boolean = false;
 
     constructor(engine: Engine, inputHandler: InputHandler) {
         super(engine, inputHandler);
@@ -122,7 +124,7 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         timerElement.classList.remove("hidden");
         
         setInterval(() => {
-            if (!this.player || !this.player.hasWon() || !this.player.hasLost()) { 
+            if (this.won || this.lost) { 
                 this.timer += 1000; // Increment the timer by 1 second
                 if (timerElement) {
                     const minutes = Math.floor(this.timer / 1000 / 60);
@@ -151,13 +153,13 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     }
 
     public visitVictory(portal: VictoryCondition): void {
-        this.player.setWin();
+        this.won = true;
         portal.displayWin(this.score, this.timer);
         this.scene.getPhysicsEngine().dispose();
     }
 
     public update(dt: number) {
-        if (!this.started || this.player.hasWon() || this.player.hasLost()) {
+        if (!this.started || this.won || this.lost) {
             return; // Prevent further updates if the game is not started
         }
 
@@ -167,7 +169,11 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
             object.update(dt, input);
         });
         this.player.update(dt, input);
-        this.loseCondition.checkLoose(this.timer); // Check if the player has lost
+        if(this.loseCondition.checkLoose(this.timer)) {
+            this.lost = true;
+            this.scene.getPhysicsEngine().dispose();
+            this.loseCondition.triggerLose(this.score, this.timer);
+        }
     }
 
     public render(): void {

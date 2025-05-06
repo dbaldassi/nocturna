@@ -5,7 +5,7 @@ export class LooseCondition {
     private player: Player;
     private scene: Scene;
     private timeBelowThreshold: number = 0;
-    private loseThreshold: number = 2000; // 3 seconds in milliseconds
+    private loseThreshold: number = 3000; // 3 seconds in milliseconds
     private lastYPos: number; // Example threshold for y-axis
     private lastTimer: number = 0; // Last timer value when the player was below the threshold
 
@@ -22,7 +22,7 @@ export class LooseCondition {
         this.scene = scene;
     }
 
-    public checkLoose(timer: number): void {
+    public checkLoose(timer: number): boolean {
         if (this.lastYPos === undefined) {
             this.lastYPos = this.player.mesh.position.y; // Initialize lastYPos on first check
         }
@@ -37,24 +37,23 @@ export class LooseCondition {
                 this.lastTimer = timer; // Set lastTimer when the player is below the threshold
             }
             if (timer - this.lastTimer > this.loseThreshold) {
-                this.triggerLose(timer); // Trigger lose condition if below threshold for too long
+                return true;
             }
         }
+
+        return false;
     }
 
-    private triggerLose(timer: number): void {
-        this.player.setLose(true);
-        this.player.removePhysics();
+    public triggerLose(score: number, timer: number): void {
         const loseScreen = document.getElementById("game-over-screen") as HTMLElement;
         loseScreen.classList.remove("hidden");
-        this.animateScore(timer);
+        this.animateScore(score, timer);
     }
 
-    public animateScore(time: number): void {
-        const targetScore = this.player.getScore();
+    public animateScore(score: number, time: number): void {
         const duration = 2000;
         const interval = 20;
-        const step = targetScore / (duration / interval);
+        const step = score / (duration / interval);
         let current = 0;
 
         this.setRandomDeathMessage();
@@ -66,8 +65,8 @@ export class LooseCondition {
         finalTimerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
         const timer = setInterval(() => {
             current += step;
-            if (current >= targetScore) {
-                finalScoreElement.textContent = targetScore.toLocaleString();
+            if (current >= score) {
+                finalScoreElement.textContent = score.toLocaleString();
                 clearInterval(timer);
             } else {
                 finalScoreElement.textContent = Math.floor(current).toLocaleString();

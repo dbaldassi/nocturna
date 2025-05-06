@@ -1,31 +1,51 @@
-import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, AbstractMesh, Mesh, Ray, SceneLoader } from "@babylonjs/core";
-import { CharacterInput, EditorObject, getMeshSize } from "../types";
-import { GameObject, GameObjectConfig, GameObjectFactory } from "../types";
-import { FixedPlatform, ParentedPlatform } from "./Platform";
-import "@babylonjs/loaders";
+import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, AbstractMesh, SceneLoader, Mesh, Ray } from "@babylonjs/core";
+import { CharacterInput, EditorObject, getMeshSize, GameObject, GameObjectConfig, GameObjectFactory, AbstractState } from "../types";
+
+// ========================= PLAYER =========================
+// This section contains the Player class, which represents the
+// player character in the game. It includes methods for movement,
+// jumping, and handling game states. The Player class implements
+// the GameObject interface, allowing it to be used in the game
+// context. 
+// ==========================================================
 
 export class Player implements GameObject {
     public static readonly Type: string = "player";
 
-    private scene: Scene;
     public mesh: Mesh;
-    private diameter: number = 10;
-    private speed: number = 2000.0;
-    private haswin: boolean = false;
-    private hasLoose: boolean = false;
-    private score: number = 0;
+    private scene: Scene;
+    private speed: number = 5.0;
     private jumpForce: Vector3 = undefined;
+    private state: AbstractState = null;
 
     constructor(mesh: Mesh, scene: Scene) {
         this.scene = scene;
         this.jumpForce = new Vector3(0, 100000, 0); // Force de saut initiale
 
         this.mesh = mesh;
+        this.state = new IdleState(this);
     }
 
-    private isPlatform(mesh: AbstractMesh): boolean {
-        // console.log("isPlatform", mesh.name);
-        return mesh.name === "platform";
+    public jump() {
+        // console.log("Jumping", this.jumpForce);
+        const physicsBody = this.mesh.physicsBody;
+        if (!physicsBody) {
+            console.warn("Physics body not found for the player mesh.");
+            return;
+        }
+        physicsBody.applyImpulse(this.jumpForce, this.mesh.getAbsolutePosition());
+    }
+
+    public isGrounded(): boolean {
+        const ray = Vector3.Down(); // Downward ray
+        const diameter = getMeshSize(this.mesh).x;
+        const rayLength = diameter / 2; // Slightly below the player
+        const rayOrigin = this.mesh.getAbsolutePosition().add(new Vector3(0, -diameter / 2, 0)); // Adjust ray origin to the bottom of the player
+        const hit = this.scene.pickWithRay(new Ray(rayOrigin, ray, rayLength));
+
+        const isGrounded = hit && hit.pickedMesh && hit.pickedMesh.name === "platform";
+
+        return isGrounded;
     }
 
     public move(dt: number, input: CharacterInput) {
@@ -36,69 +56,37 @@ export class Player implements GameObject {
             return;
         }
 
-        // console.log(input);
-
         // Calculer les directions locales
-        const right = Vector3.Right().scale(input.right ? -5 : 0);
-        const left = Vector3.Left().scale(input.left ? -5 : 0);
+        const right = Vector3.Right().scale(input.right ? 1 : 0);
+        const left = Vector3.Left().scale(input.left ? 1: 0);
 
         // Combiner les mouvements horizontaux
         const horizontalMovement = right.add(left);
         // Appliquer la vitesse en fonction de l'entrée utilisateur
-        const velocity = horizontalMovement.scale(this.speed * dt / 1000);
-
+        const velocity = horizontalMovement.scale(this.speed * dt);
 
         // Récupérer la vitesse actuelle pour conserver l'effet de gravité
         const currentVelocity = physicsBody.getLinearVelocity();
         velocity.y = currentVelocity.y; // Conserver la composante verticale (gravité)
 
         physicsBody.setLinearVelocity(velocity);
-
-        const ray = Vector3.Down(); // Downward ray
-        const diameter = getMeshSize(this.mesh).x;
-        const rayLength = diameter / 2; // Slightly below the player
-        const rayOrigin = this.mesh.getAbsolutePosition().add(new Vector3(0, -diameter / 2, 0)); // Adjust ray origin to the bottom of the player
-        const hit = this.scene.pickWithRay(new Ray(rayOrigin, ray, rayLength));
-
-        const isGrounded = hit && hit.pickedMesh && this.isPlatform(hit.pickedMesh);
-
-        // console.log("isGrounded", isGrounded, hit);
-        if (input.jump && isGrounded) {
-            console.log("Jumping", this.jumpForce);
-            physicsBody.applyImpulse(this.jumpForce, this.mesh.getAbsolutePosition());
-        }
     }
 
     public update(dt: number, input: CharacterInput) {
-        this.move(dt, input);
+        const newState = this.state.update(dt, input);
+        if (newState) {
+            this.state.exit();
+            this.state = newState;
+            this.state.enter();
+        }
     }
 
-    public hasWon(): boolean {
-        return this.haswin;
-    }
-
-    public setWin() {
-        this.haswin = true;
-    }
-
-    public getScore(): number {
-        return this.score;
-    }
-
-    public setScore(score: number) {
-        this.score = score;
+    public getScene(): Scene {
+        return this.scene;
     }
 
     public getMesh(): Mesh {
         return this.mesh;
-    }
-
-    public setLose(lose: boolean) {
-        this.hasLoose = lose;
-    }
-
-    public hasLost(): boolean {
-        return this.hasLoose;
     }
 
     public removePhysics() {
@@ -106,9 +94,18 @@ export class Player implements GameObject {
         this.mesh.physicsBody = null;
     }
 
-    public accept(visitor: any): void { }
+    public accept(_: any): void {}
 
 }
+
+// ========================= EDITOR =========================
+// This section contains the PlayerEditor class, which is responsible
+// for managing the player's appearance and behavior in the editor.
+// It includes methods for updating the player's position, rotation,
+// and scale, as well as handling selection and serialization.
+// The PlayerEditor class implements the EditorObject interface,
+// allowing it to be used in the editor context.
+// ==========================================================
 
 export class PlayerEditor implements EditorObject {
     private player: Player;
@@ -129,9 +126,11 @@ export class PlayerEditor implements EditorObject {
         this.player.mesh.rotation.y += (input.up ? 1 : input.down ? -1 : 0) * dt / 1000;
     }
 
-    public updateScale(dt: number, input: CharacterInput): void { }
+    public updateScale(_: number, __: CharacterInput): void {}
 
     public setSelected(selected: boolean): void {
+        this.selected = selected;
+
         const material = this.player.mesh.material as StandardMaterial;
         if (!material) return;
 
@@ -166,6 +165,13 @@ export class PlayerEditor implements EditorObject {
         return data;
     }
 }
+
+// ========================= FACTORY =========================
+// This section contains the PlayerFactory class, which is responsible
+// for creating player objects in the game. It includes methods to
+// create the player mesh and apply physics properties. The factory
+// also provides a method to create player objects for the editor.
+// ==========================================================
 
 export class PlayerFactory implements GameObjectFactory {
     private createMesh(config: GameObjectConfig): Mesh {
@@ -208,5 +214,112 @@ export class PlayerFactory implements GameObjectFactory {
         const mesh = this.createMesh(config);
         const player = new Player(mesh, config.scene);
         return new PlayerEditor(player);
+    }
+}
+
+// ========================= STATES =========================
+// This section contains the implementation of the player's states,
+// including JumpingState, MovingState, and IdleState. Each state
+// manages specific behaviors and transitions based on player input
+// and interactions with the environment.
+// ==========================================================
+
+class JumpingState implements AbstractState {
+    public static readonly Type: string = "jumping";
+    private player: Player;
+    constructor(player: Player) {
+        this.player = player;
+    }
+
+    public enter(): void {
+        // Set jumping animation
+    }
+    public exit(): void {
+        // Stop jumping animation
+    }
+    public name(): string {
+        return JumpingState.Type;
+    }
+
+    public update(dt: number, input: CharacterInput): AbstractState | null {
+       
+        const isGrounded = this.player.isGrounded();
+
+        this.player.move(dt, input);
+        
+        if(isGrounded) {
+            if(input.left || input.right) return new MovingState(this.player);
+            else return new IdleState(this.player);
+        }
+
+        return null;
+    }
+}
+
+class MovingState implements AbstractState {
+    public static readonly Type: string = "moving";
+    private player: Player;
+    
+    constructor(player: Player) {
+        this.player = player;
+    }
+
+    public enter(): void {
+        // Set moving animation
+    }
+    public exit(): void {
+        // Stop moving animation
+    }
+    public name(): string {
+        return MovingState.Type;
+    }
+    public update(dt: number, input: CharacterInput): AbstractState | null {
+        // console.log("MovingState", dt, input);
+        if (input.jump) {
+            this.player.jump();
+            return new JumpingState(this.player);
+        }
+        else if(!input.left && !input.right) {
+            return new IdleState(this.player);
+        }
+
+        this.player.move(dt, input);
+
+        if(!this.player.isGrounded()) {
+            return new JumpingState(this.player);
+        }
+        
+        return null;
+    }
+}
+
+class IdleState implements AbstractState {
+    public static readonly Type: string = "idle";
+    private player: Player;
+    constructor(player: Player) {
+        this.player = player;
+    }
+    public enter(): void {
+    }
+    public exit(): void {
+        // Stop idle animation
+    }
+    public name(): string {
+        return IdleState.Type;
+    }
+    public update(dt: number, input: CharacterInput): AbstractState | null {
+        // must update the velocity to 0, becuase of moving state inertia
+        this.player.mesh.physicsBody.setLinearVelocity(Vector3.Zero());
+
+        // console.log("IdleState", dt, input);
+        if(input.jump) {
+            this.player.jump();
+            return new JumpingState(this.player);
+        }
+        else if (input.left || input.right) {
+            this.player.move(dt, input);
+            return new MovingState(this.player);
+        }
+        return null;
     }
 }
