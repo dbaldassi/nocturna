@@ -1,5 +1,6 @@
 import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, AbstractMesh, SceneLoader, Mesh, Ray, AssetsManager, ImportMeshAsync, BoundingBox } from "@babylonjs/core";
 import { CharacterInput, EditorObject, getMeshSphereSize, GameObject, GameObjectConfig, GameObjectFactory, AbstractState } from "../types";
+import { RayHelper } from "@babylonjs/core";
 
 // ========================= PLAYER =========================
 // This section contains the Player class, which represents the
@@ -38,16 +39,27 @@ export class Player implements GameObject {
     }
 
     public isGrounded(): boolean {
-        const ray = Vector3.Down(); // Downward ray
-        const diameter = getMeshSphereSize(this.mesh) * this.mesh.scaling.x;
-        // console.log("Diameter", diameter, getMeshSphereSize(this.mesh));
-        const rayLength = diameter; // Slightly below the player
-        const rayOrigin = this.mesh.getAbsolutePosition().add(new Vector3(0, -diameter / 2, 0)); // Adjust ray origin to the bottom of the player
-        const hit = this.scene.pickWithRay(new Ray(rayOrigin, ray, rayLength));
+        const boundingInfo = this.mesh.getBoundingInfo();
+        const rayLength = 5; // Add a small offset
+        // use player position + diameter / 2 
+        const boundingBox = boundingInfo.boundingBox;
+        const center = boundingBox.centerWorld;
+        const rayOrigin = new Vector3(center.x, center.y - 8, center.z); // Start from the bottom of the sphere
 
-        const isGrounded = hit && hit.pickedMesh && hit.pickedMesh.name === "platform";
+        const rayDirection = Vector3.Down(); // Downward ray
+        const ray = new Ray(rayOrigin, rayDirection, rayLength);
 
-        return isGrounded;
+        const isGrounded = this.scene.pickWithRay(ray);
+
+        // const rayHelper = new RayHelper(ray);
+        // rayHelper.show(this.scene);
+
+        // Check if the ray hit something
+        if (isGrounded?.hit && isGrounded.pickedMesh) {
+            return true; 
+        }
+
+        return false;
     }
 
     public move(dt: number, input: CharacterInput) {
@@ -60,7 +72,7 @@ export class Player implements GameObject {
 
         // Calculer les directions locales
         const right = Vector3.Right().scale(input.right ? 1 : 0);
-        const left = Vector3.Left().scale(input.left ? 1: 0);
+        const left = Vector3.Left().scale(input.left ? 1 : 0);
 
         // Combiner les mouvements horizontaux
         const horizontalMovement = right.add(left);
@@ -96,7 +108,7 @@ export class Player implements GameObject {
         this.mesh.physicsBody = null;
     }
 
-    public accept(_: any): void {}
+    public accept(_: any): void { }
 
     public getHp(): number {
         return this.hp;
@@ -141,7 +153,7 @@ export class PlayerEditor implements EditorObject {
         this.player.mesh.rotation.y += (input.up ? 1 : input.down ? -1 : 0) * dt / 1000;
     }
 
-    public updateScale(_: number, __: CharacterInput): void {}
+    public updateScale(_: number, __: CharacterInput): void { }
 
     public setSelected(selected: boolean): void {
         this.selected = selected;
@@ -219,12 +231,13 @@ export class PlayerFactory implements GameObjectFactory {
             });*/
 
             const mesh = meshes[0] as Mesh;
+            mesh.name = "player";
             mesh.position = config.position;
             mesh.rotation = config.rotation;
-            mesh.scaling = new Vector3(10,10,10);
+            mesh.scaling = new Vector3(10, 10, 10);
             mesh.setBoundingInfo(meshes[1].getBoundingInfo());
             mesh.refreshBoundingInfo();
-            
+
             new PhysicsAggregate(mesh, PhysicsShapeType.SPHERE, { mass: 70, friction: 10, restitution: 0 }, config.scene);
 
             player.mesh = mesh;
@@ -268,13 +281,13 @@ class JumpingState implements AbstractState {
     }
 
     public update(dt: number, input: CharacterInput): AbstractState | null {
-       
+
         const isGrounded = this.player.isGrounded();
 
         this.player.move(dt, input);
-        
-        if(isGrounded) {
-            if(input.left || input.right) return new MovingState(this.player);
+
+        if (isGrounded) {
+            if (input.left || input.right) return new MovingState(this.player);
             else return new IdleState(this.player);
         }
 
@@ -285,7 +298,7 @@ class JumpingState implements AbstractState {
 class MovingState implements AbstractState {
     public static readonly Type: string = "moving";
     private player: Player;
-    
+
     constructor(player: Player) {
         this.player = player;
     }
@@ -305,16 +318,16 @@ class MovingState implements AbstractState {
             this.player.jump();
             return new JumpingState(this.player);
         }
-        else if(!input.left && !input.right) {
+        else if (!input.left && !input.right) {
             return new IdleState(this.player);
         }
 
         this.player.move(dt, input);
 
-        if(!this.player.isGrounded()) {
+        if (!this.player.isGrounded()) {
             return new JumpingState(this.player);
         }
-        
+
         return null;
     }
 }
@@ -338,7 +351,7 @@ class IdleState implements AbstractState {
         this.player.mesh.physicsBody.setLinearVelocity(Vector3.Zero());
 
         // console.log("IdleState", dt, input);
-        if(input.jump) {
+        if (input.jump) {
             this.player.jump();
             return new JumpingState(this.player);
         }
