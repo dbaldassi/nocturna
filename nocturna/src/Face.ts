@@ -31,23 +31,14 @@ export class Face {
         plane.parent = this.parent;
 
         // Adjust the position to be relative to the parent cube
-        const cloudMaterial = new StandardMaterial(this.cubeFace + "Material", this.scene);
-        // cloudMaterial.diffuseTexture = new Texture("images/clouds.jpg", this.scene); // Replace with your cloud texture path
-        cloudMaterial.backFaceCulling = false; // Ensure the texture is visible from all angles
-        plane.material = cloudMaterial;
+        const material = new StandardMaterial(this.cubeFace + "Material", this.scene);
+        material.diffuseColor = new Color3(0.1, 0.1, 0.1); // Dark color, but not completely black
+        material.backFaceCulling = false; // Ensure the texture is visible from all angles
+        material.specularColor = new Color3(0, 0, 0);
+        plane.material = material;
 
-        // apply color
-        // const material = new StandardMaterial(this.cubeFace + "Material", this.scene);
-        // material.diffuseColor = this.color;
-        // material.backFaceCulling = false; // Ensure the texture is visible from all angles
-        // plane.material = material;
-
-
-        const pointLight = new HemisphericLight("hemisphericLight", new Vector3(this.position.x / 2, this.position.y / 2, this.position.z / 2   ), this.scene); // Place light at the center
-        pointLight.intensity = 0.4;
-
-        // Add physics to the plane
-        // new PhysicsAggregate(plane, PhysicsShapeType.BOX, { mass: 0, friction: 0.5, restitution: 0.3 }, this.scene);
+        const pointLight = new HemisphericLight("hemisphericLight", new Vector3(this.position.x / 2, this.position.y / 2, this.position.z / 2), this.scene); // Place light at the center
+        pointLight.intensity = 0.2; // Lower intensity for a dimmer effect
     }
 
     public getMesh() : Mesh {
