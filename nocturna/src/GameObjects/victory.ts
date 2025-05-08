@@ -1,6 +1,6 @@
 import { Animation, Color3, int, Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, Scene, StandardMaterial, TransformNode, Vector3 } from '@babylonjs/core';
 import { SceneLoader } from '@babylonjs/core/Loading/sceneLoader';
-import { GameObject, CharacterInput, getMeshBoxSize } from '../types';
+import { GameObject, CharacterInput, getMeshBoxSize, EndConditionObserver } from '../types';
 import { GameObjectConfig, GameObjectFactory, EditorObject, GameObjectVisitor } from '../types';
 import { ParentNodeObserver } from '../ParentNode';
 import "@babylonjs/loaders";
@@ -9,11 +9,26 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
     public static readonly Type: string = "victory_condition";
     private scene: Scene;
     public mesh: Mesh;
+    private observers: EndConditionObserver[] = []; // Liste des observateurs
+    private current: number = 0;
+    private targetScore: number;
+    private ended: boolean = false;
 
     constructor(mesh: Mesh, scene: Scene) {
         this.scene = scene;
         this.mesh = mesh;
     }
+
+    public addObserver(observer: EndConditionObserver): void {
+        if (!this.observers.includes(observer)) {
+            this.observers.push(observer);
+        }
+    }
+
+    public removeObserver(observer: EndConditionObserver): void {
+        this.observers = this.observers.filter((obs) => obs !== observer);
+    }
+
 
     public startAnimation(): void {
         this.animate();
@@ -39,6 +54,11 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
         this.animateScore(score, timer);
     }
 
+    public hide(): void {
+        const loseScreen = document.getElementById("win-screen") as HTMLElement;
+        loseScreen.classList.add("hidden"); // Ajouter la classe "hidden" pour masquer l'écran
+    }
+
     public animate() {
         const animationY = new Animation("coinAnimationY", "position.y", 30, Animation.ANIMATIONTYPE_FLOAT, Animation.ANIMATIONLOOPMODE_CYCLE);
         animationY.dataType = Animation.ANIMATIONTYPE_FLOAT;
@@ -55,26 +75,15 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
     }
 
     public animateScore(targetScore: number, time: number): void {
-        const duration = 2000;
-        const interval = 20;
-        const step = targetScore / (duration / interval);
-        let current = 0;
+        this.targetScore = targetScore;
+        this.current = 0;
 
-        const finalScoreElement = document.getElementById("final-score")
         const finalTimerElement = document.getElementById("final-timer")
         const finalTime = Math.floor(time / 1000);
         const minutes = Math.floor(finalTime / 60);
         const seconds = finalTime % 60;
         finalTimerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-        const timer = setInterval(() => {
-            current += step;
-            if (current >= targetScore) {
-                finalScoreElement.textContent = targetScore.toLocaleString();
-                clearInterval(timer);
-            } else {
-                finalScoreElement.textContent = Math.floor(current).toLocaleString();
-            }
-        }, interval);
+  
         this.initialiseButtons();
     }
 
@@ -82,10 +91,10 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
         const restartButton = document.getElementById("continue-button") as HTMLElement;
         const menuButton = document.getElementById("win-menu-button") as HTMLElement;
         restartButton.addEventListener("click", () => {
-            window.location.reload();
+            this.observers.forEach(obs => obs.onRetry());
         });
         menuButton.addEventListener("click", () => {
-            window.location.reload();
+            this.observers.forEach(obs => obs.onQuit());
         });
     }
 
@@ -93,11 +102,23 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
         return this.mesh;
     }
 
-    public update(dt: number, input: CharacterInput): void {
+    public updateScore(dt: number) {
+        const finalScoreElement = document.getElementById("final-score")
 
+        this.current += dt;
+        if (this.current >= this.targetScore) {
+            finalScoreElement.textContent = this.targetScore.toLocaleString();
+        } else {
+            finalScoreElement.textContent = Math.floor(this.current).toLocaleString();
+        }
+    }
+
+    public update(dt: number, input: CharacterInput): void {
+        if(this.ended) this.updateScore(dt);
     }
 
     public accept(visitor: GameObjectVisitor): void {
+        this.scene.stopAnimation(this.mesh);
         visitor.visitVictory(this);
     }
 }

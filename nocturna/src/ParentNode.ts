@@ -83,6 +83,11 @@ export class ParentNode {
         inputHandler.addAction("rotate_right_z", () => this.animateRotation("z", -Math.PI / 2));
     }
 
+    public dispose() {
+        this.node.dispose();
+        this.observers.forEach(observer => this.removeObserver(observer));
+    }
+
     public serialize(): any {
         const data = {
             position: this.node.position,

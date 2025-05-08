@@ -70,5 +70,6 @@ export function getMeshSphereSize(mesh: Mesh): number {
 }
 
 export interface EndConditionObserver {
-    
+    onRetry();
+    onQuit();
 }

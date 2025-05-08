@@ -1,4 +1,4 @@
-import { Color3, HemisphericLight, MeshBuilder, PhysicsAggregate, PhysicsShapeType, PointLight, Scene, StandardMaterial, Texture, TransformNode, Vector3 } from "@babylonjs/core";
+import { Color3, HemisphericLight, Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, PointLight, Scene, StandardMaterial, Texture, TransformNode, Vector3 } from "@babylonjs/core";
 
 export class Face {
     private scene: Scene;
@@ -8,7 +8,7 @@ export class Face {
     private cubeFace: string;
     private color: Color3;
     private rotation: Vector3;
-    private mesh: any;
+    private mesh: Mesh;
 
     constructor(scene: Scene, size: number, parent: any, position: Vector3, cubeFace: string, color: Color3, rotation: Vector3) {
         this.rotation = rotation;
@@ -48,6 +48,10 @@ export class Face {
 
         // Add physics to the plane
         // new PhysicsAggregate(plane, PhysicsShapeType.BOX, { mass: 0, friction: 0.5, restitution: 0.3 }, this.scene);
+    }
+
+    public getMesh() : Mesh {
+        return this.mesh;
     }
 
 }

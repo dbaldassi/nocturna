@@ -8,15 +8,14 @@ import { Cube } from "../Cube";
 import { ParentNode } from "../ParentNode";
 import { InputHandler } from "../InputHandler";
 import { Player } from "../GameObjects/Player";
-import { GameObject, GameObjectFactory, GameObjectVisitor, GameObjectConfig, AbstractState, CharacterInput } from "../types";
+import { GameObject, GameObjectFactory, GameObjectVisitor, GameObjectConfig, AbstractState, CharacterInput, EndConditionObserver } from "../types";
 import { LevelLoaderObserver, LevelLoader, AbstractFactory } from "../LevelLoader";
 import { VictoryCondition } from "../GameObjects/Victory";
 import { LooseCondition } from "../Loose";
 
 const CUBE_SIZE = 3000;
 
-export class GameScene extends BaseScene implements LevelLoaderObserver, GameObjectVisitor {
-
+export class GameScene extends BaseScene implements LevelLoaderObserver, GameObjectVisitor, EndConditionObserver {
     private havokInstance: any;
     private hk: HavokPlugin;
     private currentLevel: Level;
@@ -49,6 +48,7 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         // scene.parent = new ParentNode(Vector3.Zero(), scene.scene);
         // scene.parent.setupKeyActions(scene.inputHandler);
 
+        // scene.enableDebug();
         scene.state = new LoadingState(scene);
         scene.loadLevel("scene");
 
@@ -56,12 +56,18 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     }
 
     private async addPhysic() {
+        console.log("Adding physics to the scene");
         this.havokInstance = await this.getInitializedHavok();
-
+        if (!this.havokInstance) {
+            console.error("Failed to initialize Havok Physics");
+            return;
+        }
         // Initialize the physics plugin with higher gravity
         this.hk = new HavokPlugin(true, this.havokInstance);
         this.scene.enablePhysics(new Vector3(0, -1000, 0), this.hk);
         this.scene.getPhysicsEngine().setTimeStep(1 / 120);
+
+        console.log("Physics added to the scene");
     }
 
     private loadLevel(file: string) {
@@ -135,26 +141,22 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     }
 
     public visitVictory(portal: VictoryCondition): void {
-        this.setEndState(portal);
+        const state = this.state as InGameState;
+        state.setCondition(portal);
     }
 
     public checkLoose() {
         if(this.loseCondition.checkLoose(this.timer)) {
-            this.setEndState(this.loseCondition);
+            const state = this.state as InGameState;
+            state.setCondition(this.loseCondition);
         }
-    }
-
-    private setEndState(condition: VictoryCondition | LooseCondition) {
-        this.state.exit();
-        this.state = new EndState(this, condition, this.score, this.timer);
-        this.state.enter();
     }
 
     public updateObjects(dt: number, input: CharacterInput) {
         this.gameObjects.forEach((object) => {
             object.update(dt, input);
         });
-        this.player.update(dt, input);
+        // this.player.update(dt, input);
     }
 
     public updateTimer(dt: number) {
@@ -162,8 +164,8 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         this.timer += dt; // Increment the timer by delta time
         if (timerElement) {
             const minutes = Math.floor(this.timer / 1000 / 60);
-            const seconds = this.timer / 1000 % 60;
-            const formattedTime = `${minutes}:${seconds.toString().padStart(2, '0')}`; // Format as MM:SS
+            const seconds = (this.timer / 1000 % 60).toFixed(2); // Limiter à 2 chiffres après la virgule
+            const formattedTime = `${minutes}:${seconds.toString().padStart(5, '0')}`; // Format as MM:SS.ss
             timerElement.textContent = `Time: ${formattedTime}`; // Update the timer element
         }
     }
@@ -196,6 +198,50 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     public getScene() : Scene {
         return this.scene;
     }
+    public getScore() : number {
+        return this.score;
+    }
+    public getTimer() : number {
+        return this.timer;
+    }
+
+    public async recreateScene() {
+        this.state.exit();
+        this.state = new LoadingState(this);
+        this.state.enter();
+
+        this.gameObjects = []
+        this.player = null;
+        this.parent = null;
+
+        this.cube = null;
+
+        this.scene.dispose();
+        this.scene = new Scene(this.engine);
+        this.levelLoader.setScene(this.scene);
+
+        await this.addPhysic();
+        // this.scene.enablePhysics(new Vector3(0, -1000, 0), this.hk);
+        this.loadLevel("scene");
+    }
+
+    public removePhysics() {
+        this.gameObjects.forEach(o => {
+            if(o.getMesh().physicsBody) {
+                o.getMesh().physicsBody.dispose();
+            }
+        })
+
+        this.scene.disablePhysicsEngine();
+    }
+
+    public onRetry() {
+        this.recreateScene();
+    }
+
+    public onQuit() {
+        window.location.reload();
+    }
 }
 
 // ------------------------------------------------
@@ -210,7 +256,7 @@ abstract class AbstractGameSceneState {
     }
 
     public enter(): void {
-        
+        console.log(`Entering state: ${this.constructor.name}`);
     }
     public exit(): void {
        
@@ -223,12 +269,22 @@ abstract class AbstractGameSceneState {
 }
 
 class InGameState extends AbstractGameSceneState {
+    private condition: VictoryCondition | LooseCondition;
 
     constructor(gameScene: GameScene) {
         super(gameScene);
+        this.condition = null;
+    }
+
+    public setCondition(condition: VictoryCondition | LooseCondition) {
+        this.condition = condition;
     }
 
     public update(dt: number, input: CharacterInput): AbstractGameSceneState|null {
+        if(this.condition) {
+            return new EndState(this.gameScene, this.condition);
+        }
+
         this.gameScene.updateObjects(dt, input);
         this.gameScene.checkLoose();
         this.gameScene.updateTimer(dt);
@@ -251,23 +307,26 @@ class LoadingState extends AbstractGameSceneState {
 
 class EndState extends AbstractGameSceneState {
     private endObject : VictoryCondition | LooseCondition;
-    private score: number;
-    private timer : number;
 
-    constructor(scene: GameScene, object: VictoryCondition | LooseCondition, score: number, timer: number) {
+    constructor(scene: GameScene, object: VictoryCondition | LooseCondition) {
         super(scene);
 
         this.endObject = object;
-        this.score = score;
-        this.timer = timer;
     }
 
     render(): void {
-        this.gameScene.render();
+        // this.gameScene.getScene().render();
     }
     enter(): void {
-        this.gameScene.getScene().getPhysicsEngine().dispose();
-        this.endObject.display(this.score, this.timer);
+        console.log(`Entering state: ${this.constructor.name}`);
+        this.gameScene.removePhysics();
+
+        this.endObject.addObserver(this.gameScene);
+        this.endObject.display(this.gameScene.getScore(), this.gameScene.getTimer());
+    }
+    exit() {
+        this.endObject.hide();
+        this.endObject.removeObserver(this.gameScene);
     }
 
     update(dt: number, input: CharacterInput): AbstractGameSceneState | null {

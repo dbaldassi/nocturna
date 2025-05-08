@@ -39,7 +39,7 @@ export class Player implements GameObject {
     public isGrounded(): boolean {
         const ray = Vector3.Down(); // Downward ray
         const diameter = getMeshSphereSize(this.mesh) * this.mesh.scaling.x;
-        console.log("Diameter", diameter, getMeshSphereSize(this.mesh));
+        // console.log("Diameter", diameter, getMeshSphereSize(this.mesh));
         const rayLength = diameter; // Slightly below the player
         const rayOrigin = this.mesh.getAbsolutePosition().add(new Vector3(0, -diameter / 2, 0)); // Adjust ray origin to the bottom of the player
         const hit = this.scene.pickWithRay(new Ray(rayOrigin, ray, rayLength));
@@ -194,14 +194,15 @@ export class PlayerFactory implements GameObjectFactory {
 
         const task = config.assetsManager.addMeshTask("player", "", "models/", "sphere.glb");
         task.onSuccess = (task) => {
+            console.log("Player loaded successfully");
             const meshes = task.loadedMeshes;
 
-            task.loadedMeshes.forEach((mesh, index) => {
+            /*task.loadedMeshes.forEach((mesh, index) => {
                 console.log(`Mesh ${index}:`);
                 console.log("Name:", mesh.name);
                 console.log("Type:", mesh.getClassName());
                 console.log("Bounding Info:", mesh.getBoundingInfo());
-            });
+            });*/
 
             const mesh = meshes[0] as Mesh;
             mesh.position = config.position;
@@ -213,6 +214,9 @@ export class PlayerFactory implements GameObjectFactory {
             new PhysicsAggregate(mesh, PhysicsShapeType.SPHERE, { mass: 70, friction: 10, restitution: 0 }, config.scene);
 
             player.mesh = mesh;
+        };
+        task.onError = (task, message) => {
+            console.error("Error loading player:", message);
         };
 
         return player;
@@ -240,7 +244,6 @@ class JumpingState implements AbstractState {
     }
 
     public enter(): void {
-        console.log("JumpingState enter");
         // Set jumping animation
     }
     public exit(): void {
@@ -274,7 +277,6 @@ class MovingState implements AbstractState {
     }
 
     public enter(): void {
-        console.log("MovingState enter");
         // Set moving animation
     }
     public exit(): void {
@@ -310,7 +312,6 @@ class IdleState implements AbstractState {
         this.player = player;
     }
     public enter(): void {
-        console.log("IdleState enter");
     }
     public exit(): void {
         // Stop idle animation

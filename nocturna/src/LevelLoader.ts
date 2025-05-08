@@ -53,7 +53,7 @@ export class LevelLoader {
         this.observer = observer;
         this.scene = scene;
         this.abstractFactory = abstractFactory;
-        this.assetManager = new AssetsManager(scene);
+        // this.assetManager = new AssetsManager(scene);
 
         this.factories = new Map<string, GameObjectFactory>();
         this.factories.set(ParentedPlatform.Type, new ParentedPlatformFactory());
@@ -62,6 +62,10 @@ export class LevelLoader {
         this.factories.set(Player.Type, new PlayerAbstractFactory(observer));
         this.factories.set(FixedRocket.Type, new FixedRocketFactory());
         this.factories.set(SpikeTrapObject.Type, new SpikeTrapFactory());
+    }
+
+    public setScene(scene: Scene): void {
+        this.scene = scene;
     }
 
     public loadLevel(level: string): void {
@@ -95,6 +99,8 @@ export class LevelLoader {
         // Create the parent node
         const parent = new ParentNode(data[ParentNode.Type].position, this.scene);
         this.observer.onParent(parent);
+
+        this.assetManager = new AssetsManager(this.scene);
 
         const objects = data.objects;
         objects.forEach((object: any) => {

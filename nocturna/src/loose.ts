@@ -1,6 +1,6 @@
 import { Player } from "./GameObjects/Player";
 import { Scene } from "@babylonjs/core";
-import { CharacterInput } from "./types";
+import { CharacterInput, EndConditionObserver } from "./types";
 
 export class LooseCondition {
     private player: Player;
@@ -9,6 +9,10 @@ export class LooseCondition {
     private loseThreshold: number = 3000; // 3 seconds in milliseconds
     private lastYPos: number; // Example threshold for y-axis
     private lastTimer: number = 0; // Last timer value when the player was below the threshold
+    private observers: EndConditionObserver[] = [];
+    private current: number = 0;
+    private targetScore: number;
+    private ended: boolean = false;
 
     private deathMessages: string[] = [
         "The darkness has consumed you...",
@@ -45,34 +49,36 @@ export class LooseCondition {
         return false;
     }
 
+    public addObserver(observer: EndConditionObserver): void {
+        if (!this.observers.includes(observer)) {
+            this.observers.push(observer);
+        }
+    }
+
+    public removeObserver(observer: EndConditionObserver): void {
+        this.observers = this.observers.filter((obs) => obs !== observer);
+    }
+
     public display(score: number, timer: number): void {
         const loseScreen = document.getElementById("game-over-screen") as HTMLElement;
         loseScreen.classList.remove("hidden");
         this.animateScore(score, timer);
     }
 
-    public animateScore(score: number, time: number): void {
-        const duration = 2000;
-        const interval = 20;
-        const step = score / (duration / interval);
-        let current = 0;
+    public hide(): void {
+        const loseScreen = document.getElementById("game-over-screen") as HTMLElement;
+        loseScreen.classList.add("hidden"); // Ajouter la classe "hidden" pour masquer l'écran
+    }
 
+    public animateScore(score: number, time: number): void {
+        this.targetScore = score;
         this.setRandomDeathMessage();
-        const finalScoreElement = document.getElementById("final-loose-score")
         const finalTimerElement = document.getElementById("loose-timer")
         const finalTime = Math.floor(time / 1000);
         const minutes = Math.floor(finalTime / 60);
         const seconds = finalTime % 60;
         finalTimerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-        const timer = setInterval(() => {
-            current += step;
-            if (current >= score) {
-                finalScoreElement.textContent = score.toLocaleString();
-                clearInterval(timer);
-            } else {
-                finalScoreElement.textContent = Math.floor(current).toLocaleString();
-            }
-        }, interval);
+
         this.initialiseButtons();
     }
 
@@ -86,15 +92,26 @@ export class LooseCondition {
         const restartButton = document.getElementById("retry-button") as HTMLElement;
         const menuButton = document.getElementById("game-over-menu-button") as HTMLElement;
         restartButton.addEventListener("click", () => {
-            window.location.reload(); // Reload the page to restart the game
+            this.observers.forEach(obs => obs.onRetry());
         });
         menuButton.addEventListener("click", () => {
-            window.location.reload(); // Reload the page to restart the game
+            this.observers.forEach(obs => obs.onQuit());
         });
     }
 
-    public update(dt: number, input: CharacterInput) {
+    public updateScore(dt: number) {
+        const finalScoreElement = document.getElementById("final-loose-score")
 
+        this.current += dt;
+        if (this.current >= this.targetScore) {
+            finalScoreElement.textContent = this.targetScore.toLocaleString();
+        } else {
+            finalScoreElement.textContent = Math.floor(this.current).toLocaleString();
+        }
+    }
+
+    public update(dt: number, input: CharacterInput): void {
+        if(this.ended) this.updateScore(dt);
     }
 
 }
