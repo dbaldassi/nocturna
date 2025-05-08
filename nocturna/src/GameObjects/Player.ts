@@ -17,6 +17,7 @@ export class Player implements GameObject {
     private speed: number = 5.0;
     private jumpForce: Vector3 = undefined;
     private state: AbstractState = null;
+    private hp: number = 10;
 
     constructor(mesh: Mesh, scene: Scene) {
         this.scene = scene;
@@ -96,6 +97,19 @@ export class Player implements GameObject {
     }
 
     public accept(_: any): void {}
+
+    public getHp(): number {
+        return this.hp;
+    }
+
+    public takeDamage(damage: number): boolean {
+        this.hp -= damage;
+        if (this.hp <= 0) {
+            this.hp = 0;
+            return true;
+        }
+        return false;
+    }
 
 }
 

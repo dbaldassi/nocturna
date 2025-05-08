@@ -1,5 +1,9 @@
 
+<<<<<<< HEAD
 import { Engine, Vector3, HavokPlugin, FollowCamera, Scene } from "@babylonjs/core";
+=======
+import { Engine, Vector3, HavokPlugin, FollowCamera, MergeMeshesOptimization } from "@babylonjs/core";
+>>>>>>> e4f50bb (fix collision add victory mesh)
 
 import { Level } from "../Level";
 import HavokPhysics from "@babylonjs/havok";
