@@ -225,6 +225,7 @@ export class ParentedPlatformFactory implements GameObjectFactory {
                 const meshes = task.loadedMeshes;
     
                 const mesh = meshes[0] as Mesh;
+                mesh.name = "platform";
                 mesh.position = config.position;
                 mesh.rotation = config.rotation;
                 mesh.scaling = new Vector3(50,50,50);
@@ -272,6 +273,7 @@ export class FixedPlatformFactory implements GameObjectFactory {
             const meshes = task.loadedMeshes;
 
             const mesh = meshes[0] as Mesh;
+            mesh.name = "platform";
             mesh.position = config.position;
             mesh.rotation = config.rotation;
             mesh.scaling =  new Vector3(50,50,50);
