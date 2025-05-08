@@ -1,5 +1,5 @@
 
-import { Engine, Vector3, HavokPlugin, FollowCamera } from "@babylonjs/core";
+import { Engine, Vector3, HavokPlugin, FollowCamera, Scene } from "@babylonjs/core";
 
 import { Level } from "../Level";
 import HavokPhysics from "@babylonjs/havok";
@@ -8,10 +8,10 @@ import { Cube } from "../Cube";
 import { ParentNode } from "../ParentNode";
 import { InputHandler } from "../InputHandler";
 import { Player } from "../GameObjects/Player";
-import { GameObject, GameObjectFactory, GameObjectVisitor, GameObjectConfig } from "../types";
+import { GameObject, GameObjectFactory, GameObjectVisitor, GameObjectConfig, AbstractState, CharacterInput } from "../types";
 import { LevelLoaderObserver, LevelLoader, AbstractFactory } from "../LevelLoader";
-import { VictoryCondition } from "../GameObjects/victory";
-import { LooseCondition } from "../loose";
+import { VictoryCondition } from "../GameObjects/Victory";
+import { LooseCondition } from "../Loose";
 
 const CUBE_SIZE = 3000;
 
@@ -30,9 +30,7 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     private cameras: FollowCamera[] = [];
     private activeCameraIndex: number = 0;
     private loseCondition: LooseCondition; // Replace with the actual type if available
-    private started: boolean = false;
-    private won: boolean = false;
-    private lost: boolean = false;
+    private state : AbstractGameSceneState;
 
     constructor(engine: Engine, inputHandler: InputHandler) {
         super(engine, inputHandler);
@@ -51,15 +49,8 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         // scene.parent = new ParentNode(Vector3.Zero(), scene.scene);
         // scene.parent.setupKeyActions(scene.inputHandler);
 
+        scene.state = new LoadingState(scene);
         scene.loadLevel("scene");
-        scene.scene.debugLayer.show({
-            overlay: true,
-            embedMode: true,
-            showExplorer: true,
-            showInspector: true,
-            enablePopup: true,
-        })
-
 
         return scene;
     }
@@ -71,14 +62,6 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         this.hk = new HavokPlugin(true, this.havokInstance);
         this.scene.enablePhysics(new Vector3(0, -1000, 0), this.hk);
         this.scene.getPhysicsEngine().setTimeStep(1 / 120);
-        // this.hk.setDebugMode(true);
-        // this.hk.setCollisionCallbackEnabled(true);
-
-        /*const observable = this.hk.onCollisionObservable;
-        observable.add((collision) => {
-            const { bodyA, bodyB } = collision;
-            console.log(`Collision detected between ${bodyA.name} and ${bodyB.name}`);
-        });*/
     }
 
     private loadLevel(file: string) {
@@ -97,6 +80,34 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         this.parent.setupKeyActions(this.inputHandler);
     }
     public onLevelLoaded(): void {
+        this.setupCamera();
+        this.setupCollisions();
+        // start a timer from 0 to infinity
+        this.startTimer();
+        this.loseCondition = new LooseCondition(this.player, this.scene); // Initialize the lose condition
+
+        this.state.exit();
+        this.state = new InGameState(this);
+        this.state.enter();
+    }
+
+    private setupCollisions() {
+        this.gameObjects.forEach((object) => {
+            const mesh = object.getMesh();
+
+            if (mesh.physicsBody) {
+                mesh.physicsBody.getCollisionObservable().add((collider) => {
+                    console.log(`Collision detected with ??`);
+                    if (collider.collidedAgainst === this.player.mesh.physicsBody) {
+                        console.log(`Collision detected with ${mesh.name}`);
+                        object.accept(this);
+                    }
+                });
+            }
+        });
+    }
+
+    private setupCamera() {
         // Create cameras
         this.cameras = [
             new FollowCamera("rightCamera", this.player.mesh.position, this.scene, this.player.mesh),
@@ -111,45 +122,12 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         
         this.scene.activeCamera = this.cameras[this.activeCameraIndex];
         this.scene.activeCamera.attachControl(this.scene.getEngine().getRenderingCanvas(), true);
-
-        this.gameObjects.forEach((object) => {
-            const mesh = object.getMesh();
-
-            if (mesh.physicsBody) {
-                mesh.physicsBody.getCollisionObservable().add((collider) => {
-                    console.log(`Collision detected with ??`);
-                    if (collider.collidedAgainst === this.player.mesh.physicsBody) {
-                        console.log(`Collision detected with ${mesh.name}`);
-                        object.accept(this);
-                    }
-                });
-
-            }
-        });
-
-        // start a timer from 0 to infinity
-        this.startTimer();
-        this.loseCondition = new LooseCondition(this.player, this.scene); // Initialize the lose condition
-
-        this.started = true;
     }
 
     private startTimer() {
         this.timer = 0; // Reset the timer to 0 at the start
         const timerElement = document.getElementById("game-timer"); // Get the timer element
         timerElement.classList.remove("hidden");
-        
-        setInterval(() => {
-            if (this.won || this.lost) { 
-                this.timer += 1000; // Increment the timer by 1 second
-                if (timerElement) {
-                    const minutes = Math.floor(this.timer / 1000 / 60);
-                    const seconds = this.timer / 1000 % 60;
-                    const formattedTime = `${minutes}:${seconds.toString().padStart(2, '0')}`; // Format as MM:SS
-                    timerElement.textContent = `Time: ${formattedTime}`; // Update the timer element
-                }
-            }
-        }, 1000); // Update every second
     }
 
     public onObjectCreated(object: GameObject): void {
@@ -157,31 +135,52 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     }
 
     public visitVictory(portal: VictoryCondition): void {
-        this.won = true;
-        portal.displayWin(this.score, this.timer);
-        this.scene.getPhysicsEngine().dispose();
+        this.setEndState(portal);
     }
 
-    public update(dt: number) {
-        if (!this.started || this.won || this.lost) {
-            return; // Prevent further updates if the game is not started
+    public checkLoose() {
+        if(this.loseCondition.checkLoose(this.timer)) {
+            this.setEndState(this.loseCondition);
         }
+    }
 
-        const input = this.inputHandler.getInput();
-        // this.currentLevel.update(dt, input);
+    private setEndState(condition: VictoryCondition | LooseCondition) {
+        this.state.exit();
+        this.state = new EndState(this, condition, this.score, this.timer);
+        this.state.enter();
+    }
+
+    public updateObjects(dt: number, input: CharacterInput) {
         this.gameObjects.forEach((object) => {
             object.update(dt, input);
         });
         this.player.update(dt, input);
-        if(this.loseCondition.checkLoose(this.timer)) {
-            this.lost = true;
-            this.scene.getPhysicsEngine().dispose();
-            this.loseCondition.triggerLose(this.score, this.timer);
+    }
+
+    public updateTimer(dt: number) {
+        const timerElement = document.getElementById("game-timer");
+        this.timer += dt; // Increment the timer by delta time
+        if (timerElement) {
+            const minutes = Math.floor(this.timer / 1000 / 60);
+            const seconds = this.timer / 1000 % 60;
+            const formattedTime = `${minutes}:${seconds.toString().padStart(2, '0')}`; // Format as MM:SS
+            timerElement.textContent = `Time: ${formattedTime}`; // Update the timer element
+        }
+    }
+
+    public update(dt: number) {
+        const input = this.inputHandler.getInput();
+        // this.currentLevel.update(dt, input);
+        const newState = this.state.update(dt, input);
+        if(newState) {
+            this.state.exit();
+            this.state = newState;
+            this.state.enter();
         }
     }
 
     public render(): void {
-        if(this.started) super.render();
+        this.state.render();
     }
 
     private async getInitializedHavok() {
@@ -193,4 +192,87 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         });
         return havok;
     }
+
+    public getScene() : Scene {
+        return this.scene;
+    }
+}
+
+// ------------------------------------------------
+// -------------------- STATES --------------------
+// ------------------------------------------------
+
+abstract class AbstractGameSceneState {
+    protected gameScene: GameScene;
+
+    constructor(gameScene: GameScene) {
+        this.gameScene = gameScene;
+    }
+
+    public enter(): void {
+        
+    }
+    public exit(): void {
+       
+    }
+
+    public render() : void {}
+    public update(dt: number, input: CharacterInput): AbstractGameSceneState|null {
+        return null;
+    }
+}
+
+class InGameState extends AbstractGameSceneState {
+
+    constructor(gameScene: GameScene) {
+        super(gameScene);
+    }
+
+    public update(dt: number, input: CharacterInput): AbstractGameSceneState|null {
+        this.gameScene.updateObjects(dt, input);
+        this.gameScene.checkLoose();
+        this.gameScene.updateTimer(dt);
+
+        return null;
+    }
+
+    public render(): void {
+        this.gameScene.getScene().render();
+    }
+}
+
+class LoadingState extends AbstractGameSceneState {
+
+    constructor(gameScene: GameScene) {
+        super(gameScene);
+    }
+
+}
+
+class EndState extends AbstractGameSceneState {
+    private endObject : VictoryCondition | LooseCondition;
+    private score: number;
+    private timer : number;
+
+    constructor(scene: GameScene, object: VictoryCondition | LooseCondition, score: number, timer: number) {
+        super(scene);
+
+        this.endObject = object;
+        this.score = score;
+        this.timer = timer;
+    }
+
+    render(): void {
+        this.gameScene.render();
+    }
+    enter(): void {
+        this.gameScene.getScene().getPhysicsEngine().dispose();
+        this.endObject.display(this.score, this.timer);
+    }
+
+    update(dt: number, input: CharacterInput): AbstractGameSceneState | null {
+        this.endObject.update(dt, input);
+
+        return null;
+    }    
 }

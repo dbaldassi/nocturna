@@ -7,7 +7,7 @@ import { ParentNode } from "../ParentNode"; // Ensure correct ParentNode type is
 import { GameObject, GameObjectConfig, GameObjectFactory, GameObjectVisitor } from "../types";
 import { Player } from "../GameObjects/Player";
 import { Cube } from "../Cube";
-import { VictoryCondition } from "../GameObjects/victory";
+import { VictoryCondition } from "../GameObjects/Victory";
 
 export class TutorialScene extends BaseScene implements LevelLoaderObserver, GameObjectVisitor {
     private stepIndex: number = 0;

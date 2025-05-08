@@ -18,6 +18,16 @@ export abstract class BaseScene {
         this.scene.render();
     }
 
+    public enableDebug() {
+        this.scene.debugLayer.show({
+            overlay: true,
+            embedMode: true,
+            showExplorer: true,
+            showInspector: true,
+            enablePopup: true,
+        })
+    }
+
     public restart() {
         this.scene.dispose();
         this.scene = new Scene(this.scene.getEngine());

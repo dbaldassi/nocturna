@@ -5,9 +5,9 @@ import { BaseScene } from "./BaseScene";import { ParentNode } from "../ParentNod
 import { Cube } from "../Cube";
 import { CharacterInput, AbstractState, EditorObject, GameObjectFactory } from "../types";
 import { InputHandler } from "../InputHandler";
-import { Platform, FixedPlatformFactory, ParentedPlatformFactory } from "../GameObjects/Platform";
+import { FixedPlatformFactory, ParentedPlatformFactory } from "../GameObjects/Platform";
 import { Player, PlayerFactory } from "../GameObjects/Player";
-import { VictoryConditionFactory } from "../GameObjects/victory";
+import { VictoryConditionFactory } from "../GameObjects/Victory";
 import { LevelLoader, LevelLoaderObserver } from "../LevelLoader";
 
 const CUBE_SIZE = 3000;

@@ -4,9 +4,9 @@ import { ParentedPlatformFactory, Platform } from "./Platform";
 import { Player } from "./Player";
 
 import { CharacterInput } from "./types";
-import { VictoryCondition } from "./GameObjects/victory";
+import { VictoryCondition } from "./GameObjects/Victory";
 import { ParentNode } from "./ParentNode";
-import { LooseCondition } from "./loose";
+import { LooseCondition } from "./Loose";
 import { Rocket } from "./ennemies";
 
 export class Level {

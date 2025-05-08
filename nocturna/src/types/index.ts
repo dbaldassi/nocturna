@@ -1,5 +1,5 @@
 import { Mesh, Vector3, Scene, AssetsManager } from "@babylonjs/core";
-import { VictoryCondition } from "../GameObjects/victory";
+import { VictoryCondition } from "../GameObjects/Victory";
 import { ParentNode } from "../ParentNode";
 
 export interface CharacterInput {
@@ -67,4 +67,8 @@ export function getMeshSphereSize(mesh: Mesh): number {
     const boundingInfo = mesh.getBoundingInfo();
     const boundingSphere = boundingInfo.boundingSphere;
     return boundingSphere.radius;
+}
+
+export interface EndConditionObserver {
+    
 }

@@ -5,7 +5,7 @@ import { Player, PlayerEditor, PlayerFactory } from "./GameObjects/Player";
 import { AssetsManager, Scene, Vector3 } from "@babylonjs/core";
 import { GameObjectFactory, GameObjectConfig, EditorObject, GameObject } from "./types";
 import { ParentedPlatform, ParentedPlatformFactory, FixedPlatform, FixedPlatformFactory } from "./GameObjects/Platform";
-import { VictoryCondition, VictoryConditionFactory } from "./GameObjects/victory";
+import { VictoryCondition, VictoryConditionFactory } from "./GameObjects/Victory";
 import { FixedRocket, FixedRocketFactory } from "./GameObjects/Rocket";
 import { SpikeTrapFactory, SpikeTrapObject } from "./GameObjects/SpikeTrap";
 

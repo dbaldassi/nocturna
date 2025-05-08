@@ -1,5 +1,6 @@
 import { Player } from "./GameObjects/Player";
 import { Scene } from "@babylonjs/core";
+import { CharacterInput } from "./types";
 
 export class LooseCondition {
     private player: Player;
@@ -44,7 +45,7 @@ export class LooseCondition {
         return false;
     }
 
-    public triggerLose(score: number, timer: number): void {
+    public display(score: number, timer: number): void {
         const loseScreen = document.getElementById("game-over-screen") as HTMLElement;
         loseScreen.classList.remove("hidden");
         this.animateScore(score, timer);
@@ -92,6 +93,8 @@ export class LooseCondition {
         });
     }
 
+    public update(dt: number, input: CharacterInput) {
 
+    }
 
 }

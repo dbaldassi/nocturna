@@ -32,7 +32,7 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
     }
 
 
-    public displayWin(score: number, timer: number): void {
+    public display(score: number, timer: number): void {
         // display win scrreen from html
         const winScreen = document.getElementById("win-screen") as HTMLElement;
         winScreen.classList.remove("hidden");
