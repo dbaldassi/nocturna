@@ -1,5 +1,5 @@
-
 import { Engine, Vector3, HavokPlugin, FollowCamera, Scene } from "@babylonjs/core";
+
 import { Level } from "../Level";
 import HavokPhysics from "@babylonjs/havok";
 import { BaseScene } from "./BaseScene";
@@ -29,6 +29,9 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     private activeCameraIndex: number = 0;
     private loseCondition: LooseCondition; // Replace with the actual type if available
     private state : AbstractGameSceneState;
+    private started: boolean = false;
+    private won: boolean = false;
+    private lost: boolean = false;
 
     constructor(engine: Engine, inputHandler: InputHandler) {
         super(engine, inputHandler);
@@ -126,7 +129,28 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         this.cameras[1].fov = 5;
         
         this.scene.activeCamera = this.cameras[this.activeCameraIndex];
-        this.scene.activeCamera.attachControl(this.scene.getEngine().getRenderingCanvas(), true);
+        // this.scene.activeCamera.attachControl(this.scene.getEngine().getRenderingCanvas(), true);
+
+        this.gameObjects.forEach((object) => {
+            const mesh = object.getMesh();
+            
+            if (mesh.physicsBody) {
+                mesh.physicsBody.setCollisionCallbackEnabled(true);
+                mesh.physicsBody.getCollisionObservable().add((collider) => {
+                    // console.log(`Collision detected with ??`);
+                    if (collider.collidedAgainst === this.player.mesh.physicsBody) {
+                        // console.log(`Collision detected with ${mesh.name}`);
+                        object.accept(this);
+                    }
+                });
+
+            }
+        });
+        // start a timer from 0 to infinity
+        this.startTimer();
+        this.loseCondition = new LooseCondition(this.player, this.scene); // Initialize the lose condition
+
+        this.started = true;
     }
 
     private startTimer() {
@@ -140,6 +164,7 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     }
 
     public visitVictory(portal: VictoryCondition): void {
+        this.won = true;
         const state = this.state as InGameState;
         state.setCondition(portal);
     }
