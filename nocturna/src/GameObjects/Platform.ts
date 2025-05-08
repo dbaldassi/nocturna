@@ -5,7 +5,7 @@ import { RocketObject } from "./Rocket";
 
 export class Platform implements GameObject {
 
-    protected mesh: Mesh;
+    public mesh: Mesh;
     protected scene: Scene;
 
     constructor(mesh: Mesh, scene: Scene) {
@@ -216,14 +216,28 @@ export class ParentedPlatformFactory implements GameObjectFactory {
     }
 
     public create(config: GameObjectConfig): Platform {
-        const platform = this.createWithoutPhysics(config);
-
-        // Add physics to the platform
-        new PhysicsAggregate(platform.getMesh(), PhysicsShapeType.BOX, { mass: 0, friction: 10, restitution: 0 }, config.scene);
-        config.parent.addObserver(platform);
-
-        return platform;
-    }
+            // const mesh = this.createMesh(config);
+            // const player = new Player(mesh, config.scene);
+            const platform = new Platform(null, config.scene);
+    
+            const task = config.assetsManager.addMeshTask("parented_platform", "", "models/", "platform3.glb");
+            task.onSuccess = (task) => {
+                const meshes = task.loadedMeshes;
+    
+                const mesh = meshes[0] as Mesh;
+                mesh.position = config.position;
+                mesh.rotation = config.rotation;
+                mesh.scaling = new Vector3(50,50,50);
+                mesh.setBoundingInfo(meshes[1].getBoundingInfo());
+                mesh.refreshBoundingInfo();
+                
+                new PhysicsAggregate(mesh, PhysicsShapeType.BOX, { mass: 0, friction: 10, restitution: 0 }, config.scene);
+    
+                platform.mesh = mesh;
+            };
+    
+            return platform;
+        }
 
     public createForEditor(config: GameObjectConfig): EditorObject {
         const actual_platform = this.createWithoutPhysics(config);
@@ -249,10 +263,25 @@ export class FixedPlatformFactory implements GameObjectFactory {
     }
 
     public create(config: GameObjectConfig): Platform {
-        const mesh = this.createMesh(config);
-        // Apply physics
-        new PhysicsAggregate(mesh, PhysicsShapeType.BOX, { mass: 0, friction: 10, restitution: 0 }, config.scene);
-        const platform = new FixedPlatform(mesh, config.scene);
+        // const mesh = this.createMesh(config);
+        // const player = new Player(mesh, config.scene);
+        const platform = new Platform(null, config.scene);
+
+        const task = config.assetsManager.addMeshTask("parented_platform", "", "models/", "platform4.glb");
+        task.onSuccess = (task) => {
+            const meshes = task.loadedMeshes;
+
+            const mesh = meshes[0] as Mesh;
+            mesh.position = config.position;
+            mesh.rotation = config.rotation;
+            mesh.scaling =  new Vector3(50,50,50);
+            mesh.setBoundingInfo(meshes[1].getBoundingInfo());
+            mesh.refreshBoundingInfo();
+            
+            new PhysicsAggregate(mesh, PhysicsShapeType.BOX, { mass: 0, friction: 10, restitution: 0 }, config.scene);
+
+            platform.mesh = mesh;
+        };
 
         return platform;
     }
