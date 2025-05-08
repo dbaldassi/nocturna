@@ -1,9 +1,4 @@
-
-<<<<<<< HEAD
-import { Engine, Vector3, HavokPlugin, FollowCamera, Scene } from "@babylonjs/core";
-=======
 import { Engine, Vector3, HavokPlugin, FollowCamera, MergeMeshesOptimization } from "@babylonjs/core";
->>>>>>> e4f50bb (fix collision add victory mesh)
 
 import { Level } from "../Level";
 import HavokPhysics from "@babylonjs/havok";
@@ -131,13 +126,48 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         this.cameras[1].fov = 5;
         
         this.scene.activeCamera = this.cameras[this.activeCameraIndex];
-        this.scene.activeCamera.attachControl(this.scene.getEngine().getRenderingCanvas(), true);
+        // this.scene.activeCamera.attachControl(this.scene.getEngine().getRenderingCanvas(), true);
+
+        this.gameObjects.forEach((object) => {
+            const mesh = object.getMesh();
+            
+            if (mesh.physicsBody) {
+                mesh.physicsBody.setCollisionCallbackEnabled(true);
+                mesh.physicsBody.getCollisionObservable().add((collider) => {
+                    // console.log(`Collision detected with ??`);
+                    if (collider.collidedAgainst === this.player.mesh.physicsBody) {
+                        // console.log(`Collision detected with ${mesh.name}`);
+                        object.accept(this);
+                    }
+                });
+
+            }
+        });
+        // start a timer from 0 to infinity
+        this.startTimer();
+        this.loseCondition = new LooseCondition(this.player, this.scene); // Initialize the lose condition
+
+        this.started = true;
     }
 
     private startTimer() {
         this.timer = 0; // Reset the timer to 0 at the start
         const timerElement = document.getElementById("game-timer"); // Get the timer element
         timerElement.classList.remove("hidden");
+
+        
+        setInterval(() => {
+            console.log(this.won, this.lost);
+            if (!this.won && !this.lost) { 
+                this.timer += 1000; // Increment the timer by 1 second
+                if (timerElement) {
+                    const minutes = Math.floor(this.timer / 1000 / 60);
+                    const seconds = this.timer / 1000 % 60;
+                    const formattedTime = `${minutes}:${seconds.toString().padStart(2, '0')}`; // Format as MM:SS
+                    timerElement.textContent = `Time: ${formattedTime}`; // Update the timer element
+                }
+            }
+        }, 1000); // Update every second
     }
 
     public onObjectCreated(object: GameObject): void {
