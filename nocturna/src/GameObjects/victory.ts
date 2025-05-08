@@ -166,35 +166,33 @@ export class VictoryConditionFactory implements GameObjectFactory {
         return mesh;
     }
 
-    public async createCrystal(config: GameObjectConfig): Promise<Mesh> {
-        return new Promise((resolve) => {
-            SceneLoader.ImportMesh(
-                null,
-                "models/",
-                "crystal.glb",
-                config.scene,
-                (meshes) => {
-                    const mainMesh = meshes[0] as Mesh;
-                    mainMesh.scaling = new Vector3(20, 20, 20);
-                    mainMesh.position = config.position;
-                    resolve(mainMesh); // Resolve with the main mesh
-                },
-            );
-        });
-    }
-
     public create(config: GameObjectConfig): VictoryCondition {
-        const mesh = this.createMesh(config);
-        // this.createCrystal(config);
-        // add physic
-        const aggregate = new PhysicsAggregate(mesh, PhysicsShapeType.CYLINDER, { mass: 0, friction: 0, restitution: 0 }, config.scene);
-        aggregate.body.setCollisionCallbackEnabled(true);
+        const victory = new VictoryCondition(null as any, config.scene); // Placeholder for the mesh
 
-        const victory = new VictoryCondition(mesh, config.scene);
-        config.parent.addObserver(victory);
-        config.parent.addChild(mesh);
+        const task = config.assetsManager.addMeshTask("victoryCrystal", "", "models/", "crystal.glb");
+        task.onSuccess = (task) => {
+            const meshes = task.loadedMeshes;
 
-        victory.startAnimation();
+            const crystalMesh = meshes[0] as Mesh;
+            crystalMesh.position = config.position;
+            // crystalMesh.rotation = config.rotation;
+            crystalMesh.scaling = new Vector3(20, 20, 20);
+            crystalMesh.setBoundingInfo(meshes[1].getBoundingInfo());
+            crystalMesh.refreshBoundingInfo();
+
+            // Add physics to the crystal mesh
+            new PhysicsAggregate(crystalMesh, PhysicsShapeType.CYLINDER, { mass: 0, friction: 0, restitution: 0 }, config.scene);
+
+            // Set the mesh to the VictoryCondition instance
+            victory.mesh = crystalMesh;
+
+            // Add the crystal mesh to the parent
+            config.parent.addObserver(victory);
+            config.parent.addChild(crystalMesh);
+
+            // Start animation
+            victory.startAnimation();
+        };
 
         return victory;
     }

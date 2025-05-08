@@ -1,5 +1,5 @@
 
-import { Engine, Vector3, HavokPlugin, FollowCamera } from "@babylonjs/core";
+import { Engine, Vector3, HavokPlugin, FollowCamera, MergeMeshesOptimization } from "@babylonjs/core";
 
 import { Level } from "../Level";
 import HavokPhysics from "@babylonjs/havok";
@@ -110,23 +110,23 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         this.cameras[1].fov = 5;
         
         this.scene.activeCamera = this.cameras[this.activeCameraIndex];
-        this.scene.activeCamera.attachControl(this.scene.getEngine().getRenderingCanvas(), true);
+        // this.scene.activeCamera.attachControl(this.scene.getEngine().getRenderingCanvas(), true);
 
         this.gameObjects.forEach((object) => {
             const mesh = object.getMesh();
-
+            
             if (mesh.physicsBody) {
+                mesh.physicsBody.setCollisionCallbackEnabled(true);
                 mesh.physicsBody.getCollisionObservable().add((collider) => {
-                    console.log(`Collision detected with ??`);
+                    // console.log(`Collision detected with ??`);
                     if (collider.collidedAgainst === this.player.mesh.physicsBody) {
-                        console.log(`Collision detected with ${mesh.name}`);
+                        // console.log(`Collision detected with ${mesh.name}`);
                         object.accept(this);
                     }
                 });
 
             }
         });
-
         // start a timer from 0 to infinity
         this.startTimer();
         this.loseCondition = new LooseCondition(this.player, this.scene); // Initialize the lose condition
@@ -140,7 +140,8 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         timerElement.classList.remove("hidden");
         
         setInterval(() => {
-            if (this.won || this.lost) { 
+            console.log(this.won, this.lost);
+            if (!this.won && !this.lost) { 
                 this.timer += 1000; // Increment the timer by 1 second
                 if (timerElement) {
                     const minutes = Math.floor(this.timer / 1000 / 60);
