@@ -1,4 +1,4 @@
-import { Engine, Vector3, HavokPlugin, FollowCamera, MergeMeshesOptimization } from "@babylonjs/core";
+import { Engine, Vector3, HavokPlugin, FollowCamera, MergeMeshesOptimization, Scene } from "@babylonjs/core";
 
 import { Level } from "../Level";
 import HavokPhysics from "@babylonjs/havok";
@@ -29,6 +29,9 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     private activeCameraIndex: number = 0;
     private loseCondition: LooseCondition; // Replace with the actual type if available
     private state : AbstractGameSceneState;
+    private started: boolean = false;
+    private won: boolean = false;
+    private lost: boolean = false;
 
     constructor(engine: Engine, inputHandler: InputHandler) {
         super(engine, inputHandler);
@@ -154,20 +157,6 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         this.timer = 0; // Reset the timer to 0 at the start
         const timerElement = document.getElementById("game-timer"); // Get the timer element
         timerElement.classList.remove("hidden");
-
-        
-        setInterval(() => {
-            console.log(this.won, this.lost);
-            if (!this.won && !this.lost) { 
-                this.timer += 1000; // Increment the timer by 1 second
-                if (timerElement) {
-                    const minutes = Math.floor(this.timer / 1000 / 60);
-                    const seconds = this.timer / 1000 % 60;
-                    const formattedTime = `${minutes}:${seconds.toString().padStart(2, '0')}`; // Format as MM:SS
-                    timerElement.textContent = `Time: ${formattedTime}`; // Update the timer element
-                }
-            }
-        }, 1000); // Update every second
     }
 
     public onObjectCreated(object: GameObject): void {
@@ -175,6 +164,7 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     }
 
     public visitVictory(portal: VictoryCondition): void {
+        this.won = true;
         const state = this.state as InGameState;
         state.setCondition(portal);
     }
