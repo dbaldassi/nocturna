@@ -11,6 +11,7 @@ export interface CharacterInput {
 }
 
 export interface GameObject {
+    getType(): string;
     getMesh(): Mesh;
     getMeshes(): Mesh[];
     accept(visitor: GameObjectVisitor): void;
@@ -55,6 +56,7 @@ export interface EditorObject {
     setSelected(selected: boolean): void;
     isSelected(): boolean;
     getMesh(): Mesh;
+    getType(): string;
     getMeshes(): Mesh[];
     serialize(): any;
 }

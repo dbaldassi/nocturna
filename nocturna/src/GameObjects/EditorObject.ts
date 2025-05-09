@@ -63,10 +63,15 @@ export class ObjectEditorImpl implements EditorObject {
 
     public serialize(): any {
         const data = {
+            type: this.object.getType(),
             position: this.object.getMesh().position,
             rotation: this.object.getMesh().rotation,
             size: this.object.getMesh().scaling,
         };
         return data;
+    }
+
+    public getType(): string {
+        return this.object.getType();
     }
 }

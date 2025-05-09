@@ -88,6 +88,10 @@ x
         }
     }
 
+    public getType(): string {
+        return Player.Type;
+    }
+
     public getScene(): Scene {
         return this.scene;
     }

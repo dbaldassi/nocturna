@@ -92,6 +92,8 @@ export class LevelLoader {
     }
 
     private createLevel(data: any): void {
+        console.log("CREATING LEVEL");
+
         // Create the cube
         const cube = Cube.create(this.scene, data[Cube.Type].position, data[Cube.Type].size);
         this.observer.onCube(cube);
@@ -101,7 +103,10 @@ export class LevelLoader {
         this.observer.onParent(parent);
 
         const objects = data.objects;
+        console.log(objects);
         if (!objects || objects.length === 0) {
+            console.warn("No objects found in the level data.");
+
             this.observer.onLevelLoaded();
             return;
         }

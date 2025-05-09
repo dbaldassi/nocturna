@@ -3,6 +3,8 @@ import { GameObject, GameObjectConfig, GameObjectFactory, EditorObject, Utils, C
 import { ObjectEditorImpl } from "./EditorObject";
 
 export class RocketObject implements GameObject {
+    static readonly Type: string = "rocket";
+
     protected mesh: Mesh;
     protected scene: Scene;
 
@@ -17,6 +19,10 @@ export class RocketObject implements GameObject {
 
     public getMeshes(): Mesh[] {
         return [this.mesh];
+    }
+
+    public getType(): string {
+        return RocketObject.Type;
     }
 
     public accept(_: any): void {}
@@ -82,8 +88,11 @@ export class FixedRocket extends RocketObject {
     constructor(mesh: Mesh, scene: Scene) {
         super(mesh, scene);
     }
-}
 
+    public getType(): string {
+        return FixedRocket.Type;
+    }
+}
 
 export class FixedRocketFactory implements GameObjectFactory {
     public createMesh(config: GameObjectConfig): Mesh {

@@ -28,6 +28,10 @@ export class Platform implements GameObject {
 
     public update(_: number, __: CharacterInput): void {
     }
+
+    public getType(): string {
+        return Platform.Type;
+    }
 }
 
 export class ParentedPlatform extends Platform implements ParentNodeObserver {
@@ -52,6 +56,9 @@ export class ParentedPlatform extends Platform implements ParentNodeObserver {
         new PhysicsAggregate(this.mesh[0], PhysicsShapeType.BOX, { mass: 0, friction: 10, restitution: 0 }, this.scene);
     }
 
+    public getType(): string {
+        return ParentedPlatform.Type;
+    }
 }
 
 export class FixedPlatform extends Platform  {
@@ -59,6 +66,10 @@ export class FixedPlatform extends Platform  {
 
     constructor(mesh: Mesh, scene: Scene) {
         super(mesh, scene);
+    }
+
+    public getType(): string {
+        return FixedPlatform.Type;
     }
 }
 

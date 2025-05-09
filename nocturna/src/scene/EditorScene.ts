@@ -5,11 +5,13 @@ import { BaseScene } from "./BaseScene";import { ParentNode } from "../ParentNod
 import { Cube } from "../Cube";
 import { CharacterInput, AbstractState, EditorObject, GameObjectFactory } from "../types";
 import { InputHandler } from "../InputHandler";
-import { FixedPlatformFactory, ParentedPlatformFactory } from "../GameObjects/Platform";
+import { FixedPlatform, FixedPlatformFactory, ParentedPlatform, ParentedPlatformFactory } from "../GameObjects/Platform";
 import { Player, PlayerFactory } from "../GameObjects/Player";
-import { VictoryConditionFactory } from "../GameObjects/Victory";
+import { VictoryCondition, VictoryConditionFactory } from "../GameObjects/Victory";
 import { LevelLoader, LevelLoaderObserver } from "../LevelLoader";
 import { LevelSelectionScene, LevelSelectionObserver } from "../LevelSelection";
+import { FixedRocket, FixedRocketFactory } from "../GameObjects/Rocket";
+import { SpikeTrapFactory, SpikeTrapObject } from "../GameObjects/SpikeTrap";
 
 const CUBE_SIZE = 3000;
 
@@ -83,37 +85,37 @@ abstract class EditorState implements AbstractState {
 }
 
 class AdditionState extends EditorState {
-    private fixedPlatformFactory: FixedPlatformFactory;
-    private parentedPlatformFactory: ParentedPlatformFactory;
-    private playerFactory: PlayerFactory;
-    private victoryConditionFactory: VictoryConditionFactory;
+    private factories : Map<string, GameObjectFactory>; 
 
     constructor(scene: EditorScene, inputHandler: InputHandler) {
         super(scene, inputHandler);
-
-        this.fixedPlatformFactory = new FixedPlatformFactory();
-        this.parentedPlatformFactory = new ParentedPlatformFactory(); 
-        this.playerFactory = new PlayerFactory();
-        this.victoryConditionFactory = new VictoryConditionFactory();
+        this.factories = new Map<string, GameObjectFactory>();
+        this.factories.set(ParentedPlatform.Type, new ParentedPlatformFactory());
+        this.factories.set(FixedPlatform.Type, new FixedPlatformFactory());
+        this.factories.set(VictoryCondition.Type, new VictoryConditionFactory());
+        this.factories.set(Player.Type, new PlayerFactory());
+        this.factories.set(FixedRocket.Type, new FixedRocketFactory());
+        this.factories.set(SpikeTrapObject.Type, new SpikeTrapFactory());
     }
 
     public name(): string {
         return "Addition Mode";
     }
 
-    public clone(): EditorState{
+    public clone(): EditorState {
         return new AdditionState(this.scene, this.inputHandler);
     }
 
     enter() {
         super.enter();
 
-        this.scene.showMenu(`${this.name()} -> 1: Fixed Platform 2: Parented Platform 3: Player 4: Victory ${this.getModeChangeText()}`);
+        this.scene.showMenu(`${this.name()} -> 1: Fixed Platform 2: Parented Platform 3: Player 4: Victory f: clone ${this.getModeChangeText()}`);
 
-        this.inputHandler.addAction("action_1", () => this.scene.addObject(this.fixedPlatformFactory));
-        this.inputHandler.addAction("action_2", () => this.scene.addObject(this.parentedPlatformFactory));
-        this.inputHandler.addAction("action_3", () => this.scene.addObject(this.playerFactory));
-        this.inputHandler.addAction("action_4", () => this.scene.addObject(this.victoryConditionFactory));
+        this.inputHandler.addAction("action_1", () => this.scene.addObject(this.factories.get(FixedPlatform.Type)));
+        this.inputHandler.addAction("action_2", () => this.scene.addObject(this.factories.get(ParentedPlatform.Type)));
+        this.inputHandler.addAction("action_3", () => this.scene.addObject(this.factories.get(Player.Type)));
+        this.inputHandler.addAction("action_4", () => this.scene.addObject(this.factories.get(VictoryCondition.Type)));
+        this.inputHandler.addAction("clone", () => this.scene.clone(this.factories));
         this.inputHandler.addAction("delete", () => this.scene.deleteSelection());
     }
 
@@ -138,12 +140,12 @@ class MoveState extends EditorState {
         super(scene, inputHandler);
     }
 
-    public clone(): EditorState {
-        return new MoveState(this.scene, this.inputHandler);
-    }
-
     public name(): string {
         return "Move mode";
+    }
+
+    public clone(): EditorState {
+        return new MoveState(this.scene, this.inputHandler);
     }
 
     enter() {
@@ -165,6 +167,7 @@ class RotationState extends EditorState {
     constructor(scene: EditorScene, inputHandler: InputHandler) {
         super(scene, inputHandler);
     }
+    
     enter() {
         super.enter();
         this.scene.showMenu(`${this.name()} -> WASD: Move Selection ${this.getModeChangeText()}`);
@@ -184,7 +187,6 @@ class RotationState extends EditorState {
     public name(): string {
         return "Rotation mode";
     }
-
 }
 
 class ResizeState extends EditorState {
@@ -203,12 +205,13 @@ class ResizeState extends EditorState {
         this.scene.resizeSelection(dt,input);
         return super.update(dt, input);
     }
-    public clone(): EditorState {
-        return new ResizeState(this.scene, this.inputHandler);
-    }
 
     public name(): string {
         return "Resize mode";
+    }
+
+    public clone(): EditorState {
+        return new ResizeState(this.scene, this.inputHandler);
     }
 }
 
@@ -392,7 +395,7 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
         }
     }
 
-    public addObject(factory: GameObjectFactory) {
+    public addObject(factory: GameObjectFactory, size?: Vector3, rotation?: Vector3) {
         // Effectuer un raycast à partir de la position de la souris
         const pickResult = this.scene.pick(this.scene.pointerX, this.scene.pointerY);
     
@@ -404,8 +407,8 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
             // Configurer les paramètres de la plateforme
             const config = {
                 position: position,
-                rotation: Vector3.Zero(),
-                // size: new Vector3(50, 5, 50),
+                rotation: rotation ?? Vector3.Zero(),
+                size: size,
                 scene: this.scene,
                 parent: this.parentNode,
                 assetsManager: this.assetsManager
@@ -500,5 +503,17 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
 
     getScene(): Scene {
         return this.scene;
+    }
+
+    public clone(factories: Map<string, GameObjectFactory>) {
+        if (this.currentSelection) {
+            const type = this.currentSelection.getType();
+            const factory = factories.get(type);
+            
+            if(factory) {
+                const config = this.currentSelection.getMesh();
+                this.addObject(factory, config.scaling, config.rotation);
+            }
+        }
     }
 }

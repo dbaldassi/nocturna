@@ -25,6 +25,10 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
         return this.mesh;
     }
 
+    public getType(): string {
+        return VictoryCondition.Type;
+    }
+
     public addObserver(observer: EndConditionObserver): void {
         if (!this.observers.includes(observer)) {
             this.observers.push(observer);

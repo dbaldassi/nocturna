@@ -20,6 +20,10 @@ export class SpikeTrapObject implements GameObject {
         return [this.mesh];
     }
 
+    public getType(): string {
+        return SpikeTrapObject.Type;
+    }
+
     public accept(_: any): void {}
 
     public update(_: number): void {}

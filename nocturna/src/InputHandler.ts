@@ -33,6 +33,7 @@ export class InputHandler {
         action_plus: ["+"],
         save: ["Enter"],
         delete: ["Backspace"],
+        clone: ["f"],
     };
     private keybindManager: KeybindsManager;
     // Store actions, which call a function when the key is pressed
