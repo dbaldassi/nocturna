@@ -330,7 +330,7 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
 
     private getEditorObjectByMesh(mesh: Mesh): EditorObject | null {
         // Parcourir tous les objets EditorObject pour trouver celui qui correspond au mesh
-        return this.editorObjects.find((obj) => obj.getMesh() === mesh) || null;
+        return this.editorObjects.find((obj) => obj.getMeshes().includes(mesh)) || null;
     }
 
     private selectEditorObject(object: EditorObject) {
@@ -375,7 +375,7 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
         // Créer un bloc de texte pour les instructions
         const instructions = new TextBlock();
         instructions.text = `${text} enter: Save Scene`;
-        instructions.color = "black";
+        instructions.color = "white";
         instructions.fontSize = 24;
         instructions.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
         instructions.textVerticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;

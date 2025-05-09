@@ -98,11 +98,12 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     private setupCollisions() {
         this.gameObjects.forEach((object) => {
             const mesh = object.getMesh();
+            if(object === this.player) return;
 
             if (mesh.physicsBody) {
                 mesh.physicsBody.getCollisionObservable().add((collider) => {
                     // console.log(`Collision detected with ??`);
-                    if (collider.collidedAgainst === this.player.getMesh().physicsBody) {
+                    if (collider.collidedAgainst === this.player.getBody()) {
                         console.log(`Player collision detected with ${mesh.name}`);
                         object.accept(this);
                     }

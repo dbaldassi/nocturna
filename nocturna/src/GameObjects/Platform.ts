@@ -1,19 +1,25 @@
-import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, Texture, Mesh } from "@babylonjs/core";
+import { Scene, Vector3, PhysicsAggregate, PhysicsShapeType, Mesh } from "@babylonjs/core";
 import { ParentNodeObserver } from "../ParentNode";
 import { CharacterInput, EditorObject, GameObject, GameObjectConfig, GameObjectFactory, Utils } from "../types";
-import { RocketObject } from "./Rocket";
+import { ObjectEditorImpl } from "./EditorObject";
 
 export class Platform implements GameObject {
+    public static readonly Type: string = "platform";
 
-    public mesh: Mesh;
+    protected mesh: Mesh[] = [];
     protected scene: Scene;
 
     constructor(mesh: Mesh, scene: Scene) {
-        this.mesh = mesh;
+        if(mesh) this.mesh.push(mesh);
         this.scene = scene;
     }
 
     public getMesh(): Mesh {
+        console.log(this.mesh);
+        return this.mesh[0];
+    }
+
+    public getMeshes(): Mesh[] {
         return this.mesh;
     }
 
@@ -38,12 +44,12 @@ export class ParentedPlatform extends Platform implements ParentNodeObserver {
 
     public recreatePhysicsBody() {
         // Supprimez l'ancien corps physique
-        if (this.mesh.physicsBody) {
-            this.mesh.physicsBody.dispose();
+        if (this.mesh[0].physicsBody) {
+            this.mesh[0].physicsBody.dispose();
         }
     
         // Créez un nouveau corps physique avec les nouvelles transformations
-        new PhysicsAggregate(this.mesh, PhysicsShapeType.BOX, { mass: 0, friction: 10, restitution: 0 }, this.scene);
+        new PhysicsAggregate(this.mesh[0], PhysicsShapeType.BOX, { mass: 0, friction: 10, restitution: 0 }, this.scene);
     }
 
 }
@@ -56,241 +62,83 @@ export class FixedPlatform extends Platform  {
     }
 }
 
-export class PlatformEditorDelegate implements EditorObject { 
-    private platform: Platform;
-    private selected: boolean = false;
-    private readonly lateralspeed: number = 0.5;
-    private readonly rotationspeed: number = 0.005;
-    private originalEmissiveColor: Color3 | null = null; // Stocker la couleur d'origine
-
-    constructor(platform: Platform) {
-        this.platform = platform;
-    }
-
-    public updatePosition(dt: number, input: CharacterInput): void {
-        const moveSpeed = this.lateralspeed * dt;
-        this.platform.getMesh().position.x += (input.right ? 1 : (input.left ? -1 : 0)) * moveSpeed;
-        this.platform.getMesh().position.y += (input.up ? 1 : (input.down ? -1 : 0)) * moveSpeed;
-    }
-
-    public updateRotation(dt: number, input: CharacterInput): void {
-        const moveSpeed = this.rotationspeed * dt;
-        this.platform.getMesh().rotation.y += (input.right ? 1 : (input.left ? -1 : 0)) * moveSpeed;
-        this.platform.getMesh().rotation.x += (input.up ? 1 : (input.down ? -1 : 0)) * moveSpeed;
-    }
-
-    public updateScale(_: number, input: CharacterInput): void {
-        this.platform.getMesh().scaling.x += (input.right ? 1 : (input.left ? -1 : 0));
-        this.platform.getMesh().scaling.y += (input.up ? 1 : (input.down ? -1 : 0));
-    }
-
-    public setSelected(selected: boolean): void {
-        this.selected = selected;
-
-        const material = this.platform.getMesh().material as StandardMaterial;
-        if (!material) return;
-
-        if (selected) {
-            this.originalEmissiveColor = material.emissiveColor.clone();
-            material.emissiveColor = Color3.Yellow(); // Jaune
-        } else {
-            if (this.originalEmissiveColor) {
-                material.emissiveColor = this.originalEmissiveColor;
-            }
-        }
-    }
-
-    public isSelected(): boolean {
-        return this.selected;
-    }
-
-    public getMesh(): Mesh {
-        return this.platform.getMesh();
-    }
-
-    public serialize(): any {
-        const data = {
-            position: this.platform.getMesh().position,
-            rotation: this.platform.getMesh().rotation,
-            size: Utils.getMeshBoxSize(this.platform.getMesh()),
-        };
-        return data;
-    }
-}
-
-export class FixedPlatformEditor extends FixedPlatform  implements EditorObject {
-    private platform:  FixedPlatform;
-    private delegate: PlatformEditorDelegate;
-
-    constructor(scene: Scene, platform: Platform) {
-        super(null, scene);
-        this.platform = platform as FixedPlatform;
-        this.delegate = new PlatformEditorDelegate(this.platform);
-    }
-
-    public update(dt: number) {
-
-    }
-
-    public updatePosition(dt: number, input: CharacterInput): void {
-        this.delegate.updatePosition(dt, input);
-    }
-    public updateRotation(dt: number, input: CharacterInput): void {
-        this.delegate.updateRotation(dt, input);
-    }
-    public updateScale(dt: number, input: CharacterInput): void {
-        this.delegate.updateScale(dt, input);
-    }
-    public setSelected(selected: boolean): void {
-        this.delegate.setSelected(selected);
-    }
-    public isSelected(): boolean {
-        return this.delegate.isSelected();
-    }
-    public getMesh(): Mesh {
-        return this.delegate.getMesh();
-    }
-    public serialize(): any {
-        const data = this.delegate.serialize();
-        data.type = FixedPlatform.Type;
-        return data;
-    }
-}
-
-export class ParentedPlatformEditor extends ParentedPlatform implements EditorObject {
-    private platform:  ParentedPlatform;
-    private delegate: PlatformEditorDelegate;
-
-    constructor(scene: Scene, platform: Platform) {
-        super(null, scene);
-        this.platform = platform as ParentedPlatform;
-        this.delegate = new PlatformEditorDelegate(this.platform);
-    }
-
-    public update(dt: number) {
-
-    }
-
-    public updatePosition(dt: number, input: CharacterInput): void {
-        this.delegate.updatePosition(dt, input);
-    }
-    public updateRotation(dt: number, input: CharacterInput): void {
-        this.delegate.updateRotation(dt, input);
-    }
-    public updateScale(dt: number, input: CharacterInput): void {
-        this.delegate.updateScale(dt, input);
-    }
-    public setSelected(selected: boolean): void {
-        this.delegate.setSelected(selected);
-    }
-    public isSelected(): boolean {
-        return this.delegate.isSelected();
-    }
-    public getMesh(): Mesh {
-        return this.delegate.getMesh();
-    }
-    public serialize(): any {
-        const data = this.delegate.serialize();
-        data.type = ParentedPlatform.Type;
-        return data;
-    }
-}
-
 export class ParentedPlatformFactory implements GameObjectFactory {
 
-    private createWithoutPhysics(config: GameObjectConfig): ParentedPlatform {
-        const mesh = MeshBuilder.CreateBox("platform", { width: config.size.x, height: config.size.y, depth: config.size.z }, config.scene);
-        mesh.position = config.position;
-        mesh.rotation = config.rotation;
+    private createImpl(config: GameObjectConfig, physics: boolean): ParentedPlatform {
+            // const mesh = this.createMesh(config);
+            // const player = new Player(mesh, config.scene);
+            const platform = new ParentedPlatform(null, config.scene);
+            if(!config.size) {
+                config.size = new Vector3(50, 50, 50);
+            }
+    
+            Utils.createMeshTask(config, ParentedPlatform.Type, "platform3.glb", (task) => {
+                const meshes = task.loadedMeshes;
+    
+                meshes[0].name = Platform.Type;
+                Utils.configureMesh(meshes, config);
+                
+                if(physics) {
+                    new PhysicsAggregate(meshes[0], PhysicsShapeType.BOX, { mass: 0, friction: 10, restitution: 0 }, config.scene);
+                    config.parent.addObserver(platform);
+                }
 
-        // Apply material
-        const material = new StandardMaterial("platformMaterial", config.scene);
-        material.diffuseTexture = new Texture("images/wood.jpg", config.scene); // Replace with the path to your wood texture
-        material.backFaceCulling = false; // Ensure the texture is visible from all sides
-        mesh.material = material;
+                config.parent.addChild(meshes[0]);
 
-        const platform = new ParentedPlatform(mesh, config.scene);
-        config.parent.addChild(mesh);
+                meshes.forEach((m) => {
+                    platform.mesh.push(m as Mesh);
+                });
+            });
+    
+            return platform;
+    }
 
+    public create(GameObjectConfig: any): GameObject {
+        const platform = this.createImpl(GameObjectConfig, true);
         return platform;
     }
 
-    public create(config: GameObjectConfig): Platform {
-            // const mesh = this.createMesh(config);
-            // const player = new Player(mesh, config.scene);
-            const platform = new Platform(null, config.scene);
-    
-            const task = config.assetsManager.addMeshTask("parented_platform", "", "models/", "platform3.glb");
-            task.onSuccess = (task) => {
-                const meshes = task.loadedMeshes;
-    
-                const mesh = meshes[0] as Mesh;
-                mesh.name = "platform";
-                mesh.position = config.position;
-                mesh.rotation = config.rotation;
-                mesh.scaling = new Vector3(50,50,50);
-                mesh.setBoundingInfo(meshes[1].getBoundingInfo());
-                mesh.refreshBoundingInfo();
-                
-                new PhysicsAggregate(mesh, PhysicsShapeType.BOX, { mass: 0, friction: 10, restitution: 0 }, config.scene);
-    
-                platform.mesh = mesh;
-            };
-    
-            return platform;
-        }
-
     public createForEditor(config: GameObjectConfig): EditorObject {
-        const actual_platform = this.createWithoutPhysics(config);
-
-        const platform = new FixedPlatformEditor(config.scene, actual_platform);        
-        return platform;
+        const platform = this.createImpl(config, false);
+        const editor = new ObjectEditorImpl(platform);        
+        return editor;
     }
 }
 
 export class FixedPlatformFactory implements GameObjectFactory {
-    public createMesh(config: GameObjectConfig): Mesh {
-        const mesh = MeshBuilder.CreateBox("platform", { width: config.size.x, height: config.size.y, depth: config.size.z }, config.scene);
-        mesh.position = config.position;
-        mesh.rotation = config.rotation;
-        // Apply material
-        const material = new StandardMaterial("platformMaterial", config.scene);
-        // material.diffuseTexture = new Texture("images/wood.jpg", config.scene); // Replace with the path to your wood texture
-        // material.backFaceCulling = false; // Ensure the texture is visible from all sides
-        material.diffuseColor = Color3.Blue(); // Set the color to red
-        mesh.material = material;
 
-        return mesh;
-    }
+    private createImpl(config: GameObjectConfig, physics: boolean): FixedPlatform {
+        const platform = new FixedPlatform(null, config.scene);
+        if(!config.size) {
+            config.size = new Vector3(50, 50, 50);
+        }
 
-    public create(config: GameObjectConfig): Platform {
-        // const mesh = this.createMesh(config);
-        // const player = new Player(mesh, config.scene);
-        const platform = new Platform(null, config.scene);
-
-        const task = config.assetsManager.addMeshTask("parented_platform", "", "models/", "platform4.glb");
-        task.onSuccess = (task) => {
+        Utils.createMeshTask(config, FixedPlatform.Type, "platform4.glb", (task) => {
             const meshes = task.loadedMeshes;
 
-            const mesh = meshes[0] as Mesh;
-            mesh.name = "platform";
-            mesh.position = config.position;
-            mesh.rotation = config.rotation;
-            mesh.scaling =  new Vector3(50,50,50);
-            mesh.setBoundingInfo(meshes[1].getBoundingInfo());
-            mesh.refreshBoundingInfo();
-            
-            new PhysicsAggregate(mesh, PhysicsShapeType.BOX, { mass: 0, friction: 10, restitution: 0 }, config.scene);
+            meshes[0].name = Platform.Type;
+            Utils.configureMesh(meshes, config);
+           
+            if (physics) {
+                new PhysicsAggregate(meshes[0], PhysicsShapeType.BOX, { mass: 0, friction: 10, restitution: 0 }, config.scene);
+            }
 
-            platform.mesh = mesh;
-        };
+            // platform.mesh[0] = mesh;
+            meshes.forEach((m) => {
+                platform.mesh.push(m as Mesh);
+            });
+        });
 
         return platform;
     }
 
+    public create(config: GameObjectConfig): Platform {
+        return this.createImpl(config, true);
+    }
+
     public createForEditor(config: GameObjectConfig): EditorObject {
-        const actual_platform = new FixedPlatform(this.createMesh(config), config.scene);
-        const platform = new ParentedPlatformEditor(config.scene, actual_platform);        
+        const actual_platform = this.createImpl(config, false);
+        const platform = new ObjectEditorImpl(actual_platform);        
         return platform;
     }
 }

@@ -1,4 +1,4 @@
-import { Mesh, Vector3, Scene, AssetsManager } from "@babylonjs/core";
+import { Mesh, Vector3, Scene, AssetsManager, MeshAssetTask } from "@babylonjs/core";
 import { VictoryCondition } from "../GameObjects/Victory";
 import { ParentNode } from "../ParentNode";
 
@@ -12,6 +12,7 @@ export interface CharacterInput {
 
 export interface GameObject {
     getMesh(): Mesh;
+    getMeshes(): Mesh[];
     accept(visitor: GameObjectVisitor): void;
     update(dt: number, input: CharacterInput): void;
 }
@@ -54,6 +55,7 @@ export interface EditorObject {
     setSelected(selected: boolean): void;
     isSelected(): boolean;
     getMesh(): Mesh;
+    getMeshes(): Mesh[];
     serialize(): any;
 }
 
@@ -107,6 +109,28 @@ export class Utils {
         });
 
         return { center, radius: maxRadius };
+    }
+
+    static createMeshTask(config: GameObjectConfig, name: string, file: string, callback: (task: any) => void): MeshAssetTask {
+        const task = config.assetsManager.addMeshTask(name, "", "models/", file);
+        task.onSuccess = (task) => {
+            console.log(`Loaded ${name} successfully`);
+            callback(task);
+        }
+        task.onError = (task, message) => {
+            console.error(`Failed to load ${name}: ${message}`);
+        };
+
+        return task;
+    }
+
+    static configureMesh(meshes: Mesh[], config: GameObjectConfig): void {
+        const mesh = meshes[0];
+        mesh.position = config.position;
+        mesh.rotation = config.rotation;
+        mesh.scaling = config.size;
+        mesh.setBoundingInfo(meshes[1].getBoundingInfo());
+        mesh.refreshBoundingInfo();
     }
 }
 

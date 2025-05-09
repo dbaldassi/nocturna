@@ -15,6 +15,10 @@ export class SpikeTrapObject implements GameObject {
         return this.mesh;
     }
 
+    public getMeshes(): Mesh[] {
+        return [this.mesh];
+    }
+
     public accept(_: any): void {}
 
     public update(_: number): void {}

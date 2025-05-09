@@ -1,6 +1,7 @@
 import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, AbstractMesh, SceneLoader, Mesh, Ray, AssetsManager, ImportMeshAsync, BoundingBox } from "@babylonjs/core";
 import { CharacterInput, EditorObject, Utils, GameObject, GameObjectConfig, GameObjectFactory, AbstractState } from "../types";
 import { RayHelper } from "@babylonjs/core";
+import { ObjectEditorImpl } from "./EditorObject";
 
 // ========================= PLAYER =========================
 // This section contains the Player class, which represents the
@@ -95,6 +96,10 @@ x
         return this.mesh[0];
     }
 
+    public getMeshes(): Mesh[] {
+        return this.mesh;
+    }
+
     public removePhysics() {
         this.getMesh().physicsBody.dispose();
         this.getMesh().physicsBody = null;
@@ -117,74 +122,6 @@ x
 
 }
 
-// ========================= EDITOR =========================
-// This section contains the PlayerEditor class, which is responsible
-// for managing the player's appearance and behavior in the editor.
-// It includes methods for updating the player's position, rotation,
-// and scale, as well as handling selection and serialization.
-// The PlayerEditor class implements the EditorObject interface,
-// allowing it to be used in the editor context.
-// ==========================================================
-
-export class PlayerEditor implements EditorObject {
-    private player: Player;
-    private selected: boolean = false;
-    private originalEmissiveColor: Color3 | null = null; // Store the original color
-
-    constructor(player: Player) {
-        this.player = player;
-    }
-
-    public updatePosition(dt: number, input: CharacterInput): void {
-        this.player.getMesh().position.x += (input.right ? 1 : input.left ? -1 : 0) * dt;
-        this.player.getMesh().position.y += (input.up ? 1 : input.down ? -1 : 0) * dt;
-    }
-
-    public updateRotation(dt: number, input: CharacterInput): void {
-        this.player.getMesh().rotation.x += (input.right ? 1 : input.left ? -1 : 0) * dt / 1000;
-        this.player.getMesh().rotation.y += (input.up ? 1 : input.down ? -1 : 0) * dt / 1000;
-    }
-
-    public updateScale(_: number, __: CharacterInput): void { }
-
-    public setSelected(selected: boolean): void {
-        this.selected = selected;
-
-        const material = this.player.getMesh().material as StandardMaterial;
-        if (!material) return;
-
-        if (selected) {
-            // Save the original color
-            this.originalEmissiveColor = material.emissiveColor.clone();
-            this.player.getMesh().scaling.x *= 1.1;
-            this.player.getMesh().scaling.y *= 1.1;
-            material.emissiveColor = Color3.Yellow(); // Yellow
-        } else {
-            this.player.getMesh().scaling.x /= 1.1;
-            this.player.getMesh().scaling.y /= 1.1;
-            material.emissiveColor = this.originalEmissiveColor; // White
-        }
-    }
-
-    public isSelected(): boolean {
-        return this.selected;
-    }
-
-    public getMesh(): Mesh {
-        return this.player.getMesh();
-    }
-
-    public serialize(): any {
-        const data = {
-            type: Player.Type,
-            position: this.player.getMesh().position,
-            rotation: this.player.getMesh().rotation,
-            size: this.player.getMesh().scaling,
-        };
-        return data;
-    }
-}
-
 // ========================= FACTORY =========================
 // This section contains the PlayerFactory class, which is responsible
 // for creating player objects in the game. It includes methods to
@@ -193,50 +130,20 @@ export class PlayerEditor implements EditorObject {
 // ==========================================================
 
 export class PlayerFactory implements GameObjectFactory {
-    private createMesh(config: GameObjectConfig): Mesh {
-        const sphere = MeshBuilder.CreateSphere("player", { diameter: config.size.x }, config.scene);
-        sphere.position = config.position;
-        sphere.rotation = config.rotation;
-
-        const material = new StandardMaterial("playerMaterial", config.scene);
-        material.diffuseColor = Color3.Red();
-        sphere.material = material;
-
-        return sphere;
-    }
-
-    configureMesh(meshes: Mesh[], config: GameObjectConfig): void {
-        const mesh = meshes[0];
-        mesh.name = "player";
-        mesh.position = config.position;
-        mesh.rotation = config.rotation;
-        mesh.scaling = config.size ?? new Vector3(10, 10, 10);
-        mesh.setBoundingInfo(meshes[1].getBoundingInfo());
-        mesh.refreshBoundingInfo();
-    }
-
-    createTask(config: GameObjectConfig, callback: (task: any) => void): void {
-        const task = config.assetsManager.addMeshTask("player", "", "models/", "sphere.glb");
-        task.onSuccess = (task) => {
-            console.log("Player loaded successfully");
-            callback(task);
-        }
-        task.onError = (task, message) => {
-            console.error("Error loading player:", message);
-        };
-    }
-
-    public create(config: GameObjectConfig): Player {
-        // const mesh = this.createMesh(config);
-        // const player = new Player(mesh, config.scene);
+    private createImpl(config: GameObjectConfig, physics: boolean): Player {
         const player = new Player(null, config.scene);
+        if(!config.size) {
+            config.size = new Vector3(10, 10, 10);
+        }
 
-        this.createTask(config, (task) => {
+        Utils.createMeshTask(config, "player", "sphere.glb", (task) => {
             const meshes = task.loadedMeshes;
             
-            this.configureMesh(meshes, config);
+            Utils.configureMesh(meshes, config);
 
-            new PhysicsAggregate(meshes[0], PhysicsShapeType.SPHERE, { mass: 70, friction: 10, restitution: 0 }, config.scene);
+            if(physics) {
+                new PhysicsAggregate(meshes[0], PhysicsShapeType.SPHERE, { mass: 70, friction: 10, restitution: 0 }, config.scene);
+            }
 
             meshes[0].name = "player";
             meshes.forEach((mesh) => {
@@ -249,18 +156,15 @@ export class PlayerFactory implements GameObjectFactory {
         return player;
     }
 
-    public createForEditor(config: GameObjectConfig): PlayerEditor {
-        const player = new Player(null, config.scene);
+    public create(config: GameObjectConfig): Player {
+        const player = this.createImpl(config, true);
+        return player;
+    }
 
-        this.createTask(config, (task) => {
-            const meshes = task.loadedMeshes;
-
-            this.configureMesh(meshes, config);
-
-            player.mesh = meshes[0];
-        });
-        
-        return new PlayerEditor(player);
+    public createForEditor(config: GameObjectConfig): EditorObject {
+        const player = this.createImpl(config, false);
+        const editor = new ObjectEditorImpl(player);
+        return editor;
     }
 }
 
