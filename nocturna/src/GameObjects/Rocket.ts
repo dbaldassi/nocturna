@@ -1,5 +1,6 @@
 import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, Mesh, ParticleSystem, Texture, Color4 } from "@babylonjs/core";
 import { GameObject, GameObjectConfig, GameObjectFactory, EditorObject, Utils, CharacterInput } from "../types";
+import { ObjectEditorImpl } from "./EditorObject";
 
 export class RocketObject implements GameObject {
     protected mesh: Mesh;
@@ -83,63 +84,6 @@ export class FixedRocket extends RocketObject {
     }
 }
 
-export class RocketEditorDelegate implements EditorObject {
-    private rocket: RocketObject;
-    private selected: boolean = false;
-    private originalEmissiveColor: Color3 | null = null;
-
-    constructor(rocket: RocketObject) {
-        this.rocket = rocket;
-    }
-    updateScale(dt: number, input: CharacterInput): void {
-        throw new Error("Method not implemented.");
-    }
-
-    public updatePosition(dt: number, input: any): void {
-        const moveSpeed = 0.5 * dt;
-        this.rocket.getMesh().position.x += (input.right ? 1 : input.left ? -1 : 0) * moveSpeed;
-        this.rocket.getMesh().position.y += (input.up ? 1 : input.down ? -1 : 0) * moveSpeed;
-    }
-
-    public updateRotation(dt: number, input: any): void {
-        const moveSpeed = 0.005 * dt;
-        this.rocket.getMesh().rotation.y += (input.right ? 1 : input.left ? -1 : 0) * moveSpeed;
-        this.rocket.getMesh().rotation.x += (input.up ? 1 : input.down ? -1 : 0) * moveSpeed;
-    }
-
-    public setSelected(selected: boolean): void {
-        this.selected = selected;
-
-        const material = this.rocket.getMesh().material as StandardMaterial;
-        if (!material) return;
-
-        if (selected) {
-            this.originalEmissiveColor = material.emissiveColor.clone();
-            material.emissiveColor = Color3.Yellow();
-        } else {
-            if (this.originalEmissiveColor) {
-                material.emissiveColor = this.originalEmissiveColor;
-            }
-        }
-    }
-
-    public isSelected(): boolean {
-        return this.selected;
-    }
-
-    public getMesh(): Mesh {
-        return this.rocket.getMesh();
-    }
-
-    public serialize(): any {
-        const data = {
-            position: this.rocket.getMesh().position,
-            rotation: this.rocket.getMesh().rotation,
-            size: Utils.getMeshBoxSize(this.rocket.getMesh()),
-        };
-        return data;
-    }
-}
 
 export class FixedRocketFactory implements GameObjectFactory {
     public createMesh(config: GameObjectConfig): Mesh {
@@ -164,6 +108,6 @@ export class FixedRocketFactory implements GameObjectFactory {
 
     public createForEditor(config: GameObjectConfig): EditorObject {
         const rocket = new FixedRocket(this.createMesh(config), config.scene);
-        return new RocketEditorDelegate(rocket);
+        return new ObjectEditorImpl(rocket);
     }
 }

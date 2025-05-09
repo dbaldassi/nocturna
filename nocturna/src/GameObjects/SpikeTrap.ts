@@ -1,5 +1,6 @@
 import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, Mesh } from "@babylonjs/core";
 import { GameObject, GameObjectConfig, GameObjectFactory, EditorObject, Utils, CharacterInput } from "../types";
+import { ObjectEditorImpl } from "./EditorObject";
 
 export class SpikeTrapObject implements GameObject {
     public static readonly Type: string = "spike_trap";
@@ -43,58 +44,6 @@ export class SpikeTrapObject implements GameObject {
     }
 }
 
-export class SpikeTrapEditorDelegate implements EditorObject {
-    private spikeTrap: SpikeTrapObject;
-    private selected: boolean = false;
-    private originalEmissiveColor: Color3 | null = null;
-
-    constructor(spikeTrap: SpikeTrapObject) {
-        this.spikeTrap = spikeTrap;
-    }
-    updatePosition(dt: number, input: CharacterInput): void {
-        throw new Error("Method not implemented.");
-    }
-    updateRotation(dt: number, input: CharacterInput): void {
-        throw new Error("Method not implemented.");
-    }
-    updateScale(dt: number, input: CharacterInput): void {
-        throw new Error("Method not implemented.");
-    }
-
-    public setSelected(selected: boolean): void {
-        this.selected = selected;
-
-        const material = this.spikeTrap.getMesh().material as StandardMaterial;
-        if (!material) return;
-
-        if (selected) {
-            this.originalEmissiveColor = material.emissiveColor.clone();
-            material.emissiveColor = Color3.Yellow();
-        } else {
-            if (this.originalEmissiveColor) {
-                material.emissiveColor = this.originalEmissiveColor;
-            }
-        }
-    }
-
-    public isSelected(): boolean {
-        return this.selected;
-    }
-
-    public getMesh(): Mesh {
-        return this.spikeTrap.getMesh();
-    }
-
-    public serialize(): any {
-        const data = {
-            position: this.spikeTrap.getMesh().position,
-            rotation: this.spikeTrap.getMesh().rotation,
-            size: Utils.getMeshBoxSize(this.spikeTrap.getMesh()),
-        };
-        return data;
-    }
-}
-
 export class SpikeTrapFactory implements GameObjectFactory {
     public createMesh(config: GameObjectConfig): Mesh {
         const mesh = MeshBuilder.CreateBox("spikeTrap", { width: config.size.x, height: 0.1, depth: config.size.z }, config.scene);
@@ -118,6 +67,6 @@ export class SpikeTrapFactory implements GameObjectFactory {
 
     public createForEditor(config: GameObjectConfig): EditorObject {
         const spikeTrap = new SpikeTrapObject(this.createMesh(config), config.scene);
-        return new SpikeTrapEditorDelegate(spikeTrap);
+        return new ObjectEditorImpl(spikeTrap);
     }
 }
