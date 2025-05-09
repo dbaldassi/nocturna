@@ -57,16 +57,57 @@ export interface EditorObject {
     serialize(): any;
 }
 
-export function getMeshBoxSize(mesh: Mesh): Vector3 {
-    const boundingInfo = mesh.getBoundingInfo();
-    const boundingBox = boundingInfo.boundingBox;
-    return boundingBox.maximum.subtract(boundingBox.minimum);
-}
+export class Utils {
+    static getMeshBoxSize(mesh: Mesh): Vector3 {
+        const boundingInfo = mesh.getBoundingInfo();
+        const boundingBox = boundingInfo.boundingBox;
+        return boundingBox.maximum.subtract(boundingBox.minimum);
+    }
+    
+    static getMeshSphereSize(mesh: Mesh): { center: Vector3; radius: number } {
+        const boundingInfo = mesh.getBoundingInfo();
+        const boundingSphere = boundingInfo.boundingSphere;
+        return {
+            center: boundingSphere.centerWorld.clone(), // Centre de la bounding sphere
+            radius: boundingSphere.radiusWorld          // Rayon de la bounding sphere
+        };
+    }
 
-export function getMeshSphereSize(mesh: Mesh): number {
-    const boundingInfo = mesh.getBoundingInfo();
-    const boundingSphere = boundingInfo.boundingSphere;
-    return boundingSphere.radius;
+    static getTotalBoundingBox(meshes: Mesh[]): { minimum: Vector3; maximum: Vector3 } {
+        if (meshes.length === 0) {
+            throw new Error("No meshes provided to calculate bounding box.");
+        }
+
+        let totalMin = meshes[0].getBoundingInfo().boundingBox.minimumWorld.clone();
+        let totalMax = meshes[0].getBoundingInfo().boundingBox.maximumWorld.clone();
+
+        meshes.forEach((mesh) => {
+            const boundingBox = mesh.getBoundingInfo().boundingBox;
+            totalMin = Vector3.Minimize(totalMin, boundingBox.minimumWorld);
+            totalMax = Vector3.Maximize(totalMax, boundingBox.maximumWorld);
+        });
+
+        return { minimum: totalMin, maximum: totalMax };
+    }
+
+    static getTotalBoundingSphere(meshes: Mesh[]): { center: Vector3; radius: number } {
+        if (meshes.length === 0) {
+            throw new Error("No meshes provided to calculate bounding sphere.");
+        }
+
+        const { minimum, maximum } = this.getTotalBoundingBox(meshes);
+        const center = minimum.add(maximum).scale(0.5); // Centre de la bounding box
+        let maxRadius = 0;
+
+        meshes.forEach((mesh) => {
+            const boundingSphere = mesh.getBoundingInfo().boundingSphere;
+            const distanceToCenter = Vector3.Distance(center, boundingSphere.centerWorld);
+            const radius = distanceToCenter + boundingSphere.radiusWorld;
+            maxRadius = Math.max(maxRadius, radius);
+        });
+
+        return { center, radius: maxRadius };
+    }
 }
 
 export interface EndConditionObserver {

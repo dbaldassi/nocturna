@@ -1,6 +1,6 @@
 import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, Texture, Mesh } from "@babylonjs/core";
 import { ParentNodeObserver } from "../ParentNode";
-import { CharacterInput, EditorObject, GameObject, GameObjectConfig, GameObjectFactory, getMeshBoxSize } from "../types";
+import { CharacterInput, EditorObject, GameObject, GameObjectConfig, GameObjectFactory, Utils } from "../types";
 import { RocketObject } from "./Rocket";
 
 export class Platform implements GameObject {
@@ -112,7 +112,7 @@ export class PlatformEditorDelegate implements EditorObject {
         const data = {
             position: this.platform.getMesh().position,
             rotation: this.platform.getMesh().rotation,
-            size: getMeshBoxSize(this.platform.getMesh()),
+            size: Utils.getMeshBoxSize(this.platform.getMesh()),
         };
         return data;
     }

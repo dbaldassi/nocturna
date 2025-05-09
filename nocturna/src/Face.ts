@@ -29,6 +29,7 @@ export class Face {
         plane.position = this.position;
         plane.rotation = this.rotation;
         plane.parent = this.parent;
+        plane.name = this.cubeFace;
 
         // Adjust the position to be relative to the parent cube
         const material = new StandardMaterial(this.cubeFace + "Material", this.scene);

@@ -110,7 +110,7 @@ export class TutorialScene extends BaseScene implements LevelLoaderObserver, Gam
 
     public onPlayer(player: Player): void {
         this.player = player;
-        this.camera = new FollowCamera("Camera", this.player.mesh.position, this.scene, this.player.mesh);
+        this.camera = new FollowCamera("Camera", this.player.getMesh().position, this.scene, this.player.getMesh());
         this.camera.radius = -500;
         this.scene.activeCamera = this.camera;
     }

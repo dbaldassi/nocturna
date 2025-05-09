@@ -1,6 +1,7 @@
 import { Player } from "./GameObjects/Player";
 import { Scene } from "@babylonjs/core";
 import { CharacterInput, EndConditionObserver } from "./types";
+import { Cube } from "./Cube";
 
 export class LooseCondition {
     private player: Player;
@@ -28,10 +29,16 @@ export class LooseCondition {
     }
 
     public checkLoose(timer: number): boolean {
+        // console.log(this.player.getMesh().position.y, -Cube.DefaultSize / 2);
+        // temp fix
+        return this.player.getMesh().position.y < (-Cube.DefaultSize);
+    }
+
+    /*public checkLoose(timer: number): boolean {
         if (this.lastYPos === undefined) {
-            this.lastYPos = this.player.mesh.position.y; // Initialize lastYPos on first check
+            this.lastYPos = this.player.getMesh().position.y; // Initialize lastYPos on first check
         }
-        const playerY = this.player.mesh.position.y;
+        const playerY = this.player.getMesh().position.y;
         if (playerY === this.lastYPos) {
             this.lastTimer = 0;
         }
@@ -47,7 +54,7 @@ export class LooseCondition {
         }
 
         return false;
-    }
+    }*/
 
     public addObserver(observer: EndConditionObserver): void {
         if (!this.observers.includes(observer)) {

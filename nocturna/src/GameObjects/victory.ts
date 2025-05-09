@@ -1,6 +1,6 @@
 import { Animation, Color3, int, Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, Scene, StandardMaterial, TransformNode, Vector3 } from '@babylonjs/core';
 import { SceneLoader } from '@babylonjs/core/Loading/sceneLoader';
-import { GameObject, CharacterInput, getMeshBoxSize, EndConditionObserver } from '../types';
+import { GameObject, CharacterInput, Utils, EndConditionObserver } from '../types';
 import { GameObjectConfig, GameObjectFactory, EditorObject, GameObjectVisitor } from '../types';
 import { ParentNodeObserver } from '../ParentNode';
 import "@babylonjs/loaders";
@@ -167,7 +167,7 @@ export class VictoryConditionEditor extends VictoryCondition implements EditorOb
             type: VictoryCondition.Type,
             position: this.mesh.position,
             rotation: this.mesh.rotation,
-            size: getMeshBoxSize(this.mesh),
+            size: Utils.getMeshBoxSize(this.mesh),
         };
         return data;
     }

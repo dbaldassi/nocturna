@@ -101,9 +101,9 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
 
             if (mesh.physicsBody) {
                 mesh.physicsBody.getCollisionObservable().add((collider) => {
-                    console.log(`Collision detected with ??`);
-                    if (collider.collidedAgainst === this.player.mesh.physicsBody) {
-                        console.log(`Collision detected with ${mesh.name}`);
+                    // console.log(`Collision detected with ??`);
+                    if (collider.collidedAgainst === this.player.getMesh().physicsBody) {
+                        console.log(`Player collision detected with ${mesh.name}`);
                         object.accept(this);
                     }
                 });
@@ -114,8 +114,8 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     private setupCamera() {
         // Create cameras
         this.cameras = [
-            new FollowCamera("rightCamera", this.player.mesh.position, this.scene, this.player.mesh),
-            new FollowCamera("topRightCamera", this.player.mesh.position, this.scene, this.player.mesh),
+            new FollowCamera("rightCamera", this.player.getMesh().position, this.scene, this.player.getMesh()),
+            new FollowCamera("topRightCamera", this.player.getMesh().position, this.scene, this.player.getMesh()),
         ];
 
         this.cameras[0].radius = -500;
@@ -126,25 +126,6 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         
         this.scene.activeCamera = this.cameras[this.activeCameraIndex];
         // this.scene.activeCamera.attachControl(this.scene.getEngine().getRenderingCanvas(), true);
-
-        this.gameObjects.forEach((object) => {
-            const mesh = object.getMesh();
-            
-            if (mesh.physicsBody) {
-                mesh.physicsBody.setCollisionCallbackEnabled(true);
-                mesh.physicsBody.getCollisionObservable().add((collider) => {
-                    // console.log(`Collision detected with ??`);
-                    if (collider.collidedAgainst === this.player.mesh.physicsBody) {
-                        // console.log(`Collision detected with ${mesh.name}`);
-                        object.accept(this);
-                    }
-                });
-
-            }
-        });
-        // start a timer from 0 to infinity
-        this.startTimer();
-        this.loseCondition = new LooseCondition(this.player, this.scene); // Initialize the lose condition
     }
 
     private startTimer() {
@@ -239,7 +220,7 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
 
         await this.addPhysic();
         // this.scene.enablePhysics(new Vector3(0, -1000, 0), this.hk);
-        this.loadLevel("scene");
+        this.loadLevel("scene.json");
     }
 
     public removePhysics() {

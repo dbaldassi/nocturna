@@ -1,5 +1,5 @@
 import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, AbstractMesh, SceneLoader, Mesh, Ray, AssetsManager, ImportMeshAsync, BoundingBox } from "@babylonjs/core";
-import { CharacterInput, EditorObject, getMeshSphereSize, GameObject, GameObjectConfig, GameObjectFactory, AbstractState } from "../types";
+import { CharacterInput, EditorObject, Utils, GameObject, GameObjectConfig, GameObjectFactory, AbstractState } from "../types";
 import { RayHelper } from "@babylonjs/core";
 
 // ========================= PLAYER =========================
@@ -13,58 +13,50 @@ import { RayHelper } from "@babylonjs/core";
 export class Player implements GameObject {
     public static readonly Type: string = "player";
 
-    public mesh: Mesh;
+    private mesh: Mesh[] = [];
     private scene: Scene;
     private speed: number = 5.0;
     private jumpForce: Vector3 = undefined;
     private state: AbstractState = null;
     private hp: number = 10;
-
+x
     constructor(mesh: Mesh, scene: Scene) {
         this.scene = scene;
         this.jumpForce = new Vector3(0, 100000, 0); // Force de saut initiale
 
-        this.mesh = mesh;
+        if(mesh) this.mesh.push(mesh);
         this.state = new IdleState(this);
     }
 
     public jump() {
-        // console.log("Jumping", this.jumpForce);
-        const physicsBody = this.mesh.physicsBody;
+        console.log("Jumping", this.jumpForce);
+        const physicsBody = this.getMesh().physicsBody;
         if (!physicsBody) {
             console.warn("Physics body not found for the player mesh.");
             return;
         }
-        physicsBody.applyImpulse(this.jumpForce, this.mesh.getAbsolutePosition());
+        physicsBody.applyImpulse(this.jumpForce, this.getMesh().getAbsolutePosition());
     }
 
     public isGrounded(): boolean {
-        const boundingInfo = this.mesh.getBoundingInfo();
-        const rayLength = 5; // Add a small offset
+        const bounding = Utils.getTotalBoundingSphere(this.mesh);
+        const rayLength = bounding.radius; // Add a small offset
         // use player position + diameter / 2 
-        const boundingBox = boundingInfo.boundingBox;
-        const center = boundingBox.centerWorld;
-        const rayOrigin = new Vector3(center.x, center.y - 8, center.z); // Start from the bottom of the sphere
+        const rayOrigin = new Vector3(bounding.center.x, bounding.center.y, bounding.center.z); // Start from the bottom of the sphere
 
         const rayDirection = Vector3.Down(); // Downward ray
         const ray = new Ray(rayOrigin, rayDirection, rayLength);
-
-        const isGrounded = this.scene.pickWithRay(ray);
-
         // const rayHelper = new RayHelper(ray);
         // rayHelper.show(this.scene);
 
-        // Check if the ray hit something
-        if (isGrounded?.hit && isGrounded.pickedMesh) {
-            return true; 
-        }
-
-        return false;
+        const result = this.scene.pickWithRay(ray, (mesh) => !this.mesh.includes(mesh));
+    
+        return !!(result?.hit && result.pickedMesh);;
     }
 
     public move(dt: number, input: CharacterInput) {
         // Récupérer le corps physique du joueur
-        const physicsBody = this.mesh.physicsBody;
+        const physicsBody = this.getMesh().physicsBody;
         if (!physicsBody) {
             console.warn("Physics body not found for the player mesh.");
             return;
@@ -100,12 +92,12 @@ export class Player implements GameObject {
     }
 
     public getMesh(): Mesh {
-        return this.mesh;
+        return this.mesh[0];
     }
 
     public removePhysics() {
-        this.mesh.physicsBody.dispose();
-        this.mesh.physicsBody = null;
+        this.getMesh().physicsBody.dispose();
+        this.getMesh().physicsBody = null;
     }
 
     public accept(_: any): void { }
@@ -144,13 +136,13 @@ export class PlayerEditor implements EditorObject {
     }
 
     public updatePosition(dt: number, input: CharacterInput): void {
-        this.player.mesh.position.x += (input.right ? 1 : input.left ? -1 : 0) * dt;
-        this.player.mesh.position.y += (input.up ? 1 : input.down ? -1 : 0) * dt;
+        this.player.getMesh().position.x += (input.right ? 1 : input.left ? -1 : 0) * dt;
+        this.player.getMesh().position.y += (input.up ? 1 : input.down ? -1 : 0) * dt;
     }
 
     public updateRotation(dt: number, input: CharacterInput): void {
-        this.player.mesh.rotation.x += (input.right ? 1 : input.left ? -1 : 0) * dt / 1000;
-        this.player.mesh.rotation.y += (input.up ? 1 : input.down ? -1 : 0) * dt / 1000;
+        this.player.getMesh().rotation.x += (input.right ? 1 : input.left ? -1 : 0) * dt / 1000;
+        this.player.getMesh().rotation.y += (input.up ? 1 : input.down ? -1 : 0) * dt / 1000;
     }
 
     public updateScale(_: number, __: CharacterInput): void { }
@@ -158,18 +150,18 @@ export class PlayerEditor implements EditorObject {
     public setSelected(selected: boolean): void {
         this.selected = selected;
 
-        const material = this.player.mesh.material as StandardMaterial;
+        const material = this.player.getMesh().material as StandardMaterial;
         if (!material) return;
 
         if (selected) {
             // Save the original color
             this.originalEmissiveColor = material.emissiveColor.clone();
-            this.player.mesh.scaling.x *= 1.1;
-            this.player.mesh.scaling.y *= 1.1;
+            this.player.getMesh().scaling.x *= 1.1;
+            this.player.getMesh().scaling.y *= 1.1;
             material.emissiveColor = Color3.Yellow(); // Yellow
         } else {
-            this.player.mesh.scaling.x /= 1.1;
-            this.player.mesh.scaling.y /= 1.1;
+            this.player.getMesh().scaling.x /= 1.1;
+            this.player.getMesh().scaling.y /= 1.1;
             material.emissiveColor = this.originalEmissiveColor; // White
         }
     }
@@ -179,15 +171,15 @@ export class PlayerEditor implements EditorObject {
     }
 
     public getMesh(): Mesh {
-        return this.player.mesh;
+        return this.player.getMesh();
     }
 
     public serialize(): any {
         const data = {
             type: Player.Type,
-            position: this.player.mesh.position,
-            rotation: this.player.mesh.rotation,
-            size: this.player.mesh.scaling,
+            position: this.player.getMesh().position,
+            rotation: this.player.getMesh().rotation,
+            size: this.player.getMesh().scaling,
         };
         return data;
     }
@@ -241,12 +233,17 @@ export class PlayerFactory implements GameObjectFactory {
 
         this.createTask(config, (task) => {
             const meshes = task.loadedMeshes;
-
+            
             this.configureMesh(meshes, config);
 
             new PhysicsAggregate(meshes[0], PhysicsShapeType.SPHERE, { mass: 70, friction: 10, restitution: 0 }, config.scene);
 
-            player.mesh = meshes[0];
+            meshes[0].name = "player";
+            meshes.forEach((mesh) => {
+                console.log("Mesh", mesh.name);
+                player.mesh.push(mesh);
+            });
+            // player.mesh = meshes[0];
         });
         
         return player;
@@ -292,10 +289,9 @@ class JumpingState implements AbstractState {
     }
 
     public update(dt: number, input: CharacterInput): AbstractState | null {
+        this.player.move(dt, input);
 
         const isGrounded = this.player.isGrounded();
-
-        this.player.move(dt, input);
 
         if (isGrounded) {
             if (input.left || input.right) return new MovingState(this.player);
@@ -332,12 +328,11 @@ class MovingState implements AbstractState {
         else if (!input.left && !input.right) {
             return new IdleState(this.player);
         }
-
-        this.player.move(dt, input);
-
-        if (!this.player.isGrounded()) {
+        else if (!this.player.isGrounded()) {
             return new JumpingState(this.player);
         }
+
+        this.player.move(dt, input);
 
         return null;
     }
@@ -359,7 +354,9 @@ class IdleState implements AbstractState {
     }
     public update(dt: number, input: CharacterInput): AbstractState | null {
         // must update the velocity to 0, becuase of moving state inertia
-        this.player.mesh.physicsBody.setLinearVelocity(Vector3.Zero());
+        const velocity = this.player.getMesh().physicsBody.getLinearVelocity();
+        velocity.x = 0;
+        this.player.getMesh().physicsBody.setLinearVelocity(velocity);
 
         // console.log("IdleState", dt, input);
         if (input.jump) {
@@ -370,6 +367,7 @@ class IdleState implements AbstractState {
             this.player.move(dt, input);
             return new MovingState(this.player);
         }
+
         return null;
     }
 }
