@@ -1,5 +1,5 @@
 import { AdvancedDynamicTexture, TextBlock, Control } from "@babylonjs/gui";
-import { Engine, Vector3, FreeCamera, Mesh } from "@babylonjs/core";
+import { Engine, Vector3, FreeCamera, Mesh, Scene, AssetsManager } from "@babylonjs/core";
 
 import { BaseScene } from "./BaseScene";import { ParentNode } from "../ParentNode";
 import { Cube } from "../Cube";
@@ -9,9 +9,9 @@ import { FixedPlatformFactory, ParentedPlatformFactory } from "../GameObjects/Pl
 import { Player, PlayerFactory } from "../GameObjects/Player";
 import { VictoryConditionFactory } from "../GameObjects/Victory";
 import { LevelLoader, LevelLoaderObserver } from "../LevelLoader";
+import { LevelSelectionScene, LevelSelectionObserver } from "../LevelSelection";
 
 const CUBE_SIZE = 3000;
-
 
 abstract class EditorState implements AbstractState {
     protected scene: EditorScene;
@@ -110,10 +110,10 @@ class AdditionState extends EditorState {
 
         this.scene.showMenu(`${this.name()} -> 1: Fixed Platform 2: Parented Platform 3: Player 4: Victory ${this.getModeChangeText()}`);
 
-        this.inputHandler.addAction("action_1", () => this.scene.addPlatform(this.fixedPlatformFactory));
-        this.inputHandler.addAction("action_2", () => this.scene.addPlatform(this.parentedPlatformFactory));
-        this.inputHandler.addAction("action_3", () => this.scene.addPlatform(this.playerFactory));
-        this.inputHandler.addAction("action_4", () => this.scene.addPlatform(this.victoryConditionFactory));
+        this.inputHandler.addAction("action_1", () => this.scene.addObject(this.fixedPlatformFactory));
+        this.inputHandler.addAction("action_2", () => this.scene.addObject(this.parentedPlatformFactory));
+        this.inputHandler.addAction("action_3", () => this.scene.addObject(this.playerFactory));
+        this.inputHandler.addAction("action_4", () => this.scene.addObject(this.victoryConditionFactory));
         this.inputHandler.addAction("delete", () => this.scene.deleteSelection());
     }
 
@@ -226,6 +226,37 @@ class InitState implements AbstractState {
     }
 }
 
+class SelectionState implements AbstractState, LevelSelectionObserver {
+    private scene: EditorScene;
+    private levelSelector: LevelSelectionScene;
+    private level :string = null;
+
+    constructor(scene: EditorScene) {
+        this.scene = scene;
+    }
+
+    public name(): string {
+        return "Selection state";
+    }
+
+    enter() {
+        this.levelSelector = new LevelSelectionScene(this.scene.getScene(), this);
+
+    }
+    exit() {
+        this.scene.getScene().dispose();
+        this.scene.createLevel(this.level);
+    }
+
+    update(_: number, __: CharacterInput): AbstractState | null {
+        return this.level ? new InitState() : null;
+    }
+
+    onLevelSelected(level: string): void {
+        this.level = level;
+    }
+}
+
 export class EditorScene extends BaseScene implements LevelLoaderObserver {
 
     private parentNode: ParentNode;
@@ -236,11 +267,10 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
     private currentSelection: EditorObject | null = null;
     private editorObjects: EditorObject[] = [];
     private levelLoader: LevelLoader;
+    private assetsManager: AssetsManager;
 
     constructor(engine: Engine, inputHandler: InputHandler) {
         super(engine, inputHandler);
-
-        this.levelLoader = new LevelLoader(this.scene, this, { create: (factory: GameObjectFactory, config: any) => factory.createForEditor(config) });
 
         EditorState.clearState();
         EditorState.addState(new AdditionState(this, this.inputHandler),
@@ -252,25 +282,34 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
 
     static async createScene(engine: Engine, inputHandler: InputHandler): Promise<BaseScene> {
         const scene = new EditorScene(engine, inputHandler);
-        // scene.parentNode = new ParentNode(Vector3.Zero(), scene.scene);
-        // scene.parentNode.setupKeyActions(scene.inputHandler);
-
-        scene.inputHandler.addAction("save", () => scene.serializeScene());
-
-        // scene.cube = Cube.create(scene.scene);
-
-        scene.camera = new FreeCamera("camera", new Vector3(0, 0, -500), scene.scene);
-        scene.camera.attachControl(true); // Permet de contrôler la caméra avec la souris et le clavier
-        scene.camera.speed = 2; // Vitesse de la caméra
-
-        scene.scene.activeCamera = scene.camera;
-
-        scene.setupClickListener();
-
-        scene.currentState = new InitState();
-        scene.levelLoader.loadLevel("scene");
+        
+        scene.currentState = new SelectionState(scene);
+        scene.currentState.enter();
+        /*scene.currentState = new InitState();
+        scene.currentState.enter();
+        scene.createLevel("scene.json");*/
 
         return scene;
+    }
+
+    public createLevel(level: string): void {
+        this.scene = new Scene(this.engine);
+        this.levelLoader = new LevelLoader(this.scene, this, { create: (factory: GameObjectFactory, config: any) => factory.createForEditor(config) });
+
+        this.assetsManager = new AssetsManager(this.scene);
+        this.assetsManager.useDefaultLoadingScreen = false;
+
+        this.inputHandler.addAction("save", () => this.serializeScene());
+
+        this.camera = new FreeCamera("camera", new Vector3(0, 0, -500), this.scene);
+        this.camera.attachControl(true); // Permet de contrôler la caméra avec la souris et le clavier
+        this.camera.speed = 2; // Vitesse de la caméra
+
+        this.scene.activeCamera = this.camera;
+
+        this.setupClickListener();
+
+        this.levelLoader.loadLevel(level);
     }
 
     public onCube(cube: Cube): void {
@@ -314,7 +353,9 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
 
     public setupClickListener() {
         this.scene.onPointerDown = (evt, pickResult) => {
+            console.log("Pointer down event:");
             if (pickResult?.hit && pickResult.pickedMesh) {
+                console.log("Mesh clicked:", pickResult.pickedMesh.name);
                 // Vérifier si le mesh appartient à un EditorObject
                 const selectedObject = this.getEditorObjectByMesh(pickResult.pickedMesh);
                 if (selectedObject) {
@@ -351,7 +392,7 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
         }
     }
 
-    public addPlatform(factory: GameObjectFactory) {
+    public addObject(factory: GameObjectFactory) {
         // Effectuer un raycast à partir de la position de la souris
         const pickResult = this.scene.pick(this.scene.pointerX, this.scene.pointerY);
     
@@ -364,17 +405,21 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
             const config = {
                 position: position,
                 rotation: Vector3.Zero(),
-                size: new Vector3(50, 5, 50),
+                // size: new Vector3(50, 5, 50),
                 scene: this.scene,
                 parent: this.parentNode,
+                assetsManager: this.assetsManager
             };
-    
+
             // Créer la plateforme avec la factory
-            const platform = factory.createForEditor(config);
-            this.editorObjects.push(platform);
-            this.selectEditorObject(platform);
+            const object = factory.createForEditor(config);
+            this.editorObjects.push(object);
+
+            this.assetsManager.load();
+            this.assetsManager.onFinish = () => {
+                this.selectEditorObject(object);
+            }
     
-            console.log("Platform created at:", position);
         } else {
             console.log("No intersection detected.");
         }
@@ -451,5 +496,9 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
         document.body.removeChild(a);
     
         console.log("Scene serialized and download triggered.");
+    }
+
+    getScene(): Scene {
+        return this.scene;
     }
 }

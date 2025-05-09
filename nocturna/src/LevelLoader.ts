@@ -70,7 +70,7 @@ export class LevelLoader {
 
     public loadLevel(level: string): void {
         // Load the level from the specified path
-        const levelPath = `assets/levels/${level}.json`;
+        const levelPath = `assets/levels/${level}`;
         fetch(levelPath)
             .then(response => {
                 if (!response.ok) {
@@ -100,9 +100,14 @@ export class LevelLoader {
         const parent = new ParentNode(data[ParentNode.Type].position, this.scene);
         this.observer.onParent(parent);
 
+        const objects = data.objects;
+        if (!objects || objects.length === 0) {
+            this.observer.onLevelLoaded();
+            return;
+        }
+
         this.assetManager = new AssetsManager(this.scene);
 
-        const objects = data.objects;
         objects.forEach((object: any) => {
             const factory = this.factories.get(object.type);
             if (factory) {
@@ -129,6 +134,7 @@ export class LevelLoader {
             // Notify that the level has been loaded
             this.observer.onLevelLoaded();
         };
+        
     }
 
 }

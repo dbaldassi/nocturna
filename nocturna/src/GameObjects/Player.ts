@@ -213,45 +213,56 @@ export class PlayerFactory implements GameObjectFactory {
         return sphere;
     }
 
+    configureMesh(meshes: Mesh[], config: GameObjectConfig): void {
+        const mesh = meshes[0];
+        mesh.name = "player";
+        mesh.position = config.position;
+        mesh.rotation = config.rotation;
+        mesh.scaling = config.size ?? new Vector3(10, 10, 10);
+        mesh.setBoundingInfo(meshes[1].getBoundingInfo());
+        mesh.refreshBoundingInfo();
+    }
+
+    createTask(config: GameObjectConfig, callback: (task: any) => void): void {
+        const task = config.assetsManager.addMeshTask("player", "", "models/", "sphere.glb");
+        task.onSuccess = (task) => {
+            console.log("Player loaded successfully");
+            callback(task);
+        }
+        task.onError = (task, message) => {
+            console.error("Error loading player:", message);
+        };
+    }
+
     public create(config: GameObjectConfig): Player {
         // const mesh = this.createMesh(config);
         // const player = new Player(mesh, config.scene);
         const player = new Player(null, config.scene);
 
-        const task = config.assetsManager.addMeshTask("player", "", "models/", "sphere.glb");
-        task.onSuccess = (task) => {
-            console.log("Player loaded successfully");
+        this.createTask(config, (task) => {
             const meshes = task.loadedMeshes;
 
-            /*task.loadedMeshes.forEach((mesh, index) => {
-                console.log(`Mesh ${index}:`);
-                console.log("Name:", mesh.name);
-                console.log("Type:", mesh.getClassName());
-                console.log("Bounding Info:", mesh.getBoundingInfo());
-            });*/
+            this.configureMesh(meshes, config);
 
-            const mesh = meshes[0] as Mesh;
-            mesh.name = "player";
-            mesh.position = config.position;
-            mesh.rotation = config.rotation;
-            mesh.scaling = new Vector3(10, 10, 10);
-            mesh.setBoundingInfo(meshes[1].getBoundingInfo());
-            mesh.refreshBoundingInfo();
+            new PhysicsAggregate(meshes[0], PhysicsShapeType.SPHERE, { mass: 70, friction: 10, restitution: 0 }, config.scene);
 
-            new PhysicsAggregate(mesh, PhysicsShapeType.SPHERE, { mass: 70, friction: 10, restitution: 0 }, config.scene);
-
-            player.mesh = mesh;
-        };
-        task.onError = (task, message) => {
-            console.error("Error loading player:", message);
-        };
-
+            player.mesh = meshes[0];
+        });
+        
         return player;
     }
 
     public createForEditor(config: GameObjectConfig): PlayerEditor {
-        const mesh = this.createMesh(config);
-        const player = new Player(mesh, config.scene);
+        const player = new Player(null, config.scene);
+
+        this.createTask(config, (task) => {
+            const meshes = task.loadedMeshes;
+
+            this.configureMesh(meshes, config);
+
+            player.mesh = meshes[0];
+        });
+        
         return new PlayerEditor(player);
     }
 }

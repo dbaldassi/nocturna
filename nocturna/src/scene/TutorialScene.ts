@@ -44,7 +44,7 @@ export class TutorialScene extends BaseScene implements LevelLoaderObserver, Gam
     public static async createScene(engine: Engine, inputHandler: InputHandler): Promise<TutorialScene> {
         const scene = new TutorialScene(engine, inputHandler);
         await scene.addPhysic();
-        scene.loadLevel("tutorial");
+        scene.loadLevel("tutorial.json");
         return scene;
     }
 
