@@ -1,14 +1,14 @@
-import { Animation, Color3, int, Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, Scene, StandardMaterial, TransformNode, Vector3 } from '@babylonjs/core';
-import { SceneLoader } from '@babylonjs/core/Loading/sceneLoader';
+import { Animation, Mesh, PhysicsAggregate, PhysicsShapeType, Scene, Vector3 } from '@babylonjs/core';
 import { GameObject, CharacterInput, Utils, EndConditionObserver } from '../types';
 import { GameObjectConfig, GameObjectFactory, EditorObject, GameObjectVisitor } from '../types';
 import { ParentNodeObserver } from '../ParentNode';
 import "@babylonjs/loaders";
+import { ObjectEditorImpl } from './EditorObject';
 
 export class VictoryCondition implements GameObject, ParentNodeObserver {
     public static readonly Type: string = "victory_condition";
     private scene: Scene;
-    public mesh: Mesh;
+    public mesh: Mesh[] = []; 
     private observers: EndConditionObserver[] = []; // Liste des observateurs
     private current: number = 0;
     private targetScore: number;
@@ -16,11 +16,13 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
 
     constructor(mesh: Mesh, scene: Scene) {
         this.scene = scene;
-        this.mesh = mesh;
+        if(mesh) {
+            this.mesh = [mesh];
+        }
     }
 
     public getMeshes(): Mesh[] {
-        return [this.mesh];
+        return this.mesh;
     }
 
     public addObserver(observer: EndConditionObserver): void {
@@ -43,11 +45,11 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
     }
     public recreatePhysicsBody(): void {
         // Supprimez l'ancien corps physique
-        if (this.mesh.physicsBody) {
-            this.mesh.physicsBody.dispose();
+        if (this.mesh[0].physicsBody) {
+            this.mesh[0].physicsBody.dispose();
         }
         // Créez un nouveau corps physique avec les nouvelles transformations
-        new PhysicsAggregate(this.mesh, PhysicsShapeType.CYLINDER, { mass: 0, friction: 0, restitution: 0 }, this.scene);
+        new PhysicsAggregate(this.mesh[0], PhysicsShapeType.CYLINDER, { mass: 0, friction: 0, restitution: 0 }, this.scene);
     }
 
 
@@ -68,12 +70,12 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
         animationY.dataType = Animation.ANIMATIONTYPE_FLOAT;
         animationY.loopMode = Animation.ANIMATIONLOOPMODE_CYCLE;
         const keysY = [
-            { frame: 0, value: this.mesh.position.y },
-            { frame: 30, value: this.mesh.position.y + 2 },
-            { frame: 60, value: this.mesh.position.y },
+            { frame: 0, value: this.getMesh().position.y },
+            { frame: 30, value: this.getMesh().position.y + 2 },
+            { frame: 60, value: this.getMesh().position.y },
         ];
         animationY.setKeys(keysY);
-        this.mesh.animations.push(animationY);
+        this.getMesh().animations.push(animationY);
 
         this.scene.beginAnimation(this.mesh, 0, 60, true);
     }
@@ -103,7 +105,7 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
     }
 
     public getMesh(): Mesh {
-        return this.mesh;
+        return this.mesh[0];
     }
 
     public updateScore(dt: number) {
@@ -127,105 +129,45 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
     }
 }
 
-export class VictoryConditionEditor extends VictoryCondition implements EditorObject {
-    private originalEmissiveColor: Color3;
-
-    public constructor(mesh: Mesh, scene: Scene) {
-        super(mesh, scene);
-    }
-    public updatePosition(dt: number, input: CharacterInput): void {
-        this.mesh.position.x += (input.right ? 1 : input.left ? -1 : 0) * dt;
-        this.mesh.position.y += (input.up ? 1 : input.down ? -1 : 0) * dt;
-
-        console.log(input.down, input.up);
-
-        console.log(this.mesh.position);
-    }
-    public updateRotation(dt: number, input: CharacterInput): void {
-    }
-    public updateScale(dt: number, input: CharacterInput): void {
-    }
-
-    public setSelected(selected: boolean): void {
-        const material = this.mesh.material as StandardMaterial;
-        if (!material) return;
-
-        if (selected) {
-            // save the original color
-            this.originalEmissiveColor = material.emissiveColor.clone();
-            this.mesh.scaling.x *= 1.1;
-            this.mesh.scaling.y *= 1.1;
-            material.emissiveColor = Color3.Yellow(); // Jaune
-        } else {
-            this.mesh.scaling.x /= 1.1;
-            this.mesh.scaling.y /= 1.1;
-            material.emissiveColor = this.originalEmissiveColor; // Blanc
-        }
-    }
-    public isSelected(): boolean {
-        return this.mesh.scaling.x > 1;
-    }
-
-    public serialize(): any {
-        const data = {
-            type: VictoryCondition.Type,
-            position: this.mesh.position,
-            rotation: this.mesh.rotation,
-            size: Utils.getMeshBoxSize(this.mesh),
-        };
-        return data;
-    }
-}
-
 export class VictoryConditionFactory implements GameObjectFactory {
-    private createMesh(config: GameObjectConfig): Mesh {
-        const mesh = MeshBuilder.CreateCylinder("coin", { diameter: config.size.x, height: config.size.y }, config.scene);
-        mesh.position = config.position;
-        mesh.rotation = config.rotation;
+    
+    private createImpl(config: GameObjectConfig, physics: boolean): VictoryCondition {
+        const victory = new VictoryCondition(null, config.scene); // Placeholder for the mesh
+        if(!config.size) {
+            config.size = new Vector3(20, 20, 20);
+        }
 
-        // this.parent.addChild(coin);
-        const material = new StandardMaterial("coinMaterial", config.scene);
-        material.diffuseColor = Color3.Green(); // Gold color
-        mesh.material = material;
-
-        return mesh;
-    }
-
-    public create(config: GameObjectConfig): VictoryCondition {
-        const victory = new VictoryCondition(null as any, config.scene); // Placeholder for the mesh
-
-        const task = config.assetsManager.addMeshTask("victoryCrystal", "", "models/", "crystal.glb");
-        task.onSuccess = (task) => {
+        Utils.createMeshTask(config, VictoryCondition.Type, "crystal.glb", (task) => {
             const meshes = task.loadedMeshes;
 
-            const crystalMesh = meshes[0] as Mesh;
-            crystalMesh.position = config.position;
-            // crystalMesh.rotation = config.rotation;
-            crystalMesh.scaling = new Vector3(20, 20, 20);
-            crystalMesh.setBoundingInfo(meshes[1].getBoundingInfo());
-            crystalMesh.refreshBoundingInfo();
+            meshes[0].name = VictoryCondition.Type;
+            Utils.configureMesh(meshes, config);
 
-            // Add physics to the crystal mesh
-            new PhysicsAggregate(crystalMesh, PhysicsShapeType.CYLINDER, { mass: 0, friction: 0, restitution: 0 }, config.scene);
+            config.parent.addChild(meshes[0]);
+            
+            meshes.forEach((m) => {
+                victory.mesh.push(m);
+            });
 
-            // Set the mesh to the VictoryCondition instance
-            victory.mesh = crystalMesh;
+            if(physics) {
+                const p = new PhysicsAggregate(meshes[0], PhysicsShapeType.CYLINDER, { mass: 0, friction: 0, restitution: 0 }, config.scene);
+                p.body.setCollisionCallbackEnabled(true);
+                config.parent.addObserver(victory);
 
-            // Add the crystal mesh to the parent
-            config.parent.addObserver(victory);
-            config.parent.addChild(crystalMesh);
-
-            // Start animation
-            victory.startAnimation();
-        };
+                victory.startAnimation();
+            }
+        });
 
         return victory;
     }
 
-    public createForEditor(config: GameObjectConfig): VictoryConditionEditor {
-        const mesh = this.createMesh(config);
-        config.parent.addChild(mesh);
+    public create(config: GameObjectConfig): VictoryCondition {
+        return this.createImpl(config, true);
+    }
 
-        return new VictoryConditionEditor(mesh, config.scene);
+    public createForEditor(config: GameObjectConfig): EditorObject {
+        const victory = this.createImpl(config, false);
+        const editor = new ObjectEditorImpl(victory);
+        return editor;
     }
 }
