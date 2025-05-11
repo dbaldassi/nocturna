@@ -1,7 +1,6 @@
-import { Engine, Vector3, FreeCamera, MeshBuilder, StandardMaterial, Color3, DirectionalLight, HavokPlugin, FollowCamera } from "@babylonjs/core";
+import { Engine, Vector3, FreeCamera, MeshBuilder, StandardMaterial, Color3, DirectionalLight, FollowCamera } from "@babylonjs/core";
 import { BaseScene } from "./BaseScene";
 import { InputHandler } from "../InputHandler";
-import HavokPhysics from "@babylonjs/havok";
 import { LevelLoader, LevelLoaderObserver } from "../LevelLoader";
 import { ParentNode } from "../ParentNode"; // Ensure correct ParentNode type is imported
 import { GameObject, GameObjectConfig, GameObjectFactory, GameObjectVisitor } from "../types";
@@ -12,8 +11,6 @@ import { VictoryCondition } from "../GameObjects/Victory";
 export class TutorialScene extends BaseScene implements LevelLoaderObserver, GameObjectVisitor {
     private stepIndex: number = 0;
     private steps: (() => void)[] = [];
-    private havokInstance: any;
-    private hk: any;
     private levelLoader: LevelLoader;
     private player: Player;
     private camera: FollowCamera;
@@ -52,28 +49,9 @@ export class TutorialScene extends BaseScene implements LevelLoaderObserver, Gam
         this.levelLoader.loadLevel(file);
     }
 
-    private async addPhysic() {
-        this.havokInstance = await this.getInitializedHavok();
-
-        // Initialize the physics plugin with higher gravity
-        this.hk = new HavokPlugin(true, this.havokInstance);
-        this.scene.enablePhysics(new Vector3(0, -1000, 0), this.hk);
-        this.scene.getPhysicsEngine().setTimeStep(1 / 120);
-    }
-
     public startTutorial(): void {
         this.stepIndex = 0;
         this.steps[this.stepIndex]();
-    }
-
-    private async getInitializedHavok() {
-        // locates the wasm file copied during build process
-        const havok = await HavokPhysics({
-            locateFile: (_) => {
-                return "assets/HavokPhysics.wasm"
-            }
-        });
-        return havok;
     }
 
     private showMovementInstructions(): void {

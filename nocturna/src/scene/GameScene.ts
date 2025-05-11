@@ -1,7 +1,5 @@
-import { Engine, Vector3, HavokPlugin, FollowCamera, Scene } from "@babylonjs/core";
+import { Engine, Vector3, FollowCamera, Scene } from "@babylonjs/core";
 
-import { Level } from "../Level";
-import HavokPhysics from "@babylonjs/havok";
 import { BaseScene } from "./BaseScene";
 import { Cube } from "../Cube";
 import { ParentNode } from "../ParentNode";
@@ -15,8 +13,6 @@ import { LooseCondition } from "../Loose";
 const CUBE_SIZE = 3000;
 
 export class GameScene extends BaseScene implements LevelLoaderObserver, GameObjectVisitor, EndConditionObserver {
-    private havokInstance: any;
-    private hk: HavokPlugin;
     private cube: Cube;
     private parent: ParentNode;
     private player: Player;
@@ -51,21 +47,6 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         scene.loadLevel("scene.json");
 
         return scene;
-    }
-
-    private async addPhysic() {
-        console.log("Adding physics to the scene");
-        this.havokInstance = await this.getInitializedHavok();
-        if (!this.havokInstance) {
-            console.error("Failed to initialize Havok Physics");
-            return;
-        }
-        // Initialize the physics plugin with higher gravity
-        this.hk = new HavokPlugin(true, this.havokInstance);
-        this.scene.enablePhysics(new Vector3(0, -1000, 0), this.hk);
-        this.scene.getPhysicsEngine().setTimeStep(1 / 120);
-
-        console.log("Physics added to the scene");
     }
 
     private loadLevel(file: string) {
@@ -182,16 +163,6 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
 
     public render(): void {
         this.state.render();
-    }
-
-    private async getInitializedHavok() {
-        // locates the wasm file copied during build process
-        const havok = await HavokPhysics({
-            locateFile: (_) => {
-                return "assets/HavokPhysics.wasm"
-            }
-        });
-        return havok;
     }
 
     public getScene() : Scene {

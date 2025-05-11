@@ -1,6 +1,7 @@
 {
   "dependencies": {
-    "vite": "^6.0.7"
+    "vite": "^6.0.7",
+    "websocket": "^1.0.35"
   },
   "devDependencies": {
     "@babylonjs/core": "^7.44.0",

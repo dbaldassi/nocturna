@@ -5,12 +5,14 @@ import { GameScene } from "./GameScene";
 import { EditorScene } from "./EditorScene";
 import { InputHandler } from "../InputHandler";
 import { TutorialScene } from "./TutorialScene";
+import { MultiScene } from "./MultiScene";
 
 export class SceneFactory {
     private static scenes: { [key: string]: (engine: Engine, inputHandler: InputHandler) => Promise<BaseScene> } = {
         singleplayer: (engine: Engine, inputHandler: InputHandler) => GameScene.createScene(engine, inputHandler),
         editor: (engine: Engine, inputHandler: InputHandler) => EditorScene.createScene(engine, inputHandler),
         tutorial: (engine, inputHandler) => TutorialScene.createScene(engine, inputHandler),
+        multiplayer: (engine: Engine, inputHandler: InputHandler) => MultiScene.createScene(engine, inputHandler),
     };
 
     /**

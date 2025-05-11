@@ -11,6 +11,7 @@ export class LevelSelectionScene {
     private observer: LevelSelectionObserver;
 
     constructor(scene: Scene, observer: LevelSelectionObserver) {
+        console.log(scene);
         this.scene = scene;
         this.observer = observer;
 
@@ -38,7 +39,7 @@ export class LevelSelectionScene {
 
     private createLevelSelectionUI(levels: { name: string; file: string }[]) {
         // Créer une texture GUI pour afficher les boutons
-        this.guiTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI");
+        this.guiTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this.scene);
 
         // Créer un panneau vertical pour organiser les boutons
         const panel = new StackPanel();

@@ -88,5 +88,5 @@ export class App {
 
 
 }
-const gameEngine = new App();
 
+const gameEngine = new App();

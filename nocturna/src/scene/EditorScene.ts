@@ -373,7 +373,7 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
 
     public showMenu(text: string) {
         // Créer une texture GUI pour afficher les instructions
-        this.guiTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI");
+        this.guiTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this.scene);
     
         // Créer un bloc de texte pour les instructions
         const instructions = new TextBlock();

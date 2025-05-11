@@ -9,7 +9,7 @@ export class Cube {
     private mesh: any;
 
     public static readonly Type: string = "Cube";
-    public static readonly DefaultSize: number = 1000;
+    public static readonly DefaultSize: number = 3000;
 
     constructor(scene: Scene, size: number) {
         this.scene = scene;
