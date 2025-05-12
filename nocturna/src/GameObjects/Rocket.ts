@@ -1,12 +1,13 @@
 import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, Mesh, ParticleSystem, Texture, Color4 } from "@babylonjs/core";
-import { GameObject, GameObjectConfig, GameObjectFactory, EditorObject, Utils, CharacterInput } from "../types";
+import { GameObject, GameObjectConfig, GameObjectFactory, EditorObject, Utils, CharacterInput, GameObjectVisitor, Enemy } from "../types";
 import { ObjectEditorImpl } from "./EditorObject";
 
-export class RocketObject implements GameObject {
+export class RocketObject implements Enemy {
     static readonly Type: string = "rocket";
 
     protected mesh: Mesh;
     protected scene: Scene;
+    public damage: number = 5;
 
     constructor(mesh: Mesh, scene: Scene) {
         this.mesh = mesh;
@@ -25,7 +26,9 @@ export class RocketObject implements GameObject {
         return RocketObject.Type;
     }
 
-    public accept(_: any): void {}
+    public accept(visitor: GameObjectVisitor): void {
+        visitor.visitEnemy(this);
+    }
 
     public update(_: number): void {}
 
@@ -39,7 +42,7 @@ export class RocketObject implements GameObject {
         physicsBody.setCollisionCallbackEnabled(true);
         const collisionObservable = physicsBody.getCollisionObservable();
         collisionObservable.add(() => {
-            this.explode(); 
+            this.explode();
         });
     }
 
@@ -83,7 +86,7 @@ export class RocketObject implements GameObject {
 }
 
 export class FixedRocket extends RocketObject {
-    public static readonly Type: string = "fixed_rocket";
+    public static readonly Type: string = "rocket";
 
     constructor(mesh: Mesh, scene: Scene) {
         super(mesh, scene);
@@ -103,7 +106,7 @@ export class FixedRocketFactory implements GameObjectFactory {
         const material = new StandardMaterial("rocketMaterial", config.scene);
         material.diffuseColor = Color3.Red();
         mesh.material = material;
-
+        
         return mesh;
     }
 

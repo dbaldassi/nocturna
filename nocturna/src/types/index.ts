@@ -18,9 +18,13 @@ export interface GameObject {
     update(dt: number, input: CharacterInput): void;
 }
 
+export interface Enemy extends GameObject {
+    damage: number;
+}
+
 export interface GameObjectVisitor {
     // visitCoin(coin: Coin): void;
-    // visitEnemy(enemy: Enemy): void;
+    visitEnemy(enemy: Enemy): void;
     visitVictory(portal: VictoryCondition): void;
 }
 

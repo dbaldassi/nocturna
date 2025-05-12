@@ -30,8 +30,9 @@ export class LooseCondition {
 
     public checkLoose(timer: number): boolean {
         console.log(this.player.getMesh().position.y, -Cube.DefaultSize / 2);
-        // temp fix
-        return this.player.getMesh().position.y < (-Cube.DefaultSize);
+        console.log(this.player.getHp(), this.player.isAlive());
+        
+        return this.player.getMesh().position.y < (-Cube.DefaultSize) || !this.player.isAlive();
     }
 
     /*public checkLoose(timer: number): boolean {

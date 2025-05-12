@@ -1,5 +1,5 @@
 import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, AbstractMesh, SceneLoader, Mesh, Ray, AssetsManager, ImportMeshAsync, BoundingBox } from "@babylonjs/core";
-import { CharacterInput, EditorObject, Utils, GameObject, GameObjectConfig, GameObjectFactory, AbstractState } from "../types";
+import { CharacterInput, EditorObject, Utils, GameObject, GameObjectConfig, GameObjectFactory, AbstractState, Enemy } from "../types";
 import { RayHelper } from "@babylonjs/core";
 import { ObjectEditorImpl } from "./EditorObject";
 
@@ -115,15 +115,17 @@ x
         return this.hp;
     }
 
-    public takeDamage(damage: number): boolean {
+    public visitEnemy(Enemy: Enemy): void {
+        const damage = Enemy.damage;
         this.hp -= damage;
         if (this.hp <= 0) {
             this.hp = 0;
-            return true;
         }
-        return false;
     }
 
+    public isAlive(): boolean {
+        return this.hp > 0;
+    }
 }
 
 // ========================= FACTORY =========================

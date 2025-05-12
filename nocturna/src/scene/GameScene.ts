@@ -5,7 +5,7 @@ import { Cube } from "../Cube";
 import { ParentNode } from "../ParentNode";
 import { InputHandler } from "../InputHandler";
 import { Player } from "../GameObjects/Player";
-import { GameObject, GameObjectFactory, GameObjectVisitor, GameObjectConfig, AbstractState, CharacterInput, EndConditionObserver } from "../types";
+import { GameObject, GameObjectFactory, GameObjectVisitor, GameObjectConfig, AbstractState, CharacterInput, EndConditionObserver, Enemy } from "../types";
 import { LevelLoaderObserver, LevelLoader, AbstractFactory } from "../LevelLoader";
 import { VictoryCondition } from "../GameObjects/Victory";
 import { LooseCondition } from "../Loose";
@@ -125,8 +125,13 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         state.setCondition(portal);
     }
 
+    public visitEnemy(enemy: Enemy): void {
+        this.player.visitEnemy(enemy);
+    }
+
     public checkLoose() {
         if(this.loseCondition.checkLoose(this.timer)) {
+            console.log("Loose condition met");
             const state = this.state as InGameState;
             state.setCondition(this.loseCondition);
         }
