@@ -69,11 +69,15 @@ abstract class EditorState implements AbstractState {
                 this.goPreviousState = true;
             }
         });
+        this.inputHandler.addAction("action_multi", () => {
+            this.scene.setMultiMode();
+        });
     }
 
     exit() {
         this.inputHandler.removeAction("action_plus");
         this.inputHandler.removeAction("action_minus");
+        this.inputHandler.removeAction("action_multi");
     }
 
     update(_: number, __: CharacterInput): AbstractState | null {
@@ -313,6 +317,10 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
         this.setupClickListener();
 
         this.levelLoader.loadLevel(level);
+    }
+
+    public setMultiMode() {
+        this.cube.setupMulti();
     }
 
     public onCube(cube: Cube): void {

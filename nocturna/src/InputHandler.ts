@@ -31,6 +31,7 @@ export class InputHandler {
         action_0: ["0"],
         action_minus: ["-"],
         action_plus: ["+"],
+        action_multi: ["m"],
         save: ["Enter"],
         delete: ["Backspace"],
         clone: ["f"],

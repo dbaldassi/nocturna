@@ -24,7 +24,7 @@ export class Face {
     }
     private createFace() {
         // Create a plane for the cube face
-        const plane = MeshBuilder.CreatePlane(this.cubeFace, { size: this.size * 2 }, this.scene);
+        const plane = MeshBuilder.CreatePlane(this.cubeFace, { size: this.size * 2}, this.scene);
         this.mesh = plane; // Store the mesh reference
         plane.position = this.position;
         plane.rotation = this.rotation;

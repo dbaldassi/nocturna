@@ -61,6 +61,12 @@ export interface EditorObject {
     serialize(): any;
 }
 
+export interface IRemoteGameObject extends GameObject {
+    getId(): string;
+    getOwnerId(): string;
+    updatePosition(position: Vector3, timestamp: number): void;
+}
+
 export class Utils {
     static getMeshBoxSize(mesh: Mesh): Vector3 {
         const boundingInfo = mesh.getBoundingInfo();

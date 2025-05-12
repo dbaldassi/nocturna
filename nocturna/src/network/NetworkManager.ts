@@ -9,7 +9,7 @@ export interface NetworkObserver {
     onParticipantJoined(participantId:string): void;
     onParticipantLeft(participantId:string): void;
     onConnectionEstablished(remoteId:string): void;
-    onUpdate(participantId:string, action: string, data:any): void;
+    onPeerMessage(participantId:string, action: string, data:any): void;
 }
 
 export class NetworkManager implements RTCSignaling, RemoteParticipantObserver {
@@ -219,6 +219,6 @@ export class NetworkManager implements RTCSignaling, RemoteParticipantObserver {
 
     // RemoteParticipantObserver methods
     public onUpdate(id: string, action: string, data: any): void {
-        this.observers.onUpdate(id, action, data);
+        this.observers.onPeerMessage(id, action, data);
     }
 }

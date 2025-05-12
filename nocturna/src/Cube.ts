@@ -1,6 +1,5 @@
-import { Scene, Vector3, MeshBuilder, Color3 } from "@babylonjs/core";
+import { Scene, Vector3, MeshBuilder, Color3, PhysicsAggregate, PhysicsShapeType } from "@babylonjs/core";
 import { Face } from "./Face";
-import { CharacterInput } from "./types";
 
 export class Cube {
     private scene: Scene;
@@ -9,7 +8,7 @@ export class Cube {
     private mesh: any;
 
     public static readonly Type: string = "Cube";
-    public static readonly DefaultSize: number = 3000;
+    public static readonly DefaultSize: number = 1000;
 
     constructor(scene: Scene, size: number) {
         this.scene = scene;
@@ -66,6 +65,64 @@ export class Cube {
             const face = new Face(this.scene, this.size, this.mesh, positions[i], names[i], colors[i], rotations[i]);
             this.faces.push(face);
         }
+    }
+
+    public setupMulti() {
+        // Trouver la face "Front"
+        const frontFace = this.faces.find(face => face.getMesh().name === "Back");
+        if (!frontFace) {
+            console.error("Front face not found!");
+            return;
+        }
+
+        console.log("ADDING SEPARATORS");
+
+        const mesh = frontFace.getMesh();
+
+        // Position de la face "Front"
+        const frontPosition = mesh.position;
+
+        const depth = 100;
+        const sep = 10;
+        // Créer la plateforme horizontale
+        const horizontalPlatform = MeshBuilder.CreateBox("horizontalSeparator", {
+            width: this.size * 2,
+            depth: depth + depth / 2,
+            height: sep,
+        }, this.scene);
+
+        // Positionner la plateforme horizontale à mi-hauteur de la face "Front"
+        horizontalPlatform.position = new Vector3(
+            frontPosition.x,
+            frontPosition.y, // Mi-hauteur
+            frontPosition.z // Légèrement en avant de la face
+        );
+
+        console.log("horizontalPlatform", horizontalPlatform.position, frontPosition);
+
+        // Créer la plateforme verticale
+        const verticalPlatform = MeshBuilder.CreateBox("verticalSeparator", {
+            width: sep,
+            depth: depth,
+            height: this.size * 2,
+        }, this.scene);
+
+        // Positionner la plateforme verticale à mi-largeur de la face "Front"
+        verticalPlatform.position = new Vector3(
+            frontPosition.x, // Mi-largeur
+            frontPosition.y, // Même hauteur que la face
+            frontPosition.z - depth / 2 // Légèrement en avant de la face
+        );
+
+        // Add physics to the platforms if engine is enabled
+       if (this.scene.getPhysicsEngine()) {
+            new PhysicsAggregate(horizontalPlatform, PhysicsShapeType.BOX, { mass: 0 });
+            new PhysicsAggregate(verticalPlatform, PhysicsShapeType.BOX, { mass: 0 });
+        }
+
+        // Ajouter les plateformes comme enfants de la face "Front"
+        // horizontalPlatform.parent = mesh;
+        // verticalPlatform.parent = mesh;
     }
 
     public getMesh(): any {

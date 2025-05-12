@@ -50,10 +50,17 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
     public recreatePhysicsBody(): void {
         // Supprimez l'ancien corps physique
         if (this.mesh[0].physicsBody) {
-            this.mesh[0].physicsBody.dispose();
+            // this.mesh[0].physicsBody.dispose();
+            const physicsBody = this.mesh[0].physicsBody;
+
+            // Obtenez la position et la rotation actuelles du mesh
+            const newPosition = this.mesh[0].absolutePosition;
+            const newRotation = this.mesh[0].absoluteRotationQuaternion;
+
+            physicsBody.setTargetTransform(newPosition, newRotation);
         }
         // Créez un nouveau corps physique avec les nouvelles transformations
-        new PhysicsAggregate(this.mesh[0], PhysicsShapeType.CYLINDER, { mass: 0, friction: 0, restitution: 0 }, this.scene);
+        // new PhysicsAggregate(this.mesh[0], PhysicsShapeType.CYLINDER, { mass: 0, friction: 0, restitution: 0 }, this.scene);
     }
 
 
