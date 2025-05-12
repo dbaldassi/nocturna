@@ -42,6 +42,8 @@ export class ParentedPlatform extends Platform implements ParentNodeObserver {
         super(mesh, scene);
     }
 
+    public onRotationStart: () => void;
+
     public onRotationChange() {
         this.recreatePhysicsBody();
     }

@@ -8,6 +8,7 @@ export class RocketObject implements Enemy {
     protected mesh: Mesh;
     protected scene: Scene;
     public damage: number = 5;
+    public explosionRadius: number = 10;
 
     constructor(mesh: Mesh, scene: Scene) {
         this.mesh = mesh;
@@ -61,8 +62,8 @@ export class RocketObject implements Enemy {
         particleSystem.maxEmitBox = new Vector3(1, 1, 1); // Maximum box size
         particleSystem.color1 = new Color4(1, 0.5, 0, 1); // Orange
         particleSystem.color2 = new Color4(1, 0, 0, 1); // Red
-        particleSystem.minSize = 5; // Increased from 2
-        particleSystem.maxSize = 10; // Increased from 5
+        particleSystem.minSize = 2; // Increased from 2
+        particleSystem.maxSize = 7; // Increased from 5
         particleSystem.minLifeTime = 0.2;
         particleSystem.maxLifeTime = 1;
         particleSystem.emitRate = 1000;

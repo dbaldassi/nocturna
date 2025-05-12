@@ -13,6 +13,7 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
     private current: number = 0;
     private targetScore: number;
     private ended: boolean = false;
+    public victoryAggregate: PhysicsAggregate;
 
     constructor(mesh: Mesh, scene: Scene) {
         this.scene = scene;
@@ -44,8 +45,16 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
         this.animate();
     }
 
+    public onRotationStart(): void {
+        // this.mesh[0].physicsBody.disablePreStep = false;
+    }
+    
     public onRotationChange(): void {
         this.recreatePhysicsBody();
+        // this.mesh[0].physicsBody.disablePreStep = true;
+        // const absoluteMeshPosition = this.mesh[0].getAbsolutePosition();
+        // this.victoryAggregate.body.transformNode.position = absoluteMeshPosition;
+        // console.log("onRotationChange", absoluteMeshPosition, this.victoryAggregate.body.transformNode.getAbsolutePosition());
     }
     public recreatePhysicsBody(): void {
         // Supprimez l'ancien corps physique
@@ -152,12 +161,12 @@ export class VictoryConditionFactory implements GameObjectFactory {
             meshes.forEach((m) => {
                 victory.mesh.push(m);
             });
-
+            
             if(physics) {
                 const p = new PhysicsAggregate(meshes[0], PhysicsShapeType.CYLINDER, { mass: 0, friction: 0, restitution: 0 }, config.scene);
                 p.body.setCollisionCallbackEnabled(true);
                 config.parent.addObserver(victory);
-
+                victory.victoryAggregate = p;
                 victory.startAnimation();
             }
         });
