@@ -355,12 +355,12 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
     }
 
     public setupClickListener() {
-        this.scene.onPointerDown = (evt, pickResult) => {
+        this.scene.onPointerDown = (_, pickResult) => {
             console.log("Pointer down event:");
             if (pickResult?.hit && pickResult.pickedMesh) {
                 console.log("Mesh clicked:", pickResult.pickedMesh.name);
                 // Vérifier si le mesh appartient à un EditorObject
-                const selectedObject = this.getEditorObjectByMesh(pickResult.pickedMesh);
+                const selectedObject = this.getEditorObjectByMesh(pickResult.pickedMesh as Mesh);
                 if (selectedObject) {
                     this.selectEditorObject(selectedObject);
                 } else {

@@ -1,7 +1,7 @@
 {
-  "name": "testproj",
+  "name": "Nocturna",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,8 +13,9 @@
     "vite": "^6.0.5"
   },
   "dependencies": {
-    "@babylonjs/havok": "^1.3.10",
-    "@babylonjs/loaders": "^8.6.1",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "http": "^0.0.1-security",
     "ws": "^8.18.2"
   }
 }

@@ -233,7 +233,7 @@ abstract class AbstractGameSceneState {
     }
 
     public render() : void {}
-    public update(dt: number, input: CharacterInput): AbstractGameSceneState|null {
+    public update(_: number, __: CharacterInput): AbstractGameSceneState|null {
         return null;
     }
 }

@@ -28,7 +28,7 @@ export class LooseCondition {
         this.scene = scene;
     }
 
-    public checkLoose(timer: number): boolean {
+    public checkLoose(_: number): boolean {
         console.log(this.player.getMesh().position.y, -Cube.DefaultSize / 2);
         // temp fix
         return this.player.getMesh().position.y < (-Cube.DefaultSize);
@@ -117,7 +117,7 @@ export class LooseCondition {
         }
     }
 
-    public update(dt: number, input: CharacterInput): void {
+    public update(dt: number, _: CharacterInput): void {
         if(this.ended) this.updateScore(dt);
     }
 

@@ -119,7 +119,7 @@ export class Utils {
             console.log(`Loaded ${name} successfully`);
             callback(task);
         }
-        task.onError = (task, message) => {
+        task.onError = (_, message) => {
             console.error(`Failed to load ${name}: ${message}`);
         };
 

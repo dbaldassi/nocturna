@@ -33,7 +33,7 @@ export class TutorialScene extends BaseScene implements LevelLoaderObserver, Gam
         // ];
     }
 
-    public visitVictory(coin: VictoryCondition): void {
+    public visitVictory(_: VictoryCondition): void {
         console.log("Victory condition reached!");
         this.endTutorial();
     }
@@ -112,7 +112,7 @@ export class TutorialScene extends BaseScene implements LevelLoaderObserver, Gam
         if (mesh.physicsBody) {
             mesh.physicsBody.getCollisionObservable().add((collider) => {
                 console.log(`Collision detected with ??`);
-                if (collider.collidedAgainst === this.player.mesh.physicsBody) {
+                if (collider.collidedAgainst === this.player.getMesh().physicsBody) {
                     console.log(`Collision detected with ${mesh.name}`);
                     object.accept(this);
                 }

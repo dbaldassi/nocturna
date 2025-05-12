@@ -14,7 +14,7 @@ import { ObjectEditorImpl } from "./EditorObject";
 export class Player implements GameObject {
     public static readonly Type: string = "player";
 
-    private mesh: Mesh[] = [];
+    public mesh: Mesh[] = [];
     private scene: Scene;
     private speed: number = 5.0;
     private jumpForce: Vector3 = undefined;
@@ -50,7 +50,7 @@ x
         // const rayHelper = new RayHelper(ray);
         // rayHelper.show(this.scene);
 
-        const result = this.scene.pickWithRay(ray, (mesh) => !this.mesh.includes(mesh));
+        const result = this.scene.pickWithRay(ray, (mesh) => !this.mesh.includes(mesh as Mesh));
     
         return !!(result?.hit && result.pickedMesh);;
     }

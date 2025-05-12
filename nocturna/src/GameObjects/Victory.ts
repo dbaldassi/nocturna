@@ -123,7 +123,7 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
         }
     }
 
-    public update(dt: number, input: CharacterInput): void {
+    public update(dt: number, _: CharacterInput): void {
         if(this.ended) this.updateScore(dt);
     }
 

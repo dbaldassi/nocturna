@@ -1,7 +1,7 @@
 
 import { Cube } from "./Cube";
 import { ParentNode } from "./ParentNode";
-import { Player, PlayerEditor, PlayerFactory } from "./GameObjects/Player";
+import { Player, PlayerFactory } from "./GameObjects/Player";
 import { AssetsManager, Scene, Vector3 } from "@babylonjs/core";
 import { GameObjectFactory, GameObjectConfig, EditorObject, GameObject } from "./types";
 import { ParentedPlatform, ParentedPlatformFactory, FixedPlatform, FixedPlatformFactory } from "./GameObjects/Platform";
@@ -30,7 +30,7 @@ class PlayerAbstractFactory implements GameObjectFactory {
         this.observer.onPlayer(player);
         return player;
     }
-    public createForEditor(GameObjectConfig: any): PlayerEditor {
+    public createForEditor(GameObjectConfig: any): EditorObject {
         const player = this.factory.createForEditor(GameObjectConfig);
         this.observer.onObjectCreated(player);
         return player;

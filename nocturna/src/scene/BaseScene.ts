@@ -1,5 +1,5 @@
 
-import { Engine, Scene, HavokPlugin } from "@babylonjs/core";
+import { Engine, Scene, HavokPlugin, Vector3 } from "@babylonjs/core";
 
 import { InputHandler } from "../InputHandler";
 import HavokPhysics from "@babylonjs/havok";

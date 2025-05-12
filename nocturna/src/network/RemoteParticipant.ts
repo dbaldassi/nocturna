@@ -47,7 +47,15 @@ export class RemoteParticipant {
             return;
         }
 
-        this.pc = new RTCPeerConnection();
+        this.pc = new RTCPeerConnection({
+            iceServers: [
+                { urls: "stun:stun.l.google.com:19302" },
+                { urls: "stun:stun1.l.google.com:19302" },
+                { urls: "stun:stun2.l.google.com:19302" },
+                { urls: "stun:stun3.l.google.com:19302" },
+                { urls: "stun:stun4.l.google.com:19302" },
+            ],
+        });
         this.pc.onicecandidate = (event) => {
             this.signaling.sendICECandidate(this.id, event.candidate);
         };
@@ -66,7 +74,15 @@ export class RemoteParticipant {
             return;
         }
 
-        this.pc = new RTCPeerConnection();
+        this.pc = new RTCPeerConnection({
+            iceServers: [
+                { urls: "stun:stun.l.google.com:19302" },
+                { urls: "stun:stun1.l.google.com:19302" },
+                { urls: "stun:stun2.l.google.com:19302" },
+                { urls: "stun:stun3.l.google.com:19302" },
+                { urls: "stun:stun4.l.google.com:19302" },
+            ],
+        });
         this.pc.onicecandidate = (event) => {
             this.signaling.sendICECandidate(this.id, event.candidate);
         };

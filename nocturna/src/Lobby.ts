@@ -1,6 +1,5 @@
 import { Scene } from "@babylonjs/core";
 import { AdvancedDynamicTexture, Button, Control, InputText, StackPanel, TextBlock } from "@babylonjs/gui";
-import { c } from "vite/dist/node/moduleRunnerTransport.d-DJ_mE5sf";
 
 export interface LobbyObserver {
     onRoomCreation(playerId: string) : void;
