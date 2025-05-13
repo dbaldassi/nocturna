@@ -129,6 +129,7 @@ export class MultiScene extends BaseScene implements LevelLoaderObserver, GameOb
     public onRoomJoinFailed(_: string): void {}
     public onParticipantJoined(_: string): void {}
     public onParticipantLeft(_: string): void {}
+    public onConnectionEstablished(_: string): void {}
 
     public onUpdate(participantId: string, action: string, data: any): void {
         console.log("Update received from participant:", participantId, action, data);
@@ -154,7 +155,7 @@ abstract class AbstractGameSceneState {
     }
 
     public render() : void {}
-    public update(dt: number, input: CharacterInput): AbstractGameSceneState|null {
+    public update(_: number, __: CharacterInput): AbstractGameSceneState|null {
         return null;
     }
 }
@@ -301,7 +302,7 @@ class LobbyState extends AbstractGameSceneState implements NetworkObserver, Lobb
         this.ready = true;
     }
 
-    public update(dt: number, input: CharacterInput): AbstractGameSceneState | null {
+    public update(_: number, __: CharacterInput): AbstractGameSceneState | null {
         return null;
     }
 

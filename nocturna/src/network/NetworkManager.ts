@@ -36,7 +36,10 @@ export class NetworkManager implements RTCSignaling, RemoteParticipantObserver {
     private constructor() {
         const hostname = window.location.hostname;
         const port = window.location.port;
-        const url = `ws://${hostname}:${port}/nocturna-ws`;
+        const protocol = window.location.protocol === "http:" ? "ws" : "wss";
+        const host = port ? `${hostname}:${port}` : `${hostname}`;
+
+        const url = `${protocol}://${host}/nocturna-ws`;
         this.createWebsocket(url);
     }
 
@@ -209,8 +212,8 @@ export class NetworkManager implements RTCSignaling, RemoteParticipantObserver {
     public onDataChannelOpened(remoteId: string): void {
         this.observers.onConnectionEstablished(remoteId);
     }
-    
-    public onDataChannelClosed(remoteId: string): void {
+
+    public onDataChannelClosed(_: string): void {
         
     }
 

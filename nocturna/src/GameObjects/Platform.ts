@@ -6,7 +6,7 @@ import { ObjectEditorImpl } from "./EditorObject";
 export class Platform implements GameObject {
     public static readonly Type: string = "platform";
 
-    protected mesh: Mesh[] = [];
+    public mesh: Mesh[] = [];
     protected scene: Scene;
 
     constructor(mesh: Mesh, scene: Scene) {
