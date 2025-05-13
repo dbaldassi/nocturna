@@ -1,6 +1,6 @@
 
 import { GameObject, IRemoteGameObject, CharacterInput, GameObjectVisitor } from "../types";
-import { Vector3, Mesh } from "@babylonjs/core";
+import { Vector3, Mesh, PhysicsMassProperties, PhysicsBody, PhysicsAggregate } from "@babylonjs/core";
 
 class Interpolator {
     private previousUpdate: { position: Vector3; timestamp: number } | null = null;
@@ -35,7 +35,9 @@ class Interpolator {
             P1.z + (P2.z - P1.z) * clampedAlpha
         );
 
-        return position;
+        console.log("Interpolated position:", position, this.lastUpdate.position);
+
+        return this.lastUpdate.position;
     }
 }
 
@@ -52,6 +54,12 @@ export class RemoteGameObject implements IRemoteGameObject {
         this.interpolator = new Interpolator();
         this.id = id;
         this.ownerId = ownerId;
+
+        const physicsBody = this.object.getMesh().physicsBody;
+        if (physicsBody) {
+            physicsBody.dispose();
+            this.object.getMesh().physicsBody = null;
+        }
     }
 
     public getId(): string {
@@ -69,7 +77,8 @@ export class RemoteGameObject implements IRemoteGameObject {
         const interpolatedPosition = this.interpolator.getInterpolatedPosition(this.timestamp);
 
         this.object.getMesh().position = interpolatedPosition || this.object.getMesh().position;
-        this.object.getMesh().computeWorldMatrix(true);
+        console.log("Updated position:", this.object.getMesh().position);
+        // this.object.getMesh().computeWorldMatrix(true);
 
         if(this.object.getMesh().physicsBody) {
             this.object.getMesh().physicsBody.setTargetTransform(this.object.getMesh().position, this.object.getMesh().rotationQuaternion);

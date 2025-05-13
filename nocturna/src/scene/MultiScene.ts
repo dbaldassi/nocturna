@@ -59,6 +59,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
 
     private setupCamera() {
         const camera = new UniversalCamera("camera1", Vector3.Zero(), this.scene);
+        camera.fov = 8;
         this.scene.activeCamera = camera;
     }
 
@@ -113,6 +114,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
     public updateRemoteObject(objectId: string, participantId: string, position: Vector3, timestamp: number) {
         const remoteObject = this.remoteObjects.find(object => object.getId() === objectId && object.getOwnerId() === participantId);
         if(remoteObject) {
+            // console.log("Updating remote object", objectId, participantId, position, timestamp);
             remoteObject.updatePosition(position, timestamp);
         }
     }
@@ -177,6 +179,9 @@ class InGameState extends AbstractGameSceneState {
         super(gameScene);
         this.condition = null;
         this.playerId = playerId;
+
+        const networkManager = NetworkManager.getInstance();
+        networkManager.setObserver(this);
     }
 
     public setCondition(condition: VictoryCondition | LooseCondition) {
@@ -221,6 +226,8 @@ class LoadingState extends AbstractGameSceneState implements LevelLoaderObserver
     public enter(): void {
         console.log("Entering Loading State");
 
+        this.gameScene.createGameScene();
+
         this.localPlayer.ready = false;
         this.remoteParticipant.forEach(p => p.ready = false);
 
@@ -261,15 +268,17 @@ class LoadingState extends AbstractGameSceneState implements LevelLoaderObserver
                 this.gameScene.addLocalObject(player);
             }
             else {
-                player.getMesh().physicsBody.dispose();
-                player.getMesh().dispose();
-
                 const participant = this.remoteParticipant.find(p => p.num === subcube);
                 if(participant) {
+                    console.log("Created remote player", participant.id);
                     // create remote object
                     const remotePlayer = new RemoteGameObject(player, participant.id, participant.id);
                     // add remote object
                     this.gameScene.addRemoteObject(remotePlayer);
+                }
+                else {
+                    player.getMesh().physicsBody.dispose();
+                    player.getMesh().dispose();
                 }
             }
         });
@@ -293,7 +302,7 @@ class LoadingState extends AbstractGameSceneState implements LevelLoaderObserver
 
     public update(_: number, __: CharacterInput): AbstractGameSceneState|null {
         if(this.localPlayer.ready && this.remoteParticipant.every(p => p.ready)) {
-            return new InGameState(this.gameScene);
+            return new InGameState(this.gameScene, this.localPlayer.id);
         }
 
         return null;

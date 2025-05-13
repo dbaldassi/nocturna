@@ -130,7 +130,7 @@ export class RemoteParticipant {
         if (this.dataChannel && this.dataChannel.readyState === "open") {
             const message = JSON.stringify({ id, action, data });
             this.dataChannel.send(message);
-            console.log("Sent message to participant:", this.id, message);
+            // console.log("Sent message to participant:", this.id, message);
         } else {
             console.warn("Data channel is not open. Cannot send message.");
         }
