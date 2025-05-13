@@ -63,7 +63,13 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     public onParent(parent: ParentNode): void {
         this.parent = parent;
         this.parent.setupKeyActions(this.inputHandler);
+        this.setupKeyActions();
     }
+
+    public setupKeyActions() {
+        this.inputHandler.addAction("pov", () => this.changeCamera());
+    }
+
     public onLevelLoaded(): void {
         this.setupCamera();
         this.setupCollisions();
@@ -103,8 +109,8 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         this.cameras[0].radius = -500;
         // this.cameras[0].position = Vector3.Zero();
         // this.cameras[0].lockedTarget = undefined;
-        this.cameras[1].radius = 50;
-        this.cameras[1].fov = 5;
+        this.cameras[1].heightOffset = 500;
+        this.cameras[1].upVector = new Vector3(0, 0, -1);
         
         this.scene.activeCamera = this.cameras[this.activeCameraIndex];
         // this.scene.activeCamera.attachControl(this.scene.getEngine().getRenderingCanvas(), true);
@@ -216,6 +222,12 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
 
     public onQuit() {
         window.location.reload();
+    }
+
+    public changeCamera() {
+        this.activeCameraIndex = (this.activeCameraIndex + 1) % this.cameras.length;
+        this.scene.activeCamera = this.cameras[this.activeCameraIndex];
+        this.scene.activeCamera.attachControl(this.scene.getEngine().getRenderingCanvas(), true);
     }
 }
 
