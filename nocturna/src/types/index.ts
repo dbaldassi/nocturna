@@ -1,4 +1,4 @@
-import { Mesh, Vector3, Scene, AssetsManager, MeshAssetTask } from "@babylonjs/core";
+import { Mesh, Vector3, Scene, AssetsManager, MeshAssetTask, Matrix, TransformNode } from "@babylonjs/core";
 import { VictoryCondition } from "../GameObjects/Victory";
 import { ParentNode } from "../ParentNode";
 
@@ -135,10 +135,30 @@ export class Utils {
     static configureMesh(meshes: Mesh[], config: GameObjectConfig): void {
         const mesh = meshes[0];
         mesh.position = config.position;
+        // mesh.setAbsolutePosition(config.position);
         mesh.rotation = config.rotation;
         mesh.scaling = config.size;
         mesh.setBoundingInfo(meshes[1].getBoundingInfo());
         mesh.refreshBoundingInfo();
+    }
+
+    static calculatePositionRelativeToParent(parent: ParentNode, position: Vector3): Vector3 {
+        // Créer une matrice de rotation à partir de la rotation du parent
+        const parentRotation = parent.getRotation();
+        const parentRotationMatrix = Matrix.RotationYawPitchRoll(
+            parentRotation.y,
+            parentRotation.x,
+            parentRotation.z
+        );
+    
+        // Inverser la matrice de rotation du parent
+        const inverseParentRotationMatrix = Matrix.Invert(parentRotationMatrix);
+    
+        // Appliquer la rotation inversée à la position locale
+        const transformedPosition = Vector3.TransformCoordinates(position, inverseParentRotationMatrix);
+    
+        // Ajouter la position du parent pour obtenir la position globale
+        return transformedPosition;
     }
 }
 

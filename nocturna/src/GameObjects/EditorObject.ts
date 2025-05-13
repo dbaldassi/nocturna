@@ -1,4 +1,4 @@
-import { Color3, Mesh, StandardMaterial } from "@babylonjs/core";
+import { Color3, Matrix, Mesh, StandardMaterial, Vector3 } from "@babylonjs/core";
 import { CharacterInput, EditorObject, GameObject } from "../types";
 
 
@@ -15,8 +15,32 @@ export class ObjectEditorImpl implements EditorObject {
 
     public updatePosition(dt: number, input: CharacterInput): void {
         const moveSpeed = this.lateralspeed * dt;
-        this.object.getMesh().position.x += (input.right ? 1 : (input.left ? -1 : 0)) * moveSpeed;
-        this.object.getMesh().position.y += (input.up ? 1 : (input.down ? -1 : 0)) * moveSpeed;
+    
+        // Calculer le mouvement local
+        const localMovement = new Vector3(
+            (input.right ? 1 : (input.left ? -1 : 0)) * moveSpeed,
+            (input.up ? 1 : (input.down ? -1 : 0)) * moveSpeed,
+            0 // Pas de mouvement en profondeur
+        );
+    
+        // Si un parent existe, transformer le mouvement local en mouvement global
+        const parentMesh = this.object.getMesh().parent as Mesh;
+        if (parentMesh) {
+            const parentRotationMatrix = Matrix.RotationYawPitchRoll(
+                parentMesh.rotation.y,
+                parentMesh.rotation.x,
+                parentMesh.rotation.z
+            );
+    
+            // Appliquer la rotation du parent au mouvement local
+            const globalMovement = Vector3.TransformCoordinates(localMovement, parentRotationMatrix);
+
+            // Ajouter le mouvement global à la position actuelle
+            this.object.getMesh().position.addInPlace(globalMovement);
+        } else {
+            // Si aucun parent, appliquer le mouvement local directement
+            this.object.getMesh().position.addInPlace(localMovement);
+        }
     }
 
     public updateRotation(dt: number, input: CharacterInput): void {

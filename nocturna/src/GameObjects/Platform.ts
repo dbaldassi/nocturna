@@ -87,6 +87,7 @@ export class ParentedPlatformFactory implements GameObjectFactory {
                 const meshes = task.loadedMeshes;
     
                 meshes[0].name = Platform.Type;
+                config.position = Utils.calculatePositionRelativeToParent(config.parent, config.position);
                 Utils.configureMesh(meshes, config);
                 
                 if(physics) {

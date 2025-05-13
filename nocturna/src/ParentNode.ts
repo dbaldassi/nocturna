@@ -33,6 +33,10 @@ export class ParentNode {
         this.observers = this.observers.filter(obs => obs !== observer);
     }
 
+    public getRotation(): Vector3 {
+        return this.node.rotation;
+    }
+
     private notifyObservers() {
         this.observers.forEach(observer => {
             observer.onRotationChange();
