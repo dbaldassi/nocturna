@@ -150,11 +150,7 @@ export class PlayerFactory implements GameObjectFactory {
             }
 
             meshes[0].name = "player";
-            meshes.forEach((mesh) => {
-                console.log("Mesh", mesh.name);
-                player.mesh.push(mesh);
-            });
-            // player.mesh = meshes[0];
+            meshes.forEach((mesh) => { player.mesh.push(mesh); });
         });
         
         return player;

@@ -30,14 +30,12 @@ class Interpolator {
         const clampedAlpha = Math.min(Math.max(alpha, 0), 1);
 
         const position = new Vector3(
-            P1.x + (P2.x - P1.x) * clampedAlpha,
-            P1.y + (P2.y - P1.y) * clampedAlpha,
-            P1.z + (P2.z - P1.z) * clampedAlpha
+            P1._x + (P2._x - P1._x) * clampedAlpha,
+            P1._y + (P2._y - P1._y) * clampedAlpha,
+            P1._z + (P2._z - P1._z) * clampedAlpha
         );
 
-        console.log("Interpolated position:", position, this.lastUpdate.position);
-
-        return this.lastUpdate.position;
+        return position;
     }
 }
 
@@ -77,7 +75,6 @@ export class RemoteGameObject implements IRemoteGameObject {
         const interpolatedPosition = this.interpolator.getInterpolatedPosition(this.timestamp);
 
         this.object.getMesh().position = interpolatedPosition || this.object.getMesh().position;
-        console.log("Updated position:", this.object.getMesh().position);
         // this.object.getMesh().computeWorldMatrix(true);
 
         if(this.object.getMesh().physicsBody) {

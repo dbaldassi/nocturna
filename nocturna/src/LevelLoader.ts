@@ -92,8 +92,6 @@ export class LevelLoader {
     }
 
     private createLevel(data: any): void {
-        console.log("CREATING LEVEL");
-
         // Create the cube
         const cube = Cube.create(this.scene, data[Cube.Type].position, data[Cube.Type].size);
         this.observer.onCube(cube);
@@ -124,7 +122,7 @@ export class LevelLoader {
                     parent: parent,
                     assetsManager: this.assetManager
                 };
-                console.log("config", config);
+                
                 const gameObject = this.abstractFactory.create(factory, config);
                 this.observer.onObjectCreated(gameObject);
             } else {

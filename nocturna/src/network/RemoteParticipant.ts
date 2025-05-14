@@ -79,8 +79,6 @@ export class RemoteParticipant {
                 { urls: "stun:stun.l.google.com:19302" },
                 { urls: "stun:stun1.l.google.com:19302" },
                 { urls: "stun:stun2.l.google.com:19302" },
-                { urls: "stun:stun3.l.google.com:19302" },
-                { urls: "stun:stun4.l.google.com:19302" },
             ],
         });
         this.pc.onicecandidate = (event) => {
@@ -102,7 +100,7 @@ export class RemoteParticipant {
         if (this.pc) {
             try {
                 await this.pc.setRemoteDescription(answer);
-                console.log("Remote description set:", answer);
+                // console.log("Remote description set:", answer);
             } catch (error) {
                 console.error("Error setting remote description:", error);
             }
@@ -113,7 +111,7 @@ export class RemoteParticipant {
         if (this.pc) {
             try {
                 await this.pc.addIceCandidate(candidate);
-                console.log("ICE candidate added:", candidate);
+                // console.log("ICE candidate added:", candidate);
             } catch (error) {
                 console.error("Error adding ICE candidate:", error);
             }

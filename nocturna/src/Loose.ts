@@ -29,7 +29,7 @@ export class LooseCondition {
     }
 
     public checkLoose(_: number): boolean {
-        console.log(this.player.getMesh().position.y, -Cube.DefaultSize / 2);
+        // console.log(this.player.getMesh().position.y, -Cube.DefaultSize / 2);
         // temp fix
         return this.player.getMesh().position.y < (-Cube.DefaultSize);
     }
