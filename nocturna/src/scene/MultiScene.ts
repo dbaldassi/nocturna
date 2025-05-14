@@ -5,21 +5,52 @@ import { BaseScene } from "./BaseScene";
 import { Cube } from "../Cube";
 import { ParentNode } from "../ParentNode";
 import { InputHandler } from "../InputHandler";
-import { Player } from "../GameObjects/Player";
+import { Player, PlayerFactory } from "../GameObjects/Player";
 import { GameObject, GameObjectFactory, GameObjectVisitor, GameObjectConfig, CharacterInput, EndConditionObserver, IRemoteGameObject } from "../types";
 import { LevelLoaderObserver, LevelLoader } from "../LevelLoader";
-import { VictoryCondition } from "../GameObjects/Victory";
+import { VictoryCondition, VictoryConditionFactory } from "../GameObjects/Victory";
 import { LooseCondition } from "../Loose";
 import { Lobby, LobbyObserver } from "../Lobby";
 
 import { NetworkManager, NetworkObserver } from "../network/NetworkManager";
 import { RemoteGameObject } from "../GameObjects/RemoteGameObject";
+import { Coin, CoinFactory, SuperCoin, SuperCoinFactory } from "../GameObjects/Coin";
+import { FixedPlatform, FixedPlatformFactory, ParentedPlatform, ParentedPlatformFactory, Platform } from "../GameObjects/Platform";
+import { FixedRocket, FixedRocketFactory } from "../GameObjects/Rocket";
+import { SpikeTrapFactory, SpikeTrapObject } from "../GameObjects/SpikeTrap";
 
 type Participant = {
     id: string;
     ready: boolean;
     num: number;
 }
+
+class CoinSpawner {
+    private scene: Scene;
+    private coinFactory: CoinFactory;
+    private superCoinFactory: SuperCoinFactory;
+
+    constructor(scene: Scene) {
+        this.scene = scene;
+        this.coinFactory = new CoinFactory();
+        this.superCoinFactory = new SuperCoinFactory();
+    }
+
+    public spawnCoin(position: Vector3): Coin {
+        let coin: Coin;
+        const config: GameObjectConfig = {
+            position: position,
+            translation: Vector3.Up(),
+            rotation: Vector3.Zero(),
+            scene: this.scene,
+        };
+
+        if(Math.random() > 0.1) coin = this.coinFactory.create(config);
+        else coin = this.superCoinFactory.create(config);
+
+        return coin;
+    }
+};
 
 export class MultiScene extends BaseScene implements GameObjectVisitor, EndConditionObserver {
     public static readonly MaxPlayer: number = 4;
@@ -29,7 +60,12 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
     private localObjects: GameObject[] = [];
     private loseCondition: LooseCondition; // Replace with the actual type if available
     private state : AbstractGameSceneState;
-    private timestamp: number = 0; 
+    private timestamp: number = 0;
+    private score: number = 0;
+    private coinSpawner: CoinSpawner;
+    private playerId: string;
+    private coinTimer: number = 0;
+    private readonly coinInterval: number = 10000; // 1 second
 
     constructor(engine: Engine, inputHandler: InputHandler) {
         super(engine, inputHandler);
@@ -47,8 +83,10 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
         return scene;
     }
     
-    public async createGameScene() {
+    public async createGameScene(ownerId: string) {
         this.scene = new Scene(this.engine);
+        this.playerId = ownerId;
+        this.coinSpawner = new CoinSpawner(this.scene);
         await this.addPhysic();
         this.setupCamera();        
     }
@@ -58,8 +96,9 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
     }
 
     private setupCamera() {
-        const camera = new UniversalCamera("camera1", Vector3.Zero(), this.scene);
-        camera.fov = 8;
+        const camera = new UniversalCamera("camera1", new Vector3(0,0,0), this.scene);
+        camera.fov = 5;
+        // caemra to look slightly downward
         this.scene.activeCamera = camera;
     }
 
@@ -67,8 +106,70 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
         this.remoteObjects.push(object);
     }
 
+    public removeRemoteObject(id: string, owner: string): void {
+        const object = this.remoteObjects.find(o => id !== o.getId() && owner !== o.getOwnerId());
+
+        if(!object) return;
+
+        const body = object.getMesh().physicsBody;
+        if(body) {
+            body.dispose();
+        }
+        object.getMesh().dispose();
+
+        this.remoteObjects = this.remoteObjects.filter(o => o !== object);
+    }
+
     public addLocalObject(object: GameObject): void {
         this.localObjects.push(object);
+    }
+
+    private addAndSendLocalObject(object: GameObject): void {
+        this.localObjects.push(object);
+        
+        const body = object.getMesh().physicsBody;
+        if(body) {
+            body.getCollisionObservable().add((collider) => {
+                if(collider.collidedAgainst === this.localObjects[0].getMesh().physicsBody) {
+                    object.accept(this);
+                }
+            });
+        }
+
+        const networkManager = NetworkManager.getInstance();
+        networkManager.sendUpdate("createObject", {
+            id: object.getId(),
+            owner: this.playerId,
+            position: object.getMesh().position,
+            type: object.getType(),
+        });
+    }
+
+    private removeLocalObject(object: GameObject): void {
+        if(object.getMesh().physicsBody) {
+            object.getMesh().physicsBody.dispose();
+        }
+        object.getMesh().dispose();
+
+        this.localObjects = this.localObjects.filter(o => object !== o);
+        const networkManager = NetworkManager.getInstance();
+        networkManager.sendUpdate("removeObject", {
+            id: object.getId(),
+            owner: this.playerId
+        });
+    }
+
+    private updateLocalObject(object: GameObject, dt: number, input: CharacterInput): void {
+        // update locally
+        object.update(dt, input);
+        // Send update to others
+        const networkManager = NetworkManager.getInstance();
+        networkManager.sendUpdate("updateObject", {
+            id: object.getId(),
+            owner: this.playerId,
+            position: object.getMesh().position,
+            timestamp: this.timestamp,
+        });
     }
 
     public onObjectCreated(object: GameObject): void {
@@ -80,24 +181,29 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
         state.setCondition(portal);
     }
 
-    public updateObjects(dt: number, input: CharacterInput, playerId: string) {
+    public visitCoin(coin: Coin): void {
+        this.score += coin.getScore();
+        console.log("Score: ", this.score);
+        this.removeLocalObject(coin);
+        
+    };
+
+    public updateObjects(dt: number, input: CharacterInput) {
         this.gameObjects.forEach((object) => {
             object.update(dt, input);
+            if(object.getMesh().name === Platform.Type && this.coinTimer >= this.coinInterval && Math.random() < 1/this.gameObjects.length) {
+                console.log("Spawning coin");
+                const position = object.getMesh().position;
+                const coin = this.coinSpawner.spawnCoin(position);;
+                this.addAndSendLocalObject(coin);
+                this.coinTimer = 0;
+            }
         });
-        this.localObjects.forEach((object) => {
-            object.update(dt, input);
-            const networkManager = NetworkManager.getInstance();
-            networkManager.sendUpdate("updateObject", {
-                id: /*object.getId()*/ playerId,
-                owner: playerId,
-                position: object.getMesh().position,
-                timestamp: this.timestamp,
-            });
-        });
-        this.remoteObjects.forEach((object) => {
-            object.update(dt, input);
-        });
+
+        this.localObjects.forEach((object) => this.updateLocalObject(object, dt, input));
+        this.remoteObjects.forEach((object) => object.update(dt, input));
         this.timestamp += dt;
+        this.coinTimer += dt;
     }
 
     public update(dt: number) {
@@ -173,12 +279,21 @@ abstract class AbstractGameSceneState implements NetworkObserver {
 
 class InGameState extends AbstractGameSceneState {
     private condition: VictoryCondition | LooseCondition;
-    private playerId: string;
+    private factories : Map<string, GameObjectFactory>;
 
     constructor(gameScene: MultiScene, playerId: string) {
         super(gameScene);
         this.condition = null;
-        this.playerId = playerId;
+
+        this.factories = new Map<string, GameObjectFactory>();
+        this.factories.set(ParentedPlatform.Type, new ParentedPlatformFactory());
+        this.factories.set(FixedPlatform.Type, new FixedPlatformFactory());
+        this.factories.set(VictoryCondition.Type, new VictoryConditionFactory());
+        this.factories.set(Player.Type, new PlayerFactory());
+        this.factories.set(FixedRocket.Type, new FixedRocketFactory());
+        this.factories.set(SpikeTrapObject.Type, new SpikeTrapFactory());
+        this.factories.set(Coin.Type, new CoinFactory());
+        this.factories.set(SuperCoin.Type, new SuperCoinFactory());
 
         const networkManager = NetworkManager.getInstance();
         networkManager.setObserver(this);
@@ -193,7 +308,7 @@ class InGameState extends AbstractGameSceneState {
             return new EndState(this.gameScene, this.condition);
         }
 
-        this.gameScene.updateObjects(dt, input, this.playerId);
+        this.gameScene.updateObjects(dt, input);
 
         return null;
     }
@@ -205,6 +320,26 @@ class InGameState extends AbstractGameSceneState {
     public onPeerMessage(participantId: string, action: string, data: any): void {
         if(action === "updateObject") {
             this.gameScene.updateRemoteObject(data.id, participantId, data.position, data.timestamp);
+        }
+        else if(action === "createObject") {
+            const factory = this.factories.get(data.type);
+            if(!factory) return;
+
+            const config: GameObjectConfig = {
+                position: data.position,
+                rotation: Vector3.Zero(),
+                scene: this.gameScene.getScene(),
+            };
+            
+            const object = factory.create(config);
+
+            if(object) {
+                const remoteObject = new RemoteGameObject(object, data.id, data.owner);
+                this.gameScene.addRemoteObject(remoteObject);
+            }
+        }
+        else if(action === "removeObject") {
+            this.gameScene.removeRemoteObject(data.id, participantId);
         }
     }
 }
@@ -224,9 +359,7 @@ class LoadingState extends AbstractGameSceneState implements LevelLoaderObserver
     }
 
     public enter(): void {
-        console.log("Entering Loading State");
-
-        this.gameScene.createGameScene();
+        this.gameScene.createGameScene(this.localPlayer.id);
 
         this.localPlayer.ready = false;
         this.remoteParticipant.forEach(p => p.ready = false);
@@ -270,9 +403,8 @@ class LoadingState extends AbstractGameSceneState implements LevelLoaderObserver
             else {
                 const participant = this.remoteParticipant.find(p => p.num === subcube);
                 if(participant) {
-                    console.log("Created remote player", participant.id);
                     // create remote object
-                    const remotePlayer = new RemoteGameObject(player, participant.id, participant.id);
+                    const remotePlayer = new RemoteGameObject(player, player.getId(), participant.id);
                     // add remote object
                     this.gameScene.addRemoteObject(remotePlayer);
                 }

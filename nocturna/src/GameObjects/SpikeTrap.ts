@@ -4,12 +4,19 @@ import { ObjectEditorImpl } from "./EditorObject";
 
 export class SpikeTrapObject implements GameObject {
     public static readonly Type: string = "spike_trap";
+    private static nextId: number = 0;
+    private id: string;
     protected mesh: Mesh;
     protected scene: Scene;
 
     constructor(mesh: Mesh, scene: Scene) {
         this.mesh = mesh;
         this.scene = scene;
+        this.id = `${SpikeTrapObject.Type}_${SpikeTrapObject.nextId++}`;
+    }
+
+    public getId(): string {
+        return this.id;
     }
 
     public getMesh(): Mesh {

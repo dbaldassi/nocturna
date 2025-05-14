@@ -7,18 +7,26 @@ import { ObjectEditorImpl } from './EditorObject';
 
 export class VictoryCondition implements GameObject, ParentNodeObserver {
     public static readonly Type: string = "victory_condition";
+    private static nextId: number = 0;
     private scene: Scene;
     public mesh: Mesh[] = []; 
     private observers: EndConditionObserver[] = []; // Liste des observateurs
     private current: number = 0;
     private targetScore: number;
     private ended: boolean = false;
+    private id: string;
 
     constructor(mesh: Mesh, scene: Scene) {
         this.scene = scene;
         if(mesh) {
             this.mesh = [mesh];
         }
+
+        this.id = `${VictoryCondition.Type}_${VictoryCondition.nextId++}`;
+    }
+
+    public getId(): string {
+        return this.id;
     }
 
     public getMeshes(): Mesh[] {

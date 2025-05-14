@@ -4,6 +4,8 @@ import { ObjectEditorImpl } from "./EditorObject";
 
 export class RocketObject implements GameObject {
     static readonly Type: string = "rocket";
+    private static nextId: number = 0;
+    private id: string;
 
     protected mesh: Mesh;
     protected scene: Scene;
@@ -11,10 +13,15 @@ export class RocketObject implements GameObject {
     constructor(mesh: Mesh, scene: Scene) {
         this.mesh = mesh;
         this.scene = scene;
+        this.id = `${RocketObject.Type}_${RocketObject.nextId++}`;
     }
 
     public getMesh(): Mesh {
         return this.mesh;
+    }
+
+    public getId(): string {
+        return this.id;
     }
 
     public getMeshes(): Mesh[] {

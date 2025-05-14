@@ -13,6 +13,7 @@ import { ObjectEditorImpl } from "./EditorObject";
 
 export class Player implements GameObject {
     public static readonly Type: string = "player";
+    private static nextId: number = 0;
 
     public mesh: Mesh[] = [];
     private scene: Scene;
@@ -20,6 +21,7 @@ export class Player implements GameObject {
     private jumpForce: Vector3 = undefined;
     private state: AbstractState = null;
     private hp: number = 10;
+    private id: string;
 x
     constructor(mesh: Mesh, scene: Scene) {
         this.scene = scene;
@@ -27,10 +29,15 @@ x
 
         if(mesh) this.mesh.push(mesh);
         this.state = new IdleState(this);
+
+        this.id = `${Player.Type}_${Player.nextId++}`;
+    }
+
+    public getId(): string {
+        return this.id;
     }
 
     public jump() {
-        console.log("Jumping", this.jumpForce);
         const physicsBody = this.getMesh().physicsBody;
         if (!physicsBody) {
             console.warn("Physics body not found for the player mesh.");

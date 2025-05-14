@@ -1,6 +1,7 @@
 import { Mesh, Vector3, Scene, AssetsManager, MeshAssetTask, Matrix, TransformNode } from "@babylonjs/core";
 import { VictoryCondition } from "../GameObjects/Victory";
 import { ParentNode } from "../ParentNode";
+import { Coin } from "../GameObjects/Coin";
 
 export interface CharacterInput {
     left: boolean;
@@ -16,21 +17,23 @@ export interface GameObject {
     getMeshes(): Mesh[];
     accept(visitor: GameObjectVisitor): void;
     update(dt: number, input: CharacterInput): void;
+    getId(): string;
 }
 
 export interface GameObjectVisitor {
-    // visitCoin(coin: Coin): void;
+    visitCoin(coin: Coin): void;
     // visitEnemy(enemy: Enemy): void;
     visitVictory(portal: VictoryCondition): void;
 }
 
 export interface GameObjectConfig {
-    size: Vector3;
+    size?: Vector3;
     position: Vector3;
+    translation?: Vector3;
     rotation: Vector3;
     parent?: ParentNode;
     scene: Scene;
-    assetsManager: AssetsManager;
+    assetsManager?: AssetsManager;
 }
 
 export interface GameObjectFactory {
@@ -62,7 +65,6 @@ export interface EditorObject {
 }
 
 export interface IRemoteGameObject extends GameObject {
-    getId(): string;
     getOwnerId(): string;
     updatePosition(position: Vector3, timestamp: number): void;
 }

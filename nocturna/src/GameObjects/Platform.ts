@@ -5,6 +5,8 @@ import { ObjectEditorImpl } from "./EditorObject";
 
 export class Platform implements GameObject {
     public static readonly Type: string = "platform";
+    private static nextId: number = 0;
+    private id: string;
 
     public mesh: Mesh[] = [];
     protected scene: Scene;
@@ -12,10 +14,14 @@ export class Platform implements GameObject {
     constructor(mesh: Mesh, scene: Scene) {
         if(mesh) this.mesh.push(mesh);
         this.scene = scene;
+        this.id = `${Platform.Type}_${Platform.nextId++}`;
+    }
+
+    public getId(): string {
+        return this.id;
     }
 
     public getMesh(): Mesh {
-        console.log(this.mesh);
         return this.mesh[0];
     }
 
