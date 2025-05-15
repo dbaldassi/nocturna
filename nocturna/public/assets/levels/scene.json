@@ -1,0 +1,168 @@
+{
+    "objects": [
+        {
+            "position": {
+                "_isDirty": false,
+                "_x": -1768.3038725837544,
+                "_y": -1637.50133127902,
+                "_z": 2974.999999999999
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 50,
+                "_y": 5,
+                "_z": 50
+            },
+            "type": "fixed_platform"
+        },
+        {
+            "position": {
+                "_isDirty": false,
+                "_x": -1709.7095677754414,
+                "_y": -1664.3763000165939,
+                "_z": 2975
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 50,
+                "_y": 5,
+                "_z": 50
+            },
+            "type": "fixed_platform"
+        },
+        {
+            "position": {
+                "_isDirty": false,
+                "_x": -1648.6298597655568,
+                "_y": -1662.1455219610154,
+                "_z": 2975
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 50,
+                "_y": 5,
+                "_z": 50
+            },
+            "type": "fixed_platform"
+        },
+        {
+            "position": {
+                "_isDirty": false,
+                "_x": -1598.4871844221786,
+                "_y": -1679.6812538996992,
+                "_z": 2975
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 50,
+                "_y": 5,
+                "_z": 50
+            },
+            "type": "fixed_platform"
+        },
+        {
+            "position": {
+                "_isDirty": false,
+                "_x": -1536.4493551302864,
+                "_y": -1678.2591804770163,
+                "_z": 2975.0000000000005
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 50,
+                "_y": 5,
+                "_z": 50
+            },
+            "type": "fixed_platform"
+        },
+        {
+            "type": "player",
+            "position": {
+                "_isDirty": false,
+                "_x": -1760.3967537868157,
+                "_y": -1605.9464288109962,
+                "_z": 2975.0000000000005
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 10,
+                "_y": 10,
+                "_z": 10
+            }
+        },
+        {
+            "type": "victory_condition",
+            "position": {
+                "_isDirty": false,
+                "_x": -1535.3643790054798,
+                "_y": -1658.4353926280924,
+                "_z": 2975.000000000001
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 1.5707963267948966,
+                "_y": 2.827433388230814,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 10,
+                "_y": 5,
+                "_z": 10
+            }
+        }
+    ],
+    "Cube": {
+        "position": {
+            "_isDirty": false,
+            "_x": 0,
+            "_y": 0,
+            "_z": 0
+        },
+        "size": 3000
+    },
+    "parent_node": {
+        "position": {
+            "_isDirty": false,
+            "_x": 0,
+            "_y": 0,
+            "_z": 0
+        }
+    }
+}

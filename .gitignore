@@ -33,3 +33,9 @@ Thumbs.db
 *.swo
 *.bak
 *.tmp
+
+# Raw Javascript
+*.js
+
+
+www
