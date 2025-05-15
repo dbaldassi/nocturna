@@ -1,5 +1,13 @@
 # Nocturna
 
+## GitHub repo
+
+git@github.com:dbaldassi/nocturna.git
+
+## Hosted Website
+
+https://nocturna.dabaldassi.fr
+
 ## Authors
 
 * Mateus Lopes
@@ -27,3 +35,5 @@ Jusqu’à 4 joueurs, chacun enfermé dans un sous-cube de cet espace fracturé.
 * Un mode solo de vitesse et de collecte, et un mode multijoueur stratégique et compétitif
 
 Chaque rêve a un prix. Et celui du réveil… pourrait être votre chute.
+
+
