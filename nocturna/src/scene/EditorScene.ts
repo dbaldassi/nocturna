@@ -404,6 +404,7 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
     }
 
     public addObject(factory: GameObjectFactory, size?: Vector3, rotation?: Vector3) {
+        console.log("Adding object");
         // Effectuer un raycast à partir de la position de la souris
         const pickResult = this.scene.pick(this.scene.pointerX, this.scene.pointerY);
     
@@ -464,9 +465,9 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
         console.log("Deleting selection");
 
         if (this.currentSelection) {
-            const index = this.editorObjects.indexOf(this.currentSelection);
-            if (index > -1) {
-                this.editorObjects.splice(index, 1);
+            if (this.editorObjects.includes(this.currentSelection)) {
+                // Supprimer l'objet de la scène
+                this.editorObjects = this.editorObjects.filter((obj) => obj !== this.currentSelection);
                 this.currentSelection.getMesh().dispose();
                 this.currentSelection = null;
             }
@@ -486,6 +487,7 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
 
     public serializeScene(): void {
         const serializedObjects = this.editorObjects.map((obj) => obj.serialize());
+        console.log("LENGTH SRI: ", this.editorObjects);
         const jsonScene = { objects : serializedObjects }; // Convertir en JSON formaté
         jsonScene[Cube.Type] = this.cube.serialize();
         jsonScene[ParentNode.Type] = this.parentNode.serialize();
