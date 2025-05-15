@@ -68,7 +68,7 @@ export class Coin implements GameObject {
         return this.score;
     }
 
-    public update(dt: number, input: CharacterInput): void {
+    public update(_: number, __: CharacterInput): void {
         
     }
 }
@@ -131,12 +131,18 @@ export class CoinFactory implements GameObjectFactory {
 export class SuperCoinFactory extends CoinFactory {
 
     protected createImpl(config: GameObjectConfig, physics: boolean): SuperCoin {
-        const mesh = MeshBuilder.CreateSphere("superCoin", { diameter: 1, segments: 16 }, config.scene);
-        mesh.scaling.y = 0.2; // Rendre la sphère plate
+        const diameter = 15;
+        const mesh = MeshBuilder.CreateSphere("superCoin", { diameter: diameter, segments: 16 }, config.scene);
         mesh.position = config.position;
+        if(config.translation) {
+            mesh.position.addInPlace(config.translation.scale(diameter));
+        }
 
-        const material = new StandardMaterial("superCoinMaterial", config.scene);
-        material.diffuseColor = Color3.Red(); // Rouge
+        const material = new PBRMaterial("coinPBRMaterial", config.scene);;
+        material.albedoColor = Color3.Red();
+        material.emissiveColor = Color3.Red(); // Red
+        material.metallic = 1; // Rend la pièce métallique
+        material.roughness = 0.2;
         mesh.material = material;
 
         if(physics) {

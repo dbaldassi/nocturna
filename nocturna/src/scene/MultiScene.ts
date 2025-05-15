@@ -1,4 +1,4 @@
-import { Engine, Vector3, FollowCamera, UniversalCamera, Scene } from "@babylonjs/core";
+import { Engine, Vector3, FollowCamera, UniversalCamera, Scene, Camera } from "@babylonjs/core";
 
 
 import { BaseScene } from "./BaseScene";
@@ -66,6 +66,10 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
     private playerId: string;
     private coinTimer: number = 0;
     private readonly coinInterval: number = 10000; // 1 second
+    private cameras: Camera[];
+    private subcube: number;   
+    private parent: ParentNode = null;
+    public activeCameraIndex: number = 0;
 
     constructor(engine: Engine, inputHandler: InputHandler) {
         super(engine, inputHandler);
@@ -83,23 +87,30 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
         return scene;
     }
     
-    public async createGameScene(ownerId: string) {
+    public async createGameScene() {
         this.scene = new Scene(this.engine);
-        this.playerId = ownerId;
         this.coinSpawner = new CoinSpawner(this.scene);
         await this.addPhysic();
-        this.setupCamera();        
     }
 
-    private setupCollisions() {
+    public setupCamera() {
+        this.cameras = [
+            new UniversalCamera("wide", Vector3.Zero(), this.scene),
+            new FollowCamera("player", Vector3.Zero(), this.scene, this.localObjects[0].getMesh()),
+        ];
+        
 
+        this.cameras[0].fov = Math.PI / 2;
+        // (this.cameras[1] as FollowCamera).radius = -500;
+
+        this.scene.activeCamera = this.cameras[this.activeCameraIndex];
+
+        this.inputHandler.addAction("pov", () => this.switchCamera());
     }
 
-    private setupCamera() {
-        const camera = new UniversalCamera("camera1", new Vector3(0,0,0), this.scene);
-        camera.fov = 5;
-        // caemra to look slightly downward
-        this.scene.activeCamera = camera;
+    public switchCamera() {
+        this.activeCameraIndex = (this.activeCameraIndex + 1) % this.cameras.length;
+        this.scene.activeCamera = this.cameras[this.activeCameraIndex];
     }
 
     public addRemoteObject(object: IRemoteGameObject): void {
@@ -107,7 +118,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
     }
 
     public removeRemoteObject(id: string, owner: string): void {
-        const object = this.remoteObjects.find(o => id !== o.getId() && owner !== o.getOwnerId());
+        const object = this.remoteObjects.find(o => id === o.getId() && owner === o.getOwnerId());
 
         if(!object) return;
 
@@ -120,11 +131,27 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
         this.remoteObjects = this.remoteObjects.filter(o => o !== object);
     }
 
-    public addLocalObject(object: GameObject): void {
-        this.localObjects.push(object);
+    public addParent(parent: ParentNode): void {
+        this.parent = parent;
     }
 
-    private addAndSendLocalObject(object: GameObject): void {
+    public addPlayer(object: GameObject, id: string, subcube: number): void {
+        this.localObjects.push(object);
+        this.subcube = subcube; 
+        this.playerId = id;
+    }
+
+    public isInSubcube(position: Vector3) {
+        switch(this.subcube) {
+            case 0:  return position.x < 0 && position.y > 0;
+            case 1:  return position.x > 0 && position.y > 0;
+            case 2:  return position.x < 0 && position.y < 0;
+            case 3:  return position.x > 0 && position.y < 0;
+            default: return false;
+        }
+    }
+
+    private addLocalObject(object: GameObject): void {
         this.localObjects.push(object);
         
         const body = object.getMesh().physicsBody;
@@ -143,6 +170,16 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
             position: object.getMesh().position,
             type: object.getType(),
         });
+    }
+
+    public addNetworkObject(object: GameObject, id: string, ownerId: string): void {
+        if(ownerId === this.playerId) {
+            this.localObjects.push(object);
+        }
+        else {
+            const remoteObject = new RemoteGameObject(object, id, ownerId);
+            this.addRemoteObject(remoteObject);
+        }
     }
 
     private removeLocalObject(object: GameObject): void {
@@ -191,11 +228,11 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
     public updateObjects(dt: number, input: CharacterInput) {
         this.gameObjects.forEach((object) => {
             object.update(dt, input);
-            if(object.getMesh().name === Platform.Type && this.coinTimer >= this.coinInterval && Math.random() < 1/this.gameObjects.length) {
+            if(object.getMesh().name === Platform.Type && this.isInSubcube(object.getMesh().position) && this.coinTimer >= this.coinInterval && Math.random() < 1/this.gameObjects.length) {
                 console.log("Spawning coin");
                 const position = object.getMesh().position;
                 const coin = this.coinSpawner.spawnCoin(position);;
-                this.addAndSendLocalObject(coin);
+                this.addLocalObject(coin);
                 this.coinTimer = 0;
             }
         });
@@ -333,13 +370,10 @@ class InGameState extends AbstractGameSceneState {
             
             const object = factory.create(config);
 
-            if(object) {
-                const remoteObject = new RemoteGameObject(object, data.id, data.owner);
-                this.gameScene.addRemoteObject(remoteObject);
-            }
+            if(object) this.gameScene.addNetworkObject(object, data.id, data.owner);
         }
         else if(action === "removeObject") {
-            this.gameScene.removeRemoteObject(data.id, participantId);
+            this.gameScene.removeRemoteObject(data.id, data.owner);
         }
     }
 }
@@ -359,7 +393,7 @@ class LoadingState extends AbstractGameSceneState implements LevelLoaderObserver
     }
 
     public enter(): void {
-        this.gameScene.createGameScene(this.localPlayer.id);
+        this.gameScene.createGameScene();
 
         this.localPlayer.ready = false;
         this.remoteParticipant.forEach(p => p.ready = false);
@@ -392,13 +426,14 @@ class LoadingState extends AbstractGameSceneState implements LevelLoaderObserver
         this.players.push(player);
     }
     public onParent(parent: ParentNode): void {
-        // this.parent = parent;
+        this.gameScene.addParent(parent);
     }
     public onLevelLoaded(): void {
         this.players.forEach(player => {
             const subcube = this.findSubcube(player);
             if(subcube === this.localPlayer.num) {
-                this.gameScene.addLocalObject(player);
+                this.gameScene.addPlayer(player, this.localPlayer.id, this.localPlayer.num);
+                this.gameScene.setupCamera();
             }
             else {
                 const participant = this.remoteParticipant.find(p => p.num === subcube);
