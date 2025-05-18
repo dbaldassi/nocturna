@@ -29,6 +29,12 @@
     <div id="fps">0</div>
     <div id="game-timer" class="hidden">Time: 0:00</div>
     <div id="game-mode-selection">
+        <div id="graphics-selector"
+        style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 20px;">
+        <button class="graphics-btn" data-graphics="potato">Ultra Low</button>
+        <button class="graphics-btn active" data-graphics="low">Low Graphics</button>
+        <button class="graphics-btn" data-graphics="high">High Graphics</button>
+    </div>
         <div class="background"></div>
         <div class="container">
             <header>
@@ -60,7 +66,8 @@
                         </svg>
                     </div>
                     <h2>Single Player</h2>
-                    <p>Traverse the dream alone — collect fragments, dodge nightmares, and reach the crystal to awaken.</p>
+                    <p>Traverse the dream alone — collect fragments, dodge nightmares, and reach the crystal to awaken.
+                    </p>
                 </div>
 
                 <div class="mode-card" data-mode="multiplayer">
@@ -74,7 +81,8 @@
                         </svg>
                     </div>
                     <h2>Multiplayer</h2>
-                    <p>Face other dreamers in a fractured world — alter their reality or shatter them before they reach the light.</p>
+                    <p>Face other dreamers in a fractured world — alter their reality or shatter them before they reach
+                        the light.</p>
                 </div>
 
                 <div class="mode-card" data-mode="editor">
@@ -86,7 +94,7 @@
                         </svg>
                     </div>
                     <h2>Level Editor</h2>
-                   <p>Bend the dream to your will — craft impossible paths and share your nightmare with others.</p>
+                    <p>Bend the dream to your will — craft impossible paths and share your nightmare with others.</p>
                 </div>
             </div>
 

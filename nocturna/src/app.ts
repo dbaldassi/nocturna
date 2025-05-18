@@ -7,6 +7,7 @@ import { InputHandler } from "./InputHandler";
 import { TutorialScene } from "./scene/TutorialScene";
 
 export class App {
+    public static selectedGraphics: string = "low";
     private engine: Engine;
     private scene: BaseScene;
     private canvas: HTMLCanvasElement;
@@ -53,6 +54,19 @@ export class App {
                     }
                     this.start(selectedMode);
                 }
+            });
+        });
+
+        const buttons = document.querySelectorAll<HTMLButtonElement>('.graphics-btn');
+
+        buttons.forEach(button => {
+            // Add click event to toggle active class
+            button.addEventListener('click', () => {
+                buttons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                App.selectedGraphics = button.getAttribute('data-graphics');
+                
             });
         });
     }

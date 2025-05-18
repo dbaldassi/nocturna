@@ -4,6 +4,7 @@ import { GameObjectConfig, GameObjectFactory, EditorObject, GameObjectVisitor } 
 import { ParentNodeObserver } from '../ParentNode';
 import "@babylonjs/loaders";
 import { ObjectEditorImpl } from './EditorObject';
+import { App } from '../app';
 
 export class VictoryCondition implements GameObject, ParentNodeObserver {
     public static readonly Type: string = "victory_condition";
@@ -150,7 +151,10 @@ export class VictoryConditionFactory implements GameObjectFactory {
             config.size = new Vector3(20, 20, 20);
         }
 
-        Utils.createMeshTask(config, VictoryCondition.Type, "crystal.glb", (task) => {
+        const path = App.selectedGraphics + "/" + VictoryCondition.Type + ".glb";
+
+
+        Utils.createMeshTask(config, VictoryCondition.Type, path, (task) => {
             const meshes = task.loadedMeshes;
 
             meshes[0].name = VictoryCondition.Type;

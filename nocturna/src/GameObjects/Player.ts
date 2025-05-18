@@ -2,6 +2,7 @@ import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate
 import { CharacterInput, EditorObject, Utils, GameObject, GameObjectConfig, GameObjectFactory, AbstractState, Enemy } from "../types";
 import { RayHelper } from "@babylonjs/core";
 import { ObjectEditorImpl } from "./EditorObject";
+import { App } from "../app";
 
 // ========================= PLAYER =========================
 // This section contains the Player class, which represents the
@@ -142,7 +143,10 @@ export class PlayerFactory implements GameObjectFactory {
             config.size = new Vector3(10, 10, 10);
         }
 
-        Utils.createMeshTask(config, "player", "sphere.glb", (task) => {
+        const path = App.selectedGraphics + "/" + Player.Type + ".glb";
+
+
+        Utils.createMeshTask(config, "player", path, (task) => {
             const meshes = task.loadedMeshes;
             
             Utils.configureMesh(meshes, config);
