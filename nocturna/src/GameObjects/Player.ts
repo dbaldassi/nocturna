@@ -1,4 +1,4 @@
-import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, AbstractMesh, SceneLoader, Mesh, Ray, AssetsManager, ImportMeshAsync, BoundingBox } from "@babylonjs/core";
+import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, AbstractMesh, SceneLoader, Mesh, Ray, AssetsManager, ImportMeshAsync, BoundingBox, NodeMaterial } from "@babylonjs/core";
 import { CharacterInput, EditorObject, Utils, GameObject, GameObjectConfig, GameObjectFactory, AbstractState, Enemy } from "../types";
 import { RayHelper } from "@babylonjs/core";
 import { ObjectEditorImpl } from "./EditorObject";
@@ -21,13 +21,21 @@ export class Player implements GameObject {
     private jumpForce: Vector3 = undefined;
     private state: AbstractState = null;
     private hp: number = 10;
-x
+    private hpBar: HTMLElement = null;
+    private hpBarContainer: HTMLElement = null;
+    private maxHp: number = 10;
+    
     constructor(mesh: Mesh, scene: Scene) {
         this.scene = scene;
         this.jumpForce = new Vector3(0, 100000, 0); // Force de saut initiale
-
-        if(mesh) this.mesh.push(mesh);
+        this.hp = this.maxHp;
+        if (mesh) this.mesh.push(mesh);
         this.state = new IdleState(this);
+        this.hpBar = document.getElementById("hp-bar") as HTMLElement;
+        this.hpBarContainer = document.getElementById("hp-bar-container") as HTMLElement;
+        this.hpBar.classList.remove("hidden");
+        this.hpBarContainer.classList.remove("hidden");
+        this.updateHpBar();
     }
 
     public jump() {
@@ -52,7 +60,7 @@ x
         // rayHelper.show(this.scene);
 
         const result = this.scene.pickWithRay(ray, (mesh) => !this.mesh.includes(mesh as Mesh));
-    
+
         return !!(result?.hit && result.pickedMesh);;
     }
 
@@ -122,6 +130,12 @@ x
         if (this.hp <= 0) {
             this.hp = 0;
         }
+        this.updateHpBar();
+    }
+
+    private updateHpBar() {
+        const percent = Math.max(0, Math.min(1, this.hp / this.maxHp));
+        this.hpBar.style.width = `${percent * 100}%`;
     }
 
     public isAlive(): boolean {
@@ -139,7 +153,7 @@ x
 export class PlayerFactory implements GameObjectFactory {
     private createImpl(config: GameObjectConfig, physics: boolean): Player {
         const player = new Player(null, config.scene);
-        if(!config.size) {
+        if (!config.size) {
             config.size = new Vector3(10, 10, 10);
         }
 
@@ -148,10 +162,10 @@ export class PlayerFactory implements GameObjectFactory {
 
         Utils.createMeshTask(config, "player", path, (task) => {
             const meshes = task.loadedMeshes;
-            
+
             Utils.configureMesh(meshes, config);
 
-            if(physics) {
+            if (physics) {
                 new PhysicsAggregate(meshes[0], PhysicsShapeType.SPHERE, { mass: 70, friction: 10, restitution: 0 }, config.scene);
             }
 
@@ -162,7 +176,7 @@ export class PlayerFactory implements GameObjectFactory {
             });
             // player.mesh = meshes[0];
         });
-        
+
         return player;
     }
 

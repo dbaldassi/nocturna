@@ -27,14 +27,17 @@
     </button>
     <script src="./src/app.ts" type="module"></script>
     <div id="fps">0</div>
+    <div id="hp-bar-container" class="hidden">
+        <div id="hp-bar" class="hidden"></div>
+    </div>
     <div id="game-timer" class="hidden">Time: 0:00</div>
     <div id="game-mode-selection">
         <div id="graphics-selector"
-        style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 20px;">
-        <button class="graphics-btn" data-graphics="potato">Ultra Low</button>
-        <button class="graphics-btn active" data-graphics="low">Low Graphics</button>
-        <button class="graphics-btn" data-graphics="high">High Graphics</button>
-    </div>
+            style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 20px;">
+            <button class="graphics-btn" data-graphics="potato">Ultra Low</button>
+            <button class="graphics-btn active" data-graphics="low">Low Graphics</button>
+            <button class="graphics-btn" data-graphics="high">High Graphics</button>
+        </div>
         <div class="background"></div>
         <div class="container">
             <header>
