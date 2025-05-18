@@ -75,7 +75,7 @@ export class InGameState extends AbstractGameSceneState {
     }
 
     public enter(): void {
-        this.gameScene.setupScoreUI();
+        this.gameScene.setupUI();
         this.gameScene.setupCamera();
     }
 

@@ -13,6 +13,7 @@ import { Coin, CoinFactory, SuperCoinFactory } from "../GameObjects/Coin";
 import { Platform } from "../GameObjects/Platform";
 import { AbstractGameSceneState, InGameState, LobbyState } from "../states/MultiSceneStates";
 import { AdvancedDynamicTexture, Control, TextBlock } from "@babylonjs/gui";
+import { Action } from "../action";
 
 class CoinSpawner {
     private scene: Scene;
@@ -44,6 +45,10 @@ class CoinSpawner {
 export class MultiScene extends BaseScene implements GameObjectVisitor, EndConditionObserver {
     public static readonly MaxPlayer: number = 4;
 
+    private readonly coinInterval: number = 10000; // 1 second
+    private readonly inventorySize: number = 3;
+    private readonly powerupScore: number = 20;
+
     private gameObjects: GameObject[] = [];
     private remoteObjects: IRemoteGameObject[] = [];
     private localObjects: GameObject[] = [];
@@ -54,12 +59,14 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
     private coinSpawner: CoinSpawner;
     private playerId: string;
     private coinTimer: number = 0;
-    private readonly coinInterval: number = 10000; // 1 second
     private cameras: Camera[];
-    private subcube: number;   
+    private subcube: number;
     private parent: ParentNode = null;
+    private scoreText: any;
+    private inventory: Action.ActionBase[] = [];
+
     public activeCameraIndex: number = 0;
-    scoreText: any;
+    inventoryTextBlocks: any[];
 
     constructor(engine: Engine, inputHandler: InputHandler) {
         super(engine, inputHandler);
@@ -80,6 +87,11 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
     public async createGameScene() {
         this.scene = new Scene(this.engine);
         this.coinSpawner = new CoinSpawner(this.scene);
+        
+        for(let i = 0; i < this.inventorySize; i++) {
+            this.inventory.push(null);
+        }
+
         await this.addPhysic();
     }
 
@@ -99,7 +111,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
         this.inputHandler.addAction("pov", () => this.switchCamera());
     }
 
-    public setupScoreUI() {
+    public setupUI() {
         const gui = AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this.scene);
         
         this.scoreText = new TextBlock();
@@ -114,12 +126,42 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
         this.scoreText.top = "-20px";  
 
         gui.addControl(this.scoreText);
+
+        // Inventaire
+        this.inventoryTextBlocks = [];
+        const slotWidth = 80;
+        for (let i = 0; i < this.inventorySize; i++) {
+            const itemText = new TextBlock();
+            itemText.text = this.inventory[i]?.getName?.() ?? "";
+            itemText.color = "white";
+            itemText.fontSize = 28;
+            itemText.width = `${slotWidth}px`;
+            itemText.height = "60px";
+            itemText.horizontalAlignment = TextBlock.HORIZONTAL_ALIGNMENT_LEFT;
+            itemText.verticalAlignment = TextBlock.VERTICAL_ALIGNMENT_BOTTOM;
+            itemText.left = `${340 + i * (slotWidth + 10)}px`; // 340px = scoreText.width + padding
+            itemText.top = "-20px";
+            // itemText.background = "#2228"; // Optionnel : fond semi-transparent
+            gui.addControl(itemText);
+            this.inventoryTextBlocks.push(itemText);
+        }
     }
 
     public showScore() {
         if (this.scoreText) {
             this.scoreText.text = `Score : ${this.score}`;
         }
+    }
+
+    public showActions() {
+        this.inventoryTextBlocks.forEach((textBlock, index) => {
+            const action = this.inventory[index];
+            if (action) {
+                textBlock.text = action.getName();
+            } else {
+                textBlock.text = "";
+            }
+        });
     }
 
     public switchCamera() {
@@ -147,6 +189,10 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
 
     public addParent(parent: ParentNode): void {
         this.parent = parent;
+    }
+
+    public getParent(): ParentNode {
+        return this.parent;
     }
 
     public addPlayer(object: GameObject, id: string, subcube: number): void {
@@ -236,14 +282,31 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
         this.score += coin.getScore();
         console.log("Score: ", this.score);
         this.removeLocalObject(coin);
-        
+
+        if(this.score >= this.powerupScore) {
+            this.addAction();
+            this.score = this.score % this.powerupScore;
+        }
     };
+
+    public addAction() {
+        // randomly create an action to add to inventory
+        const action = Action.ActionBase.create(Math.floor(Math.random() * 3), this);
+        if(action) {
+            // add it to first non null slot
+            for(let i = 0; i < this.inventory.length; i++) {
+                if(this.inventory[i] === null) {
+                    this.inventory[i] = action;
+                    break;
+                }
+            }
+        }
+    }
 
     public updateObjects(dt: number, input: CharacterInput) {
         this.gameObjects.forEach((object) => {
             object.update(dt, input);
             if(object.getMesh().name === Platform.Type && this.isInSubcube(object.getMesh().position) && this.coinTimer >= this.coinInterval && Math.random() < 1/this.gameObjects.length) {
-                console.log("Spawning coin");
                 const position = object.getMesh().position;
                 const coin = this.coinSpawner.spawnCoin(position);;
                 this.addLocalObject(coin);
@@ -257,6 +320,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
         this.coinTimer += dt;
 
         this.showScore();
+        this.showActions();
     }
 
     public update(dt: number) {

@@ -13,7 +13,12 @@ export class ParentNode {
     private isAnimating: boolean = false;
     private scene: Scene;
     private observers: ParentNodeObserver[] = [];
-
+    private readonly rotationConstants: { [key: string]: number } = {
+        x: Math.PI / 2,
+        y: Math.PI / 2,
+        z: Math.PI / 2,
+    };
+ß
     constructor(position: Vector3, scene: Scene) {
         this.scene = scene;
 
@@ -78,13 +83,17 @@ export class ParentNode {
         });
     }
 
+    public rotate(axis: "x" | "y" | "z", inverted: boolean = false) {
+        this.animateRotation(axis, inverted ? -this.rotationConstants[axis] : this.rotationConstants[axis]);
+    }
+
     public setupKeyActions(inputHandler: InputHandler) {
-        inputHandler.addAction("rotate_left_x", () => this.animateRotation("x", Math.PI / 2));
-        inputHandler.addAction("rotate_right_x", () => this.animateRotation("x", -Math.PI / 2));
-        inputHandler.addAction("rotate_left_y", () => this.animateRotation("y", Math.PI / 2));
-        inputHandler.addAction("rotate_right_y", () => this.animateRotation("y", -Math.PI / 2));
-        inputHandler.addAction("rotate_left_z", () => this.animateRotation("z", Math.PI / 2));
-        inputHandler.addAction("rotate_right_z", () => this.animateRotation("z", -Math.PI / 2));
+        inputHandler.addAction("rotate_left_x", () => this.rotate("x"));
+        inputHandler.addAction("rotate_right_x", () => this.rotate("x", true));
+        inputHandler.addAction("rotate_left_y", () => this.rotate("y"));
+        inputHandler.addAction("rotate_right_y", () => this.rotate("y", true));
+        inputHandler.addAction("rotate_left_z", () => this.rotate("z"));
+        inputHandler.addAction("rotate_right_z", () => this.rotate("z", true));
     }
 
     public dispose() {
