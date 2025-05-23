@@ -25,13 +25,24 @@ export class KeybindsManager {
         const modal = document.createElement("div");
         modal.className = "keybinds-modal";
         modal.innerHTML = `
-            <div class="keybinds-content">
-                <div class="keybinds-header">
-                    <h2>Keybinds</h2>
-                    <button class="close-button">&times;</button>
-                </div>
-                <div class="keybindings-list">
-                    ${Object.entries(this.inputHandler.getKeyBindings())
+    <div class="keybinds-content">
+        <div class="keybinds-header">
+            <h2>Keybinds</h2>
+            <button class="close-button">&times;</button>
+        </div>
+        <div class="language-selector">
+    <span>Language:</span>
+    <label>
+        <input type="radio" name="language" value="en" id="lang-en" checked>
+        English
+    </label>
+    <label>
+        <input type="radio" name="language" value="fr" id="lang-fr">
+        Français
+    </label>
+</div>
+        <div class="keybindings-list">
+            ${Object.entries(this.inputHandler.getKeyBindings())
                 .map(
                     ([action, keys]) => `
                         <div class="keybind-item">
@@ -41,9 +52,9 @@ export class KeybindsManager {
                     `
                 )
                 .join("")}
-                </div>
-            </div>
-        `;
+        </div>
+    </div>
+`;
         document.body.appendChild(modal);
 
         modal.querySelector(".close-button")?.addEventListener("click", () => {
