@@ -14,6 +14,8 @@ import { Platform } from "../GameObjects/Platform";
 import { AbstractGameSceneState, InGameState, LobbyState } from "../states/MultiSceneStates";
 import { AdvancedDynamicTexture, Control, TextBlock } from "@babylonjs/gui";
 import { Action } from "../action";
+import { HpBar } from "../HpBar";
+import { Player } from "../GameObjects/Player";
 
 class CoinSpawner {
     private scene: Scene;
@@ -64,6 +66,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
     private parent: ParentNode = null;
     private scoreText: any;
     private inventory: Action.ActionBase[] = [];
+    private hpBar: HpBar;
 
     public activeCameraIndex: number = 0;
     inventoryTextBlocks: any[];
@@ -153,6 +156,9 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
             gui.addControl(itemText);
             this.inventoryTextBlocks.push(itemText);
         }
+
+        const player = this.localObjects[0] as Player;
+        this.hpBar = new HpBar(player.getMaxHp());
     }
 
     public showScore() {
@@ -337,6 +343,9 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
 
         this.showScore();
         this.showActions();
+
+        const player = this.localObjects[0] as Player;
+        this.hpBar.update(player.getHp());
     }
 
     public update(dt: number) {
