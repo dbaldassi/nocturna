@@ -3,7 +3,7 @@ import { Engine, Vector3, FollowCamera, UniversalCamera, Scene, Camera } from "@
 import { BaseScene } from "./BaseScene";
 import { ParentNode } from "../ParentNode";
 import { InputHandler } from "../InputHandler";
-import { GameObject, GameObjectVisitor, GameObjectConfig, CharacterInput, EndConditionObserver, IRemoteGameObject } from "../types";
+import { GameObject, GameObjectVisitor, GameObjectConfig, CharacterInput, EndConditionObserver, IRemoteGameObject, Enemy } from "../types";
 import { VictoryCondition } from "../GameObjects/Victory";
 import { LooseCondition } from "../Loose";
 
@@ -299,6 +299,10 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
             this.score = this.score % this.powerupScore;
         }
     };
+
+    public visitEnemy(enemy: Enemy): void {
+        
+    }
 
     public addAction() {
         // randomly create an action to add to inventory
