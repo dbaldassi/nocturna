@@ -90,6 +90,13 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
         
         for(let i = 0; i < this.inventorySize; i++) {
             this.inventory.push(null);
+            // bind key to action
+            this.inputHandler.addAction(`action_${i+1}`, () => {
+                if(this.inventory[i]) {
+                    this.inventory[i].execute();
+                    this.inventory[i] = null;
+                }
+            });
         }
 
         await this.addPhysic();
@@ -104,7 +111,8 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
         this.activeCameraIndex = 1;
 
         this.cameras[0].fov = Math.PI / 2;
-        (this.cameras[1] as FollowCamera).radius = -500;
+        (this.cameras[1] as FollowCamera).radius = 500;
+        (this.cameras[1] as FollowCamera).rotationOffset = 180;
 
         this.scene.activeCamera = this.cameras[this.activeCameraIndex];
 
@@ -129,7 +137,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
 
         // Inventaire
         this.inventoryTextBlocks = [];
-        const slotWidth = 80;
+        const slotWidth = 120;
         for (let i = 0; i < this.inventorySize; i++) {
             const itemText = new TextBlock();
             itemText.text = this.inventory[i]?.getName?.() ?? "";
@@ -156,10 +164,13 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
     public showActions() {
         this.inventoryTextBlocks.forEach((textBlock, index) => {
             const action = this.inventory[index];
+
             if (action) {
                 textBlock.text = action.getName();
+                textBlock.alpha = 1; // Rendre le texte visible
             } else {
                 textBlock.text = "";
+                textBlock.alpha = 0; // Rendre le texte invisible
             }
         });
     }
@@ -245,6 +256,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
     private removeLocalObject(object: GameObject): void {
         if(object.getMesh().physicsBody) {
             object.getMesh().physicsBody.dispose();
+            object.getMesh().physicsBody = null;
         }
         object.getMesh().dispose();
 
@@ -280,7 +292,6 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
 
     public visitCoin(coin: Coin): void {
         this.score += coin.getScore();
-        console.log("Score: ", this.score);
         this.removeLocalObject(coin);
 
         if(this.score >= this.powerupScore) {
@@ -307,7 +318,8 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
         this.gameObjects.forEach((object) => {
             object.update(dt, input);
             if(object.getMesh().name === Platform.Type && this.isInSubcube(object.getMesh().position) && this.coinTimer >= this.coinInterval && Math.random() < 1/this.gameObjects.length) {
-                const position = object.getMesh().position;
+                const position = object.getMesh().position.clone();
+
                 const coin = this.coinSpawner.spawnCoin(position);;
                 this.addLocalObject(coin);
                 this.coinTimer = 0;

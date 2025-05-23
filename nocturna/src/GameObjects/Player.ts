@@ -153,7 +153,8 @@ export class PlayerFactory implements GameObjectFactory {
             Utils.configureMesh(meshes, config);
 
             if(physics) {
-                new PhysicsAggregate(meshes[0], PhysicsShapeType.SPHERE, { mass: 70, friction: 10, restitution: 0 }, config.scene);
+                const aggregate = new PhysicsAggregate(meshes[0], PhysicsShapeType.SPHERE, { mass: 70, friction: 10, restitution: 0 }, config.scene);
+                aggregate.body.setMassProperties({ mass: 70, inertia: new Vector3(0, 0, 1) });
             }
 
             meshes[0].name = "player";
