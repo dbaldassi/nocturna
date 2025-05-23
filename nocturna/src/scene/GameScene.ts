@@ -80,7 +80,7 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         this.setupCollisions();
         // start a timer from 0 to infinity
         this.startTimer();
-        this.loseCondition = new LooseCondition(this.player, this.scene); // Initialize the lose condition
+        this.loseCondition = new LooseCondition(this.player, this.cube.getSize()); // Initialize the lose condition
 
         this.hpBar = new HpBar(this.player.getMaxHp());
 

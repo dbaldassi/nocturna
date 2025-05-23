@@ -1,5 +1,6 @@
 import { Scene, Vector3, MeshBuilder, Color3, PhysicsAggregate, PhysicsShapeType } from "@babylonjs/core";
 import { Face } from "./Face";
+import { createEvilPortalMaterial } from "./Shaders/NocturnaShaders";
 
 export class Cube {
     private scene: Scene;
@@ -13,6 +14,10 @@ export class Cube {
     constructor(scene: Scene, size: number) {
         this.scene = scene;
         this.size = size;
+    }
+
+    public getSize(): number {
+        return this.size;
     }
 
     public static create(scene: Scene, position: Vector3 = Vector3.Zero(), size: number = Cube.DefaultSize): Cube {
@@ -119,6 +124,14 @@ export class Cube {
             new PhysicsAggregate(horizontalPlatform, PhysicsShapeType.BOX, { mass: 0 });
             new PhysicsAggregate(verticalPlatform, PhysicsShapeType.BOX, { mass: 0 });
         }
+
+        const portalMat = createEvilPortalMaterial(this.scene);
+        horizontalPlatform.material = portalMat;
+        verticalPlatform.material = portalMat;
+
+        this.scene.registerBeforeRender(() => {
+            portalMat.setFloat("time", performance.now() / 1000);
+        });
 
         // Ajouter les plateformes comme enfants de la face "Front"
         // horizontalPlatform.parent = mesh;
