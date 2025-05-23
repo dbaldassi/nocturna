@@ -1,0 +1,126 @@
+{
+    "objects": [
+        {
+            "type": "fixed_platform",
+            "position": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 50,
+                "_y": 50,
+                "_z": 50
+            }
+        },
+        {
+            "type": "fixed_platform",
+            "position": {
+                "_isDirty": false,
+                "_x": 75,
+                "_y": 0,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 50,
+                "_y": 50,
+                "_z": 50
+            }
+        },
+        {
+            "type": "rocket",
+            "position": {
+                "_isDirty": false,
+                "_x": 10,
+                "_y": 1000,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 10,
+                "_y": 10,
+                "_z": 10
+            }
+        },
+        {
+            "type": "player",
+            "position": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 20,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 10,
+                "_y": 10,
+                "_z": 10
+            }
+        },
+        {
+            "type": "victory_condition",
+            "position": {
+                "_isDirty": false,
+                "_x": 75,
+                "_y": 20,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 20,
+                "_y": 20,
+                "_z": 20
+            }
+        }
+    ],
+    "Cube": {
+        "position": {
+            "_isDirty": false,
+            "_x": 0,
+            "_y": 0,
+            "_z": 0
+        },
+        "size": 1000
+    },
+    "parent_node": {
+        "position": {
+            "_isDirty": false,
+            "_x": 0,
+            "_y": 0,
+            "_z": 0
+        }
+    }
+}

@@ -1,14 +1,16 @@
 import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, Mesh, ParticleSystem, Texture, Color4 } from "@babylonjs/core";
-import { GameObject, GameObjectConfig, GameObjectFactory, EditorObject, Utils, CharacterInput } from "../types";
+import { GameObject, GameObjectConfig, GameObjectFactory, EditorObject, Utils, CharacterInput, GameObjectVisitor, Enemy } from "../types";
 import { ObjectEditorImpl } from "./EditorObject";
 
-export class RocketObject implements GameObject {
+export class RocketObject implements Enemy {
     static readonly Type: string = "rocket";
     private static nextId: number = 0;
     private id: string;
 
     protected mesh: Mesh;
     protected scene: Scene;
+    public damage: number = 5;
+    public explosionRadius: number = 10;
 
     constructor(mesh: Mesh, scene: Scene) {
         this.mesh = mesh;
@@ -32,7 +34,9 @@ export class RocketObject implements GameObject {
         return RocketObject.Type;
     }
 
-    public accept(_: any): void {}
+    public accept(visitor: GameObjectVisitor): void {
+        visitor.visitEnemy(this);
+    }
 
     public update(_: number): void {}
 
@@ -46,7 +50,7 @@ export class RocketObject implements GameObject {
         physicsBody.setCollisionCallbackEnabled(true);
         const collisionObservable = physicsBody.getCollisionObservable();
         collisionObservable.add(() => {
-            this.explode(); 
+            this.explode();
         });
     }
 
@@ -65,8 +69,8 @@ export class RocketObject implements GameObject {
         particleSystem.maxEmitBox = new Vector3(1, 1, 1); // Maximum box size
         particleSystem.color1 = new Color4(1, 0.5, 0, 1); // Orange
         particleSystem.color2 = new Color4(1, 0, 0, 1); // Red
-        particleSystem.minSize = 5; // Increased from 2
-        particleSystem.maxSize = 10; // Increased from 5
+        particleSystem.minSize = 2; // Increased from 2
+        particleSystem.maxSize = 7; // Increased from 5
         particleSystem.minLifeTime = 0.2;
         particleSystem.maxLifeTime = 1;
         particleSystem.emitRate = 1000;
@@ -90,7 +94,7 @@ export class RocketObject implements GameObject {
 }
 
 export class FixedRocket extends RocketObject {
-    public static readonly Type: string = "fixed_rocket";
+    public static readonly Type: string = "rocket";
 
     constructor(mesh: Mesh, scene: Scene) {
         super(mesh, scene);
@@ -110,7 +114,7 @@ export class FixedRocketFactory implements GameObjectFactory {
         const material = new StandardMaterial("rocketMaterial", config.scene);
         material.diffuseColor = Color3.Red();
         mesh.material = material;
-
+        
         return mesh;
     }
 

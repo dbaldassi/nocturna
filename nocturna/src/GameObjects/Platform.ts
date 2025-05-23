@@ -2,6 +2,7 @@ import { Scene, Vector3, PhysicsAggregate, PhysicsShapeType, Mesh } from "@babyl
 import { ParentNodeObserver } from "../ParentNode";
 import { CharacterInput, EditorObject, GameObject, GameObjectConfig, GameObjectFactory, Utils } from "../types";
 import { ObjectEditorImpl } from "./EditorObject";
+import { App } from "../app";
 
 export class Platform implements GameObject {
     public static readonly Type: string = "platform";
@@ -48,6 +49,8 @@ export class ParentedPlatform extends Platform implements ParentNodeObserver {
         super(mesh, scene);
     }
 
+    public onRotationStart: () => void;
+
     public onRotationChange() {
         this.recreatePhysicsBody();
     }
@@ -88,8 +91,11 @@ export class ParentedPlatformFactory implements GameObjectFactory {
             if(!config.size) {
                 config.size = new Vector3(50, 50, 50);
             }
+
+            const path = App.selectedGraphics + "/" + ParentedPlatform.Type + ".glb";
+
     
-            Utils.createMeshTask(config, ParentedPlatform.Type, "platform3.glb", (task) => {
+            Utils.createMeshTask(config, ParentedPlatform.Type, path, (task) => {
                 const meshes = task.loadedMeshes;
     
                 meshes[0].name = Platform.Type;
@@ -131,7 +137,9 @@ export class FixedPlatformFactory implements GameObjectFactory {
             config.size = new Vector3(50, 50, 50);
         }
 
-        Utils.createMeshTask(config, FixedPlatform.Type, "platform4.glb", (task) => {
+        const path = App.selectedGraphics + "/" + FixedPlatform.Type + ".glb";
+
+        Utils.createMeshTask(config, FixedPlatform.Type, path, (task) => {
             const meshes = task.loadedMeshes;
 
             meshes[0].name = Platform.Type;

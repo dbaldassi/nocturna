@@ -20,6 +20,10 @@ export interface GameObject {
     getId(): string;
 }
 
+export interface Enemy extends GameObject {
+    damage: number;
+}
+
 export interface GameObjectVisitor {
     visitCoin(coin: Coin): void;
     // visitEnemy(enemy: Enemy): void;

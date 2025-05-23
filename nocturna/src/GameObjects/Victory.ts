@@ -4,21 +4,24 @@ import { GameObjectConfig, GameObjectFactory, EditorObject, GameObjectVisitor } 
 import { ParentNodeObserver } from '../ParentNode';
 import "@babylonjs/loaders";
 import { ObjectEditorImpl } from './EditorObject';
+import { App } from '../app';
 
 export class VictoryCondition implements GameObject, ParentNodeObserver {
     public static readonly Type: string = "victory_condition";
     private static nextId: number = 0;
+    public static mode = "normal";
     private scene: Scene;
-    public mesh: Mesh[] = []; 
+    public mesh: Mesh[] = [];
     private observers: EndConditionObserver[] = []; // Liste des observateurs
     private current: number = 0;
     private targetScore: number;
     private ended: boolean = false;
     private id: string;
+    public victoryAggregate: PhysicsAggregate;
 
     constructor(mesh: Mesh, scene: Scene) {
         this.scene = scene;
-        if(mesh) {
+        if (mesh) {
             this.mesh = [mesh];
         }
 
@@ -52,8 +55,16 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
         this.animate();
     }
 
+    public onRotationStart(): void {
+        // this.mesh[0].physicsBody.disablePreStep = false;
+    }
+
     public onRotationChange(): void {
         this.recreatePhysicsBody();
+        // this.mesh[0].physicsBody.disablePreStep = true;
+        // const absoluteMeshPosition = this.mesh[0].getAbsolutePosition();
+        // this.victoryAggregate.body.transformNode.position = absoluteMeshPosition;
+        // console.log("onRotationChange", absoluteMeshPosition, this.victoryAggregate.body.transformNode.getAbsolutePosition());
     }
     public recreatePhysicsBody(): void {
         // Supprimez l'ancien corps physique
@@ -108,13 +119,18 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
         const minutes = Math.floor(finalTime / 60);
         const seconds = finalTime % 60;
         finalTimerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  
+
         this.initialiseButtons();
     }
 
     private initialiseButtons(): void {
         const restartButton = document.getElementById("continue-button") as HTMLElement;
         const menuButton = document.getElementById("win-menu-button") as HTMLElement;
+        if (VictoryCondition.mode == "normal") {
+            restartButton.textContent = "Restart";
+        } else if (VictoryCondition.mode == "tutorial") {
+            restartButton.textContent = "Continue";
+        }
         restartButton.addEventListener("click", () => {
             this.observers.forEach(obs => obs.onRetry());
         });
@@ -139,7 +155,7 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
     }
 
     public update(dt: number, _: CharacterInput): void {
-        if(this.ended) this.updateScore(dt);
+        if (this.ended) this.updateScore(dt);
     }
 
     public accept(visitor: GameObjectVisitor): void {
@@ -149,30 +165,33 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
 }
 
 export class VictoryConditionFactory implements GameObjectFactory {
-    
+
     private createImpl(config: GameObjectConfig, physics: boolean): VictoryCondition {
         const victory = new VictoryCondition(null, config.scene); // Placeholder for the mesh
-        if(!config.size) {
+        if (!config.size) {
             config.size = new Vector3(20, 20, 20);
         }
 
-        Utils.createMeshTask(config, VictoryCondition.Type, "crystal.glb", (task) => {
+        const path = App.selectedGraphics + "/" + VictoryCondition.Type + ".glb";
+
+
+        Utils.createMeshTask(config, VictoryCondition.Type, path, (task) => {
             const meshes = task.loadedMeshes;
 
             meshes[0].name = VictoryCondition.Type;
             Utils.configureMesh(meshes, config);
 
             config.parent.addChild(meshes[0]);
-            
+
             meshes.forEach((m) => {
                 victory.mesh.push(m);
             });
 
-            if(physics) {
+            if (physics) {
                 const p = new PhysicsAggregate(meshes[0], PhysicsShapeType.CYLINDER, { mass: 0, friction: 0, restitution: 0 }, config.scene);
                 p.body.setCollisionCallbackEnabled(true);
                 config.parent.addObserver(victory);
-
+                victory.victoryAggregate = p;
                 victory.startAnimation();
             }
         });

@@ -1,13 +1,16 @@
-import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, Mesh } from "@babylonjs/core";
-import { GameObject, GameObjectConfig, GameObjectFactory, EditorObject, Utils, CharacterInput } from "../types";
+import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, Mesh, Animation } from "@babylonjs/core";
+import { GameObject, GameObjectConfig, GameObjectFactory, EditorObject, Utils, CharacterInput, GameObjectVisitor, Enemy } from "../types";
 import { ObjectEditorImpl } from "./EditorObject";
 
-export class SpikeTrapObject implements GameObject {
+export class SpikeTrapObject implements Enemy {
     public static readonly Type: string = "spike_trap";
     private static nextId: number = 0;
     private id: string;
     protected mesh: Mesh;
     protected scene: Scene;
+    public damage: number = 1;
+    private isDelayed: boolean = false;
+    private delay: number = 1; // Delay before the trap can be triggered again
 
     constructor(mesh: Mesh, scene: Scene) {
         this.mesh = mesh;
@@ -31,9 +34,16 @@ export class SpikeTrapObject implements GameObject {
         return SpikeTrapObject.Type;
     }
 
-    public accept(_: any): void {}
+    public accept(visitor: GameObjectVisitor): void {
+        if (this.isDelayed) return; 
+        visitor.visitEnemy(this);
+        this.isDelayed = true;
+        setTimeout(() => {
+            this.isDelayed = false;
+        }, this.delay * 1000); 
+    }
 
-    public update(_: number): void {}
+    public update(_: number): void { }
 
     public enableCollision(): void {
         const physicsBody = this.mesh.physicsBody;
@@ -43,16 +53,8 @@ export class SpikeTrapObject implements GameObject {
         }
 
         physicsBody.setCollisionCallbackEnabled(true);
-        const collisionObservable = physicsBody.getCollisionObservable();
-        collisionObservable.add(() => {
-            this.triggerTrap();
-        });
     }
 
-    private triggerTrap(): void {
-        console.log("Spike trap triggered!");
-        // Additional logic for triggering the trap can be added here.
-    }
 }
 
 export class SpikeTrapFactory implements GameObjectFactory {

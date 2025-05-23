@@ -5,7 +5,7 @@ import { Cube } from "../Cube";
 import { ParentNode } from "../ParentNode";
 import { InputHandler } from "../InputHandler";
 import { Player } from "../GameObjects/Player";
-import { GameObject, GameObjectFactory, GameObjectVisitor, GameObjectConfig, AbstractState, CharacterInput, EndConditionObserver } from "../types";
+import { GameObject, GameObjectFactory, GameObjectVisitor, GameObjectConfig, AbstractState, CharacterInput, EndConditionObserver, Enemy } from "../types";
 import { LevelLoaderObserver, LevelLoader, AbstractFactory } from "../LevelLoader";
 import { VictoryCondition } from "../GameObjects/Victory";
 import { LooseCondition } from "../Loose";
@@ -13,22 +13,23 @@ import { LooseCondition } from "../Loose";
 const CUBE_SIZE = 3000;
 
 export class GameScene extends BaseScene implements LevelLoaderObserver, GameObjectVisitor, EndConditionObserver {
-    private cube: Cube;
-    private parent: ParentNode;
-    private player: Player;
-    private gameObjects: GameObject[] = [];
-    private levelLoader: LevelLoader;
-    private timer: number = 0;
-    private score: number = 0;
-    private cameras: FollowCamera[] = [];
-    private activeCameraIndex: number = 0;
-    private loseCondition: LooseCondition; // Replace with the actual type if available
-    private state : AbstractGameSceneState;
+    protected cube: Cube;
+    protected parent: ParentNode;
+    protected player: Player;
+    protected gameObjects: GameObject[] = [];
+    protected levelLoader: LevelLoader;
+    protected timer: number = 0;
+    protected score: number = 0;
+    protected cameras: FollowCamera[] = [];
+    protected activeCameraIndex: number = 0;
+    protected loseCondition: LooseCondition; // Replace with the actual type if available
+    protected state: AbstractGameSceneState;
+    protected static sceneName: string = "scene.json";
 
     constructor(engine: Engine, inputHandler: InputHandler) {
         super(engine, inputHandler);
-        this.levelLoader = new LevelLoader(this.scene, this, 
-            { create: (factory: GameObjectFactory, config: GameObjectConfig) => factory.create(config) } );
+        this.levelLoader = new LevelLoader(this.scene, this,
+            { create: (factory: GameObjectFactory, config: GameObjectConfig) => factory.create(config) });
     }
 
     static async createScene(engine: Engine, inputHandler: InputHandler): Promise<BaseScene> {
@@ -44,12 +45,12 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
 
         // scene.enableDebug();
         scene.state = new LoadingState(scene);
-        scene.loadLevel("scene.json");
-
+        scene.loadLevel(this.sceneName);
+        VictoryCondition.mode = "normal";
         return scene;
     }
 
-    private loadLevel(file: string) {
+    protected loadLevel(file: string) {
         // this.currentLevel = new Level(this.scene, this.parent, this.cube, CUBE_SIZE);
         this.levelLoader.loadLevel(file);
     }
@@ -63,7 +64,13 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     public onParent(parent: ParentNode): void {
         this.parent = parent;
         this.parent.setupKeyActions(this.inputHandler);
+        this.setupKeyActions();
     }
+
+    public setupKeyActions() {
+        this.inputHandler.addAction("pov", () => this.changeCamera());
+    }
+
     public onLevelLoaded(): void {
         this.setupCamera();
         this.setupCollisions();
@@ -76,10 +83,10 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         this.state.enter();
     }
 
-    private setupCollisions() {
+    protected setupCollisions() {
         this.gameObjects.forEach((object) => {
             const mesh = object.getMesh();
-            if(object === this.player) return;
+            if (object === this.player) return;
 
             if (mesh.physicsBody) {
                 mesh.physicsBody.getCollisionObservable().add((collider) => {
@@ -93,24 +100,21 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         });
     }
 
-    private setupCamera() {
+    protected setupCamera() {
         // Create cameras
         this.cameras = [
-            new FollowCamera("rightCamera", this.player.getMesh().position, this.scene, this.player.getMesh()),
-            new FollowCamera("topRightCamera", this.player.getMesh().position, this.scene, this.player.getMesh()),
+            new FollowCamera("rightCamera", this.player.getMesh().position.clone(), this.scene, this.player.getMesh()),
+            new FollowCamera("topRightCamera", this.player.getMesh().position.clone(), this.scene, this.player.getMesh()),
         ];
 
-        this.cameras[0].radius = -500;
-        // this.cameras[0].position = Vector3.Zero();
-        // this.cameras[0].lockedTarget = undefined;
-        this.cameras[1].radius = 50;
-        this.cameras[1].fov = 5;
-        
+        this.cameras[0].radius = -300;
+        this.cameras[1].heightOffset = 300;
+
         this.scene.activeCamera = this.cameras[this.activeCameraIndex];
         // this.scene.activeCamera.attachControl(this.scene.getEngine().getRenderingCanvas(), true);
     }
 
-    private startTimer() {
+    protected startTimer() {
         this.timer = 0; // Reset the timer to 0 at the start
         const timerElement = document.getElementById("game-timer"); // Get the timer element
         timerElement.classList.remove("hidden");
@@ -125,8 +129,13 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         state.setCondition(portal);
     }
 
+    public visitEnemy(enemy: Enemy): void {
+        this.player.visitEnemy(enemy);
+    }
+
     public checkLoose() {
-        if(this.loseCondition.checkLoose(this.timer)) {
+        if (this.loseCondition.checkLoose(this.timer)) {
+            console.log("Loose condition met");
             const state = this.state as InGameState;
             state.setCondition(this.loseCondition);
         }
@@ -154,7 +163,7 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         const input = this.inputHandler.getInput();
         // this.currentLevel.update(dt, input);
         const newState = this.state.update(dt, input);
-        if(newState) {
+        if (newState) {
             this.state.exit();
             this.state = newState;
             this.state.enter();
@@ -165,13 +174,13 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         this.state.render();
     }
 
-    public getScene() : Scene {
+    public getScene(): Scene {
         return this.scene;
     }
-    public getScore() : number {
+    public getScore(): number {
         return this.score;
     }
-    public getTimer() : number {
+    public getTimer(): number {
         return this.timer;
     }
 
@@ -197,7 +206,7 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
 
     public removePhysics() {
         this.gameObjects.forEach(o => {
-            if(o.getMesh().physicsBody) {
+            if (o.getMesh().physicsBody) {
                 o.getMesh().physicsBody.dispose();
             }
         })
@@ -211,6 +220,12 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
 
     public onQuit() {
         window.location.reload();
+    }
+
+    public changeCamera() {
+        this.activeCameraIndex = (this.activeCameraIndex + 1) % this.cameras.length;
+        this.scene.activeCamera = this.cameras[this.activeCameraIndex];
+        this.scene.activeCamera.attachControl(this.scene.getEngine().getRenderingCanvas(), true);
     }
 }
 
@@ -229,17 +244,17 @@ abstract class AbstractGameSceneState {
         console.log(`Entering state: ${this.constructor.name}`);
     }
     public exit(): void {
-       
+
     }
 
-    public render() : void {}
-    public update(_: number, __: CharacterInput): AbstractGameSceneState|null {
+    public render(): void { }
+    public update(_: number, __: CharacterInput): AbstractGameSceneState | null {
         return null;
     }
 }
 
 class InGameState extends AbstractGameSceneState {
-    private condition: VictoryCondition | LooseCondition;
+    protected condition: VictoryCondition | LooseCondition;
 
     constructor(gameScene: GameScene) {
         super(gameScene);
@@ -250,8 +265,8 @@ class InGameState extends AbstractGameSceneState {
         this.condition = condition;
     }
 
-    public update(dt: number, input: CharacterInput): AbstractGameSceneState|null {
-        if(this.condition) {
+    public update(dt: number, input: CharacterInput): AbstractGameSceneState | null {
+        if (this.condition) {
             return new EndState(this.gameScene, this.condition);
         }
 
@@ -267,7 +282,7 @@ class InGameState extends AbstractGameSceneState {
     }
 }
 
-class LoadingState extends AbstractGameSceneState {
+export class LoadingState extends AbstractGameSceneState {
 
     constructor(gameScene: GameScene) {
         super(gameScene);
@@ -276,7 +291,7 @@ class LoadingState extends AbstractGameSceneState {
 }
 
 class EndState extends AbstractGameSceneState {
-    private endObject : VictoryCondition | LooseCondition;
+    protected endObject: VictoryCondition | LooseCondition;
 
     constructor(scene: GameScene, object: VictoryCondition | LooseCondition) {
         super(scene);
@@ -303,5 +318,5 @@ class EndState extends AbstractGameSceneState {
         this.endObject.update(dt, input);
 
         return null;
-    }    
+    }
 }

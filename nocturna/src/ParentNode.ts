@@ -5,6 +5,7 @@ import { InputHandler } from "./InputHandler";
 
 export interface ParentNodeObserver {
     onRotationChange: () => void;
+    onRotationStart: () => void;
 }
 
 export class ParentNode {
@@ -50,15 +51,17 @@ export class ParentNode {
 
     private animateRotation(axis: "x" | "y" | "z", angle: number, duration: number = 500) {
         console.log(`Animating rotation around ${axis} by ${angle} radians over ${duration} ms`);
-
+        this.observers.forEach(observer => {
+            observer.onRotationStart();
+        });
         if (this.isAnimating) {
             return; // Prevent starting a new animation while one is already running
         }
-    
+
         this.isAnimating = true; // Set isAnimating to true when animation starts
-    
+
         const fps = this.scene.getEngine().getFps(); // Get the current FPS
-    
+
         const animation = new Animation(
             `rotate_${axis}`,
             `rotation.${axis}`,
@@ -66,19 +69,19 @@ export class ParentNode {
             Animation.ANIMATIONTYPE_FLOAT,
             Animation.ANIMATIONLOOPMODE_CONSTANT
         );
-    
+
         const currentRotation = this.node.rotation[axis];
         const keys = [
             { frame: 0, value: currentRotation },
             { frame: duration / 16.67, value: currentRotation + angle }, // Convert duration to frames
         ];
-    
+
         animation.setKeys(keys);
         this.node.animations = [animation];
-    
+
         this.scene.beginAnimation(this.node, 0, duration / 16.67, false, 1, () => {
             this.isAnimating = false; // Set isAnimating to false when animation completes
-            
+
             this.notifyObservers(); // Notify observers after animation completes
         });
     }
