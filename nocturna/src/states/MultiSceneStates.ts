@@ -53,12 +53,10 @@ export abstract class AbstractGameSceneState implements NetworkObserver {
 }
 
 export class InGameState extends AbstractGameSceneState {
-    private condition: VictoryCondition | LooseCondition;
     private factories : Map<string, GameObjectFactory>;
 
     constructor(gameScene: MultiScene) {
         super(gameScene);
-        this.condition = null;
 
         this.factories = new Map<string, GameObjectFactory>();
         this.factories.set(ParentedPlatform.Type, new ParentedPlatformFactory());
@@ -84,13 +82,8 @@ export class InGameState extends AbstractGameSceneState {
         this.gameScene.removePlayer();
     }
 
-    public setCondition(condition: VictoryCondition | LooseCondition) {
-        this.condition = condition;
-    }
 
     public update(dt: number, input: CharacterInput): AbstractGameSceneState|null {
-        if(this.condition) return new WinningState(this.gameScene);
-
         this.gameScene.spawnObject(dt);
         this.gameScene.updateObjects(dt, input);
         this.gameScene.updateUI();
@@ -132,6 +125,9 @@ export class InGameState extends AbstractGameSceneState {
         }
         else if(action === "playerReport") {
             this.gameScene.updateRemotePlayer(data.id, { score: data.score, hp: data.hp, inventory: data.inventory });
+        }
+        else if(action === "win") {
+            this.gameScene.killPlayer();
         }
     }
 }
@@ -229,6 +225,8 @@ export class LoadingState extends AbstractGameSceneState implements LevelLoaderO
                 }
             }
         });
+
+        this.gameScene.setupCollisions();
 
         const networkManager = NetworkManager.getInstance();
         networkManager.sendUpdate("ready", {});

@@ -105,6 +105,19 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         await this.addPhysic();
     }
 
+    public setupCollisions() {
+        this.gameObjects.forEach((object) => {
+            if(object.getMesh().physicsBody) {
+                object.getMesh().physicsBody.getCollisionObservable().add((collider) => {
+                    const player = this.localObjects[0].getMesh().physicsBody;
+                    if(collider.collidedAgainst === player) {
+                        object.accept(this);
+                    }
+                });
+            }
+        });
+    }
+
     public setupUI() {
         const gui = AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this.scene);
         this.scoreText = new TextBlock();
@@ -404,7 +417,12 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
 
     public visitVictory(portal: VictoryCondition): void {
         const state = this.state as InGameState;
-        state.setCondition(portal);
+        
+        // kill other players
+        const networkManager = NetworkManager.getInstance();
+        networkManager.sendUpdate("win", {
+            id: this.playerId,
+        });
     }
 
     public visitCoin(coin: Coin): void {
@@ -506,6 +524,13 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
     public onBottomCollision(collider: PhysicsBody) {
         const player = this.localObjects[0] as Player;
         if(player.getMesh().physicsBody === collider) {
+            player.kill();
+        }
+    }
+
+    public killPlayer() {
+        const player = this.localObjects[0] as Player;
+        if(player instanceof Player) {
             player.kill();
         }
     }
