@@ -30,7 +30,29 @@
     <div id="hp-bar-container" class="hidden">
         <div id="hp-bar" class="hidden"></div>
     </div>
-    <div id="game-timer" class="hidden" data-translate="ui.timer">Time: 0:00</div>
+    <div id="keybinds-modal" class="keybinds-modal hidden">
+        <div class="keybinds-content">
+            <div class="keybinds-header">
+                <h2>Keybinds</h2>
+                <button class="close-button">&times;</button>
+            </div>
+            <div class="language-selector">
+                <span>Language:</span>
+                <label>
+                    <input type="radio" name="language" value="en" id="lang-en" checked>
+                    English
+                </label>
+                <label>
+                    <input type="radio" name="language" value="fr" id="lang-fr">
+                    Français
+                </label>
+            </div>
+            <div class="keybindings-list">
+                <!-- Keybind items will be rendered here, you may want to render them dynamically -->
+            </div>
+        </div>
+    </div>
+    <div id="game-timer" class="hidden" data-translate="ui.timer"></div>
     <div id="game-mode-selection">
         <div id="graphics-selector"
             style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 20px;">
@@ -55,7 +77,8 @@
                         </svg>
                     </div>
                     <h2 data-translate="mode.tutorial.title">Tutorial</h2>
-                    <p data-translate="mode.tutorial.desc">Awaken slowly — learn to navigate the shifting cube before the real dream begins.</p>
+                    <p data-translate="mode.tutorial.desc">Awaken slowly — learn to navigate the shifting cube before
+                        the real dream begins.</p>
                 </div>
 
                 <div class="mode-card" data-mode="singleplayer">
@@ -69,7 +92,8 @@
                         </svg>
                     </div>
                     <h2 data-translate="mode.singleplayer.title">Single Player</h2>
-                    <p data-translate="mode.singleplayer.desc">Traverse the dream alone — collect fragments, dodge nightmares, and reach the crystal to awaken.</p>
+                    <p data-translate="mode.singleplayer.desc">Traverse the dream alone — collect fragments, dodge
+                        nightmares, and reach the crystal to awaken.</p>
                 </div>
 
                 <div class="mode-card" data-mode="multiplayer">
@@ -83,7 +107,8 @@
                         </svg>
                     </div>
                     <h2 data-translate="mode.multiplayer.title">Multiplayer</h2>
-                    <p data-translate="mode.multiplayer.desc">Face other dreamers in a fractured world — alter their reality or shatter them before they reach the light.</p>
+                    <p data-translate="mode.multiplayer.desc">Face other dreamers in a fractured world — alter their
+                        reality or shatter them before they reach the light.</p>
                 </div>
 
                 <div class="mode-card" data-mode="editor">
@@ -95,7 +120,8 @@
                         </svg>
                     </div>
                     <h2 data-translate="mode.editor.title">Level Editor</h2>
-                    <p data-translate="mode.editor.desc">Bend the dream to your will — craft impossible paths and share your nightmare with others.</p>
+                    <p data-translate="mode.editor.desc">Bend the dream to your will — craft impossible paths and share
+                        your nightmare with others.</p>
                 </div>
             </div>
             <button id="start-game" class="hidden" data-translate="ui.start-game">Start Game</button>
@@ -162,7 +188,8 @@
             </div>
 
             <h1 class="game-over-title" data-translate="gameover.title">GAME OVER</h1>
-            <p id="death-message" class="game-over-subtitle" data-translate="gameover.subtitle">The darkness has consumed you...</p>
+            <p id="death-message" class="game-over-subtitle" data-translate="gameover.subtitle">The darkness has
+                consumed you...</p>
 
             <div class="stats-container game-over-stats">
                 <div class="stat-row">
@@ -184,7 +211,8 @@
                     </svg>
                     Try Again
                 </button>
-                <button id="game-over-menu-button" class="outline-button game-over-outline" data-translate="gameover.menu">
+                <button id="game-over-menu-button" class="outline-button game-over-outline"
+                    data-translate="gameover.menu">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -210,9 +238,11 @@
                 </div>
             </div>
             <h1 class="win-title" data-translate="tutorial.complete.title">Tutorial Complete!</h1>
-            <p class="win-subtitle" data-translate="tutorial.complete.subtitle">You have mastered the basics. The real dream awaits...</p>
+            <p class="win-subtitle" data-translate="tutorial.complete.subtitle">You have mastered the basics. The real
+                dream awaits...</p>
             <div class="button-container">
-                <button id="finish-tutorial-button" class="primary-button" data-translate="tutorial.complete.continue">Continue</button>
+                <button id="finish-tutorial-button" class="primary-button"
+                    data-translate="tutorial.complete.continue">Continue</button>
             </div>
         </div>
     </div>

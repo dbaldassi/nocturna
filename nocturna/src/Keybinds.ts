@@ -22,48 +22,37 @@ export class KeybindsManager {
 
     private openKeybindsModal() {
         this.editingKeybinds = true;
-        const modal = document.createElement("div");
-        modal.className = "keybinds-modal";
-        modal.innerHTML = `
-    <div class="keybinds-content">
-        <div class="keybinds-header">
-            <h2>Keybinds</h2>
-            <button class="close-button">&times;</button>
-        </div>
-        <div class="language-selector">
-    <span>Language:</span>
-    <label>
-        <input type="radio" name="language" value="en" id="lang-en" checked>
-        English
-    </label>
-    <label>
-        <input type="radio" name="language" value="fr" id="lang-fr">
-        Français
-    </label>
-</div>
-        <div class="keybindings-list">
-            ${Object.entries(this.inputHandler.getKeyBindings())
-                .map(
-                    ([action, keys]) => `
-                        <div class="keybind-item">
-                            <span class="keybind-action">${action}</span>
-                            <button class="keybind-key" data-action="${action}">${keys.join(", ")}</button>
-                        </div>
-                    `
-                )
-                .join("")}
-        </div>
-    </div>
-`;
-        document.body.appendChild(modal);
+        const modal = document.getElementById("keybinds-modal");
+        if (!modal) return;
+
+        // Render keybind items dynamically
+        this.renderKeybindItems(modal);
+
+        modal.classList.remove("hidden");
 
         modal.querySelector(".close-button")?.addEventListener("click", () => {
-            modal.remove();
+            modal.classList.add("hidden");
             this.editingKeybinds = false;
         });
         modal.querySelectorAll(".keybind-key").forEach((button) =>
             button.addEventListener("click", (event) => this.listenForKey(event))
         );
+    }
+
+    private renderKeybindItems(modal: HTMLElement) {
+        const keybindingsList = modal.querySelector(".keybindings-list");
+        if (!keybindingsList) return;
+
+        keybindingsList.innerHTML = Object.entries(this.inputHandler.getKeyBindings())
+            .map(
+                ([action, keys]) => `
+                <div class="keybind-item">
+                    <span class="keybind-action">${action}</span>
+                    <button class="keybind-key" data-action="${action}">${keys.join(", ")}</button>
+                </div>
+            `
+            )
+            .join("");
     }
 
     private listenForKey(event: Event) {
