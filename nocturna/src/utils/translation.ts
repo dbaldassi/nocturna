@@ -3,6 +3,21 @@ import { fr } from "./fr";
 
 export class Translation {
     private language: typeof en | typeof fr = en;
+    private static instance: Translation;
+
+    public static initialize(): void {
+        if (!Translation.instance) {
+            Translation.instance = new Translation();
+            Translation.instance.setLanguage("en"); // Default language
+        }
+    }
+
+    public static getTranslation(key: string): string {
+        if (!Translation.instance) {
+            throw new Error("Translation instance not initialized. Call Translation.initialize() first.");
+        }
+        return Translation.instance.getTranslation(key);
+    }
 
     constructor() {
         const radios = document.querySelectorAll('input[name="language"]');

@@ -1,4 +1,5 @@
 import { InputHandler } from "./InputHandler";
+import { Translation } from "./utils/translation";
 
 export class KeybindsManager {
     private inputHandler: InputHandler;
@@ -39,7 +40,7 @@ export class KeybindsManager {
         );
     }
 
-    private renderKeybindItems(modal: HTMLElement) {
+    public renderKeybindItems(modal: HTMLElement) {
         const keybindingsList = modal.querySelector(".keybindings-list");
         if (!keybindingsList) return;
 
@@ -47,7 +48,7 @@ export class KeybindsManager {
             .map(
                 ([action, keys]) => `
                 <div class="keybind-item">
-                    <span class="keybind-action">${action}</span>
+                    <span class="keybind-action" data-translate="${action}">${Translation.getTranslation(action)}</span>
                     <button class="keybind-key" data-action="${action}">${keys.join(", ")}</button>
                 </div>
             `

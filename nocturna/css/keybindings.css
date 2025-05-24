@@ -198,7 +198,7 @@
     background: rgba(255, 255, 255, 0.2);
 }
 
-.language-selector {
+.language-selector, .keybinds-preset {
     display: flex;
     align-items: center;
     gap: 1rem;
@@ -207,7 +207,7 @@
     font-size: 1rem;
 }
 
-.language-selector label {
+.language-selector label, .keybinds-preset label {
     display: flex;
     align-items: center;
     gap: 0.3rem;
@@ -215,7 +215,7 @@
     cursor: pointer;
 }
 
-.language-selector input[type="radio"] {
+.language-selector input[type="radio"], .keybinds-preset input[type="radio"] {
     accent-color: #3b82f6;
     width: 1rem;
     height: 1rem;
