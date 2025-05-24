@@ -11,7 +11,7 @@ import { MultiScene } from "../scene/MultiScene";
 import { CharacterInput, GameObject, GameObjectConfig, GameObjectFactory } from "../types";
 import { LevelLoader, LevelLoaderObserver } from "../LevelLoader";
 import { Cube } from "../Cube";
-import { RemoteGameObject } from "../GameObjects/RemoteGameObject";
+import { RemoteGameObject, RemotePlayer } from "../GameObjects/RemoteGameObject";
 import { Lobby, LobbyObserver } from "../Lobby";
 import { ParentNode } from "../ParentNode";
 
@@ -56,7 +56,7 @@ export class InGameState extends AbstractGameSceneState {
     private condition: VictoryCondition | LooseCondition;
     private factories : Map<string, GameObjectFactory>;
 
-    constructor(gameScene: MultiScene, playerId: string) {
+    constructor(gameScene: MultiScene) {
         super(gameScene);
         this.condition = null;
 
@@ -79,16 +79,28 @@ export class InGameState extends AbstractGameSceneState {
         this.gameScene.setupCamera();
     }
 
+    public exit(): void {
+        this.gameScene.clearUI();
+        this.gameScene.removePlayer();
+    }
+
     public setCondition(condition: VictoryCondition | LooseCondition) {
         this.condition = condition;
     }
 
     public update(dt: number, input: CharacterInput): AbstractGameSceneState|null {
-        if(this.condition) {
-            return new EndState(this.gameScene, this.condition);
-        }
+        if(this.condition) return new WinningState(this.gameScene);
 
+        this.gameScene.spawnObject(dt);
         this.gameScene.updateObjects(dt, input);
+        this.gameScene.updateUI();
+
+        const alive = this.gameScene.updatePlayer();
+        if(!alive) return new DeadState(this.gameScene);
+
+        if( this.gameScene.getLeftRemotePlayer() == 0) {
+            return new WinningState(this.gameScene);
+        }
 
         return null;
     }
@@ -118,8 +130,34 @@ export class InGameState extends AbstractGameSceneState {
         else if(action === "removeObject") {
             this.gameScene.removeRemoteObject(data.id, data.owner);
         }
+        else if(action === "playerReport") {
+            this.gameScene.updateRemotePlayer(data.id, { score: data.score, hp: data.hp, inventory: data.inventory });
+        }
     }
 }
+
+export class DeadState extends InGameState {
+
+    constructor(gameScene: MultiScene) {
+        super(gameScene);
+    }
+
+    public enter(): void {
+        this.gameScene.setupDeadCamera();
+    }
+
+    public exit(): void {
+
+    }
+
+    public update(dt: number, input: CharacterInput): AbstractGameSceneState|null {
+        this.gameScene.updateObjects(dt, input);
+
+        if(this.gameScene.getLeftRemotePlayer() == 1) return new LosingState(this.gameScene);
+
+        return null;
+    }
+};
 
 export class LoadingState extends AbstractGameSceneState implements LevelLoaderObserver {
     private levelLoader: LevelLoader;
@@ -181,9 +219,9 @@ export class LoadingState extends AbstractGameSceneState implements LevelLoaderO
                 const participant = this.remoteParticipant.find(p => p.num === subcube);
                 if(participant) {
                     // create remote object
-                    const remotePlayer = new RemoteGameObject(player, player.getId(), participant.id);
+                    const remotePlayer = new RemotePlayer(player, participant.id, participant.id);
                     // add remote object
-                    this.gameScene.addRemoteObject(remotePlayer);
+                    this.gameScene.addRemotePlayer(remotePlayer);
                 }
                 else {
                     player.getMesh().physicsBody.dispose();
@@ -211,37 +249,63 @@ export class LoadingState extends AbstractGameSceneState implements LevelLoaderO
 
     public update(_: number, __: CharacterInput): AbstractGameSceneState|null {
         if(this.localPlayer.ready && this.remoteParticipant.every(p => p.ready)) {
-            return new InGameState(this.gameScene, this.localPlayer.id);
+            return new InGameState(this.gameScene);
         }
 
         return null;
     }
 }
 
-export class EndState extends AbstractGameSceneState {
-    private endObject : VictoryCondition | LooseCondition;
-
-    constructor(scene: MultiScene, object: VictoryCondition | LooseCondition) {
+export class WinningState extends AbstractGameSceneState {
+    constructor(scene: MultiScene) {
         super(scene);
-
-        this.endObject = object;
     }
 
     render(): void {
         // this.gameScene.getScene().render();
     }
     enter(): void {
+        const winScreen = document.getElementById("win-screen") as HTMLElement;
+        winScreen.classList.remove("hidden");
 
+        const restartButton = document.getElementById("continue-button") as HTMLElement;
+        restartButton.classList.add("hidden");
+
+        const menuButton = document.getElementById("win-menu-button") as HTMLElement;
+        
+        menuButton.addEventListener("click", () => {
+            window.location.reload();
+        });
     }
     exit() {
- 
+        
     }
+}
 
-    update(dt: number, input: CharacterInput): AbstractGameSceneState | null {
-        this.endObject.update(dt, input);
+export class LosingState extends AbstractGameSceneState {
 
-        return null;
-    }    
+    constructor(gameScene: MultiScene) {
+        super(gameScene);
+    }
+    public render(): void {
+        // this.gameScene.getScene().render();
+    }
+    public enter(): void {
+        const loseScreen = document.getElementById("game-over-screen") as HTMLElement;
+        loseScreen.classList.remove("hidden");
+
+        const restartButton = document.getElementById("retry-button") as HTMLElement;
+        // hide restart button
+        restartButton.classList.add("hidden");
+        const menuButton = document.getElementById("game-over-menu-button") as HTMLElement;
+        menuButton.addEventListener("click", () => {
+            // refresh the page to go back to the main menu
+            window.location.reload();
+        });
+    }
+    public exit(): void {
+        
+    }
 }
 
 export class LobbyState extends AbstractGameSceneState implements LobbyObserver {

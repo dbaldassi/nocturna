@@ -25,33 +25,8 @@ export class LooseCondition {
     }
 
     public checkLoose(_: number): boolean {
-        // console.log(this.player.getMesh().position.y, -Cube.DefaultSize / 2);
-        // console.log(this.player.getHp(), this.player.isAlive());
-        
         return !this.player.isAlive();
     }
-
-    /*public checkLoose(timer: number): boolean {
-        if (this.lastYPos === undefined) {
-            this.lastYPos = this.player.getMesh().position.y; // Initialize lastYPos on first check
-        }
-        const playerY = this.player.getMesh().position.y;
-        if (playerY === this.lastYPos) {
-            this.lastTimer = 0;
-        }
-
-        if (playerY < this.lastYPos) {
-            this.lastYPos = playerY; // Update lastYPos if the player is below the previous position
-            if (this.lastTimer === 0) {
-                this.lastTimer = timer; // Set lastTimer when the player is below the threshold
-            }
-            if (timer - this.lastTimer > this.loseThreshold) {
-                return true;
-            }
-        }
-
-        return false;
-    }*/
 
     public addObserver(observer: EndConditionObserver): void {
         if (!this.observers.includes(observer)) {

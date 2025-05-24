@@ -41,6 +41,10 @@ x
         return this.id;
     }
 
+    public setId(id: string): void {
+        this.id = id;
+    }
+
     public jump() {
         const physicsBody = this.getMesh().physicsBody;
         if (!physicsBody) {
