@@ -136,18 +136,17 @@ export class LoadingState extends AbstractGameSceneState implements LevelLoaderO
     }
 
     public enter(): void {
-        this.gameScene.createGameScene();
-
         this.localPlayer.ready = false;
         this.remoteParticipant.forEach(p => p.ready = false);
 
         const networkManager = NetworkManager.getInstance();
         networkManager.setObserver(this);
 
-        this.levelLoader = new LevelLoader(this.gameScene.getScene(), this, 
+        this.gameScene.createGameScene().then(() => {
+            this.levelLoader = new LevelLoader(this.gameScene.getScene(), this, 
             { create: (factory: GameObjectFactory, config: GameObjectConfig) => factory.create(config) } );
-
-        this.levelLoader.loadLevel("multi.json");
+            this.levelLoader.loadLevel("multi.json");
+        });
     }
 
     private findSubcube(player: Player) : number {

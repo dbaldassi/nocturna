@@ -69,6 +69,10 @@ export class Cube {
         for (let i = 0; i < 6; i++) {
             const face = new Face(this.scene, this.size, this.mesh, positions[i], names[i], colors[i], rotations[i]);
             this.faces.push(face);
+            // add physics to the face if the physics engine is enabled
+            if (this.scene.getPhysicsEngine()) {
+                new PhysicsAggregate(face.getMesh(), PhysicsShapeType.BOX, { mass: 0 });
+            }
         }
     }
 
@@ -120,6 +124,9 @@ export class Cube {
             console.log("Adding physics to separators");
             new PhysicsAggregate(horizontalPlatform, PhysicsShapeType.BOX, { mass: 0 });
             new PhysicsAggregate(verticalPlatform, PhysicsShapeType.BOX, { mass: 0 });
+        }
+        else {
+            console.warn("Physics engine is not enabled, skipping physics setup for separators.");
         }
 
         const portalMat = createEvilPortalMaterial(this.scene);
