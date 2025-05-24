@@ -1,12 +1,17 @@
-import { Scene, Vector3, MeshBuilder, Color3, PhysicsAggregate, PhysicsShapeType } from "@babylonjs/core";
+import { Scene, Vector3, MeshBuilder, Color3, PhysicsAggregate, PhysicsShapeType, PhysicsBody } from "@babylonjs/core";
 import { Face } from "./Face";
 import { createEvilPortalMaterial } from "./Shaders/NocturnaShaders";
+
+export interface CubeCollisionObserver {
+    onBottomCollision: (collider: PhysicsBody) => void;
+}
 
 export class Cube {
     private scene: Scene;
     private size: number;
     private faces: Face[] = [];
     private mesh: any;
+    private collisionObserver: CubeCollisionObserver | null = null;
 
     public static readonly Type: string = "Cube";
     public static readonly DefaultSize: number = 1000;
@@ -14,6 +19,10 @@ export class Cube {
     constructor(scene: Scene, size: number) {
         this.scene = scene;
         this.size = size;
+    }
+
+    public setCollisionObserver(observer: CubeCollisionObserver): void {
+        this.collisionObserver = observer;
     }
 
     public getSize(): number {
@@ -71,9 +80,28 @@ export class Cube {
             this.faces.push(face);
             // add physics to the face if the physics engine is enabled
             if (this.scene.getPhysicsEngine()) {
-                new PhysicsAggregate(face.getMesh(), PhysicsShapeType.BOX, { mass: 0 });
+                const aggregate = new PhysicsAggregate(face.getMesh(), PhysicsShapeType.BOX, { mass: 0 });
+
+                if(names[i] === "Bottom") {
+                    aggregate.body.setCollisionCallbackEnabled(true);
+                    // Add collision detection for the bottom face
+                    aggregate.body.getCollisionObservable().add((collider) => {
+                        if (this.collisionObserver) {
+                            this.collisionObserver.onBottomCollision(collider.collidedAgainst);
+                        }
+                    });
+                }
             }
         }
+    }
+
+    public removePhysics() {
+        this.faces.forEach(face => {
+            if (face.getMesh().physicsBody) {
+                face.getMesh().physicsBody.dispose();
+                face.getMesh().physicsBody = null;
+            }
+        });
     }
 
     public setupMulti() {
@@ -122,8 +150,15 @@ export class Cube {
         // Add physics to the platforms if engine is enabled
        if (this.scene.getPhysicsEngine()) {
             console.log("Adding physics to separators");
-            new PhysicsAggregate(horizontalPlatform, PhysicsShapeType.BOX, { mass: 0 });
+            const aggregate = new PhysicsAggregate(horizontalPlatform, PhysicsShapeType.BOX, { mass: 0 });
             new PhysicsAggregate(verticalPlatform, PhysicsShapeType.BOX, { mass: 0 });
+
+            aggregate.body.setCollisionCallbackEnabled(true);
+            aggregate.body.getCollisionObservable().add((collider) => {
+                if (this.collisionObserver) {
+                    this.collisionObserver.onBottomCollision(collider.collidedAgainst);
+                }
+            });
         }
         else {
             console.warn("Physics engine is not enabled, skipping physics setup for separators.");

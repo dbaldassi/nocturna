@@ -28,7 +28,7 @@ export class LooseCondition {
         // console.log(this.player.getMesh().position.y, -Cube.DefaultSize / 2);
         // console.log(this.player.getHp(), this.player.isAlive());
         
-        return (this.player.getMesh().position.y < this.ground) || !this.player.isAlive();
+        return !this.player.isAlive();
     }
 
     /*public checkLoose(timer: number): boolean {

@@ -163,6 +163,7 @@ export class LoadingState extends AbstractGameSceneState implements LevelLoaderO
     public onCube(cube: Cube): void {
         // this.cube = cube;
         cube.setupMulti();
+        cube.setCollisionObserver(this.gameScene);
     }
     public onPlayer(player: Player): void {
         this.players.push(player);

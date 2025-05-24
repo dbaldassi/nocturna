@@ -139,6 +139,10 @@ x
     public isAlive(): boolean {
         return this.hp > 0;
     }
+
+    public kill(): void {
+        this.hp = 0;
+    }
 }
 
 // ========================= FACTORY =========================

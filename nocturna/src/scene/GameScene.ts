@@ -1,7 +1,7 @@
-import { Engine, Vector3, FollowCamera, Scene } from "@babylonjs/core";
+import { Engine, Vector3, FollowCamera, Scene, PhysicsBody } from "@babylonjs/core";
 
 import { BaseScene } from "./BaseScene";
-import { Cube } from "../Cube";
+import { Cube, CubeCollisionObserver } from "../Cube";
 import { ParentNode } from "../ParentNode";
 import { InputHandler } from "../InputHandler";
 import { Player } from "../GameObjects/Player";
@@ -14,7 +14,7 @@ import { HpBar } from "../HpBar";
 
 const CUBE_SIZE = 3000;
 
-export class GameScene extends BaseScene implements LevelLoaderObserver, GameObjectVisitor, EndConditionObserver {
+export class GameScene extends BaseScene implements LevelLoaderObserver, GameObjectVisitor, EndConditionObserver, CubeCollisionObserver {
     protected cube: Cube;
     protected parent: ParentNode;
     protected player: Player;
@@ -61,6 +61,7 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
 
     public onCube(cube: Cube): void {
         this.cube = cube;
+        this.cube.setCollisionObserver(this);
     }
     public onPlayer(player: Player): void {
         this.player = player;
@@ -226,6 +227,8 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
             }
         })
 
+        this.cube.removePhysics();
+
         this.scene.disablePhysicsEngine();
     }
 
@@ -241,6 +244,12 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         this.activeCameraIndex = (this.activeCameraIndex + 1) % this.cameras.length;
         this.scene.activeCamera = this.cameras[this.activeCameraIndex];
         this.scene.activeCamera.attachControl(this.scene.getEngine().getRenderingCanvas(), true);
+    }
+
+    public onBottomCollision(collider: PhysicsBody) {
+        if(this.player.getMesh().physicsBody === collider) {
+            this.player.kill();
+        }
     }
 }
 

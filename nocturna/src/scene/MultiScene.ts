@@ -1,4 +1,4 @@
-import { Engine, Vector3, FollowCamera, UniversalCamera, Scene, Camera, WebGPUEngine } from "@babylonjs/core";
+import { Engine, Vector3, FollowCamera, UniversalCamera, Scene, Camera, WebGPUEngine, PhysicsBody } from "@babylonjs/core";
 
 import { BaseScene } from "./BaseScene";
 import { ParentNode } from "../ParentNode";
@@ -16,6 +16,7 @@ import { AdvancedDynamicTexture, Control, TextBlock } from "@babylonjs/gui";
 import { Action } from "../action";
 import { HpBar } from "../HpBar";
 import { Player } from "../GameObjects/Player";
+import { CubeCollisionObserver } from "../Cube";
 
 class CoinSpawner {
     private scene: Scene;
@@ -44,7 +45,7 @@ class CoinSpawner {
     }
 };
 
-export class MultiScene extends BaseScene implements GameObjectVisitor, EndConditionObserver {
+export class MultiScene extends BaseScene implements GameObjectVisitor, EndConditionObserver, CubeCollisionObserver {
     public static readonly MaxPlayer: number = 4;
 
     private readonly coinInterval: number = 10000; // 1 second
@@ -54,7 +55,6 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
     private gameObjects: GameObject[] = [];
     private remoteObjects: IRemoteGameObject[] = [];
     private localObjects: GameObject[] = [];
-    private loseCondition: LooseCondition; // Replace with the actual type if available
     private state : AbstractGameSceneState;
     private timestamp: number = 0;
     private score: number = 0;
@@ -373,6 +373,14 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, EndCondi
 
     public getScene() : Scene {
         return this.scene;
+    }
+
+    public onBottomCollision(collider: PhysicsBody) {
+        // check if its player
+        const player = this.localObjects[0] as Player;
+        if(player.getMesh().physicsBody === collider) {
+            player.kill();
+        }
     }
 
     public onRetry() {
