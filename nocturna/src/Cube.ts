@@ -80,8 +80,6 @@ export class Cube {
             return;
         }
 
-        console.log("ADDING SEPARATORS");
-
         const mesh = frontFace.getMesh();
 
         // Position de la face "Front"
@@ -103,8 +101,6 @@ export class Cube {
             frontPosition.z // Légèrement en avant de la face
         );
 
-        console.log("horizontalPlatform", horizontalPlatform.position, frontPosition);
-
         // Créer la plateforme verticale
         const verticalPlatform = MeshBuilder.CreateBox("verticalSeparator", {
             width: sep,
@@ -121,6 +117,7 @@ export class Cube {
 
         // Add physics to the platforms if engine is enabled
        if (this.scene.getPhysicsEngine()) {
+            console.log("Adding physics to separators");
             new PhysicsAggregate(horizontalPlatform, PhysicsShapeType.BOX, { mass: 0 });
             new PhysicsAggregate(verticalPlatform, PhysicsShapeType.BOX, { mass: 0 });
         }
