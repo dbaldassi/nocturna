@@ -155,7 +155,7 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
             const minutes = Math.floor(this.timer / 1000 / 60);
             const seconds = (this.timer / 1000 % 60).toFixed(2); // Limiter à 2 chiffres après la virgule
             const formattedTime = `${minutes}:${seconds.toString().padStart(5, '0')}`; // Format as MM:SS.ss
-            timerElement.textContent = `Time: ${formattedTime}`; // Update the timer element
+            timerElement.textContent = `${formattedTime}`; // Update the timer element
         }
     }
 

@@ -5,6 +5,7 @@ import { BaseScene } from "./scene/BaseScene";
 import { SceneFactory } from "./scene/SceneFactory";
 import { InputHandler } from "./InputHandler";
 import { TutorialScene } from "./scene/TutorialScene";
+import { Translation } from "./utils/translation";
 
 export class App {
     public static selectedGraphics: string = "low";
@@ -12,9 +13,11 @@ export class App {
     private scene: BaseScene;
     private canvas: HTMLCanvasElement;
     private inputHandler: InputHandler;
+    private translation: Translation;
 
     constructor() {
         this.inputHandler = new InputHandler();
+        Translation.initialize();
         document.addEventListener('DOMContentLoaded', () => {
             const cards: NodeListOf<HTMLElement> = document.querySelectorAll('.mode-card');
             const startButton: HTMLElement | null = document.getElementById('start-game');
