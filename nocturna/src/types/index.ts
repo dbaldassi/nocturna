@@ -1,4 +1,4 @@
-import { Mesh, Vector3, Scene, AssetsManager, MeshAssetTask, Matrix, TransformNode } from "@babylonjs/core";
+import { Mesh, Vector3, Scene, AssetsManager, MeshAssetTask, Matrix, TransformNode, Quaternion } from "@babylonjs/core";
 import { VictoryCondition } from "../GameObjects/Victory";
 import { ParentNode } from "../ParentNode";
 import { Coin } from "../GameObjects/Coin";
@@ -57,6 +57,7 @@ export interface AbstractState {
 }
 
 export interface EditorObject {
+    move(movement: Vector3): void;
     updatePosition(dt: number, input: CharacterInput): void;
     updateRotation(dt: number, input: CharacterInput): void;
     updateScale(dt: number, input: CharacterInput): void;
@@ -165,6 +166,24 @@ export class Utils {
     
         // Ajouter la position du parent pour obtenir la position globale
         return transformedPosition;
+    }
+
+    static calculateRotationRelativeToParent(parent: ParentNode, rotation: Vector3): Vector3 {
+        // Matrice de rotation du parent
+        const parentRot = parent.getRotation();
+        const parentMatrix = Matrix.RotationYawPitchRoll(parentRot.y, parentRot.x, parentRot.z);
+
+        // Matrice de rotation de l'enfant
+        const childMatrix = Matrix.RotationYawPitchRoll(rotation.y, rotation.x, rotation.z);
+
+        // Rotation relative = inverse(parent) * child
+        const relativeMatrix = parentMatrix.invert().multiply(childMatrix);
+
+        // Extraire les angles Euler de la matrice résultante
+        const quat = Quaternion.FromRotationMatrix(relativeMatrix);
+        const relativeRotation = quat.toEulerAngles();
+
+        return relativeRotation;
     }
 }
 

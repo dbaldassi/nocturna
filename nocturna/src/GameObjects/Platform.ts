@@ -100,6 +100,10 @@ export class ParentedPlatformFactory implements GameObjectFactory {
     
                 meshes[0].name = Platform.Type;
                 config.position = Utils.calculatePositionRelativeToParent(config.parent, config.position);
+                // set rotation as if parent is not rotated
+                console.log(config.rotation);
+                config.rotation = Utils.calculateRotationRelativeToParent(config.parent, config.rotation);
+                console.log(config.rotation);
                 Utils.configureMesh(meshes, config);
                 
                 if(physics) {

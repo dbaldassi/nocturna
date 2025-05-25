@@ -3,7 +3,7 @@ import { Engine, Vector3, FreeCamera, Mesh, Scene, AssetsManager } from "@babylo
 
 import { BaseScene } from "./BaseScene";import { ParentNode } from "../ParentNode";
 import { Cube } from "../Cube";
-import { CharacterInput, AbstractState, EditorObject, GameObjectFactory } from "../types";
+import { CharacterInput, AbstractState, EditorObject, GameObjectFactory, Utils } from "../types";
 import { InputHandler } from "../InputHandler";
 import { FixedPlatform, FixedPlatformFactory, ParentedPlatform, ParentedPlatformFactory } from "../GameObjects/Platform";
 import { Player, PlayerFactory } from "../GameObjects/Player";
@@ -12,8 +12,6 @@ import { LevelLoader, LevelLoaderObserver } from "../LevelLoader";
 import { LevelSelectionScene, LevelSelectionObserver } from "../LevelSelection";
 import { FixedRocket, FixedRocketFactory } from "../GameObjects/Rocket";
 import { SpikeTrapFactory, SpikeTrapObject } from "../GameObjects/SpikeTrap";
-
-const CUBE_SIZE = 3000;
 
 abstract class EditorState implements AbstractState {
     protected scene: EditorScene;
@@ -292,9 +290,6 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
         
         scene.currentState = new SelectionState(scene);
         scene.currentState.enter();
-        /*scene.currentState = new InitState();
-        scene.currentState.enter();
-        scene.createLevel("scene.json");*/
 
         return scene;
     }
@@ -308,7 +303,7 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
 
         this.inputHandler.addAction("save", () => this.serializeScene());
 
-        this.camera = new FreeCamera("camera", new Vector3(0, 0, -500), this.scene);
+        this.camera = new FreeCamera("camera", new Vector3(0, 0, -250), this.scene);
         this.camera.attachControl(true); // Permet de contrôler la caméra avec la souris et le clavier
         this.camera.speed = 2; // Vitesse de la caméra
 
@@ -336,6 +331,7 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
         this.currentState.enter();
     }
     public onObjectCreated(object: EditorObject): void {
+        console.log("Object created:", object.getType());
         this.editorObjects.push(object);
     }
 
@@ -353,6 +349,8 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
         // Sélectionner le nouvel objet
         this.currentSelection = object;
         this.currentSelection.setSelected(true);
+
+        console.log(Utils.getTotalBoundingBox(object.getMeshes()));
     }
 
     private deselectCurrentSelection() {
@@ -411,7 +409,6 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
         if (pickResult?.hit && pickResult.pickedPoint) {
             // Récupérer la position où la souris pointe
             const position = pickResult.pickedPoint;
-            position.z -= 50/2;
     
             // Configurer les paramètres de la plateforme
             const config = {
@@ -429,7 +426,16 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
 
             this.assetsManager.load();
             this.assetsManager.onFinish = () => {
-                this.selectEditorObject(object);
+                this.scene.executeWhenReady(() => {
+                    object.getMeshes().forEach(m => m.refreshBoundingInfo());
+                    
+                    const totalbox = Utils.getTotalBoundingBox(object.getMeshes());
+                    const box = totalbox.maximum.subtract(totalbox.minimum);
+                    console.log("rotation : ", object.getMesh().rotation);
+                    object.move(new Vector3(0, 0, -box.z / 2)); // Ajuster la position pour que l'objet soit au-dessus du sol
+                    // object.getMesh().position.z -= box.z / 2; 
+                    this.selectEditorObject(object);
+                });
             }
     
         } else {
@@ -487,7 +493,7 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
 
     public serializeScene(): void {
         const serializedObjects = this.editorObjects.map((obj) => obj.serialize());
-        console.log("LENGTH SRI: ", this.editorObjects);
+        console.log("LENGTH SRI: ", serializedObjects);
         const jsonScene = { objects : serializedObjects }; // Convertir en JSON formaté
         jsonScene[Cube.Type] = this.cube.serialize();
         jsonScene[ParentNode.Type] = this.parentNode.serialize();
