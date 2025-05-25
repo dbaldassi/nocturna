@@ -111,12 +111,13 @@ class AdditionState extends EditorState {
     enter() {
         super.enter();
 
-        this.scene.showMenu(`${this.name()} -> 1: Fixed Platform 2: Parented Platform 3: Player 4: Victory f: clone ${this.getModeChangeText()}`);
+        this.scene.showMenu(`${this.name()} -> 1: Fixed Platform 2: Parented Platform 3: Spike Trap 4: Player 5: Victory f: clone ${this.getModeChangeText()}`);
 
         this.inputHandler.addAction("action_1", () => this.scene.addObject(this.factories.get(FixedPlatform.Type)));
         this.inputHandler.addAction("action_2", () => this.scene.addObject(this.factories.get(ParentedPlatform.Type)));
-        this.inputHandler.addAction("action_3", () => this.scene.addObject(this.factories.get(Player.Type)));
-        this.inputHandler.addAction("action_4", () => this.scene.addObject(this.factories.get(VictoryCondition.Type)));
+        this.inputHandler.addAction("action_3", () => this.scene.addObject(this.factories.get(SpikeTrapObject.Type)));
+        this.inputHandler.addAction("action_4", () => this.scene.addObject(this.factories.get(Player.Type)));
+        this.inputHandler.addAction("action_5", () => this.scene.addObject(this.factories.get(VictoryCondition.Type)));
         this.inputHandler.addAction("clone", () => this.scene.clone(this.factories));
         this.inputHandler.addAction("delete", () => this.scene.deleteSelection());
     }
@@ -331,7 +332,6 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
         this.currentState.enter();
     }
     public onObjectCreated(object: EditorObject): void {
-        console.log("Object created:", object.getType());
         this.editorObjects.push(object);
     }
 
@@ -402,7 +402,6 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
     }
 
     public addObject(factory: GameObjectFactory, size?: Vector3, rotation?: Vector3) {
-        console.log("Adding object");
         // Effectuer un raycast à partir de la position de la souris
         const pickResult = this.scene.pick(this.scene.pointerX, this.scene.pointerY);
     
@@ -493,7 +492,6 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
 
     public serializeScene(): void {
         const serializedObjects = this.editorObjects.map((obj) => obj.serialize());
-        console.log("LENGTH SRI: ", serializedObjects);
         const jsonScene = { objects : serializedObjects }; // Convertir en JSON formaté
         jsonScene[Cube.Type] = this.cube.serialize();
         jsonScene[ParentNode.Type] = this.parentNode.serialize();

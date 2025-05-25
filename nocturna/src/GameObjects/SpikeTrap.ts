@@ -9,8 +9,6 @@ export class SpikeTrapObject implements Enemy {
     protected mesh: Mesh;
     protected scene: Scene;
     private damage: number = 1;
-    private isDelayed: boolean = false;
-    private delay: number = 1; // Delay before the trap can be triggered again
 
     constructor(mesh: Mesh, scene: Scene) {
         this.mesh = mesh;
@@ -39,12 +37,7 @@ export class SpikeTrapObject implements Enemy {
     }
 
     public accept(visitor: GameObjectVisitor): void {
-        if (this.isDelayed) return; 
         visitor.visitEnemy(this);
-        this.isDelayed = true;
-        setTimeout(() => {
-            this.isDelayed = false;
-        }, this.delay * 1000); 
     }
 
     public onContact(): boolean {
@@ -67,6 +60,10 @@ export class SpikeTrapObject implements Enemy {
 
 export class SpikeTrapFactory implements GameObjectFactory {
     public createMesh(config: GameObjectConfig): Mesh {
+        if(!config.size) {
+            config.size = new Vector3(10, 0.1, 10); // Default size if not provided
+        }
+
         const mesh = MeshBuilder.CreateBox("spikeTrap", { width: config.size.x, height: 0.1, depth: config.size.z }, config.scene);
         mesh.position = config.position;
         mesh.rotation = config.rotation;
