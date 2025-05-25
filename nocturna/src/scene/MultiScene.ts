@@ -295,8 +295,6 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         const body = object.getMesh().physicsBody;
         if(body) {
             body.getCollisionObservable().add((collider) => {
-                console.log(`Collision detected between ${object.getId()}`);    
-
                 if(collider.collidedAgainst === this.localObjects[0].getMesh().physicsBody) {
                     object.accept(this);
                 }
@@ -308,10 +306,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
                 });
 
                 if(should_destroy) {
-                    object.getMesh().physicsBody.dispose();
-                    object.getMesh().physicsBody = null;
-                    object.getMeshes().forEach(mesh => mesh.dispose());
-                    this.localObjects = this.localObjects.filter(o => o !== object);
+                    this.disposeObject(object, this.localObjects);
                 }
             });
         }
@@ -330,12 +325,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
     }
 
     private removeLocalObject(object: GameObject): void {
-        if(object.getMesh().physicsBody) {
-            object.getMesh().physicsBody.dispose();
-            object.getMesh().physicsBody = null;
-        }
-        object.getMesh().dispose();
-        this.localObjects = this.localObjects.filter(o => object !== o);
+        this.disposeObject(object, this.localObjects);
         const networkManager = NetworkManager.getInstance();
         networkManager.sendUpdate("removeObject", {
             id: object.getId(),
@@ -365,9 +355,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         const player = this.localObjects[0] as Player;
         this.inventory.fill(null);
         this.score = 0;
-        player.getMesh().physicsBody?.dispose();
-        player.getMesh().dispose();
-        this.localObjects = this.localObjects.filter(o => o !== player);
+        this.disposeObject(player, this.localObjects);
     }
 
     // =========================
@@ -406,21 +394,37 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
     public onRemoteObjectContact(objectId: string, ownerId: string): void {
         const object = this.remoteObjects.find(o => o.getId() === objectId && o.getOwnerId() === ownerId);
         if(object && object.onContact()) {
-            object.getMesh().physicsBody?.dispose();
-            object.getMeshes().forEach(mesh => mesh.dispose());
-            this.remoteObjects = this.remoteObjects.filter(o => o !== object);
+            this.disposeObject(object, this.remoteObjects);
         }
     }
 
     public removeRemoteObject(id: string, owner: string): void {
         const object = this.remoteObjects.find(o => id === o.getId() && owner === o.getOwnerId());
+        this.disposeObject(object, this.remoteObjects);
+    }
+
+    public removeRemotePlayer(id: string): void {
+        const player = this.remotePlayers.find(p => p.getId() === id);
+        console.log(player, this.remotePlayers);
+        this.disposeObject(player, this.remotePlayers);
+        console.log(this.remotePlayers);
+
+        const todelete = this.remoteObjects.filter(o => o.getOwnerId() === id);
+        todelete.forEach(o => this.disposeObject(o, this.remoteObjects));
+    }
+
+    public disposeObject(object: GameObject, container: Array<GameObject>) {
         if(!object) return;
-        const body = object.getMesh().physicsBody;
-        if(body) {
-            body.dispose();
+
+        if(object.getMesh().physicsBody) {
+            object.getMesh().physicsBody.dispose();
+            object.getMesh().physicsBody = null;
         }
-        object.getMesh().dispose();
-        this.remoteObjects = this.remoteObjects.filter(o => o !== object);
+        object.getMeshes().forEach(mesh => mesh.dispose());
+        const index = container.indexOf(object);
+        if (index !== -1) {
+            container.splice(index, 1);
+        }
     }
 
     // =========================
@@ -539,8 +543,6 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         const camera = this.scene.activeCamera as UniversalCamera;
         camera.position.x += (input.right ? 1 : (input.left ? -1 : 0)) * dt;
         camera.position.y += (input.up ? 1 : (input.down ? -1 : 0)) * dt;
-
-        // console.log(`Camera position: ${camera.position.x}, ${camera.position.y}, ${camera.position.z}`);
     }
 
     public render(): void {
@@ -548,11 +550,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
     }
 
     public selectObjectDrop(callback: Action.SelectObjectCallback): void {
-        // camera position should be a bit behing first remote player
-        // const position = this.remoteObjects[0].getMesh().position.clone();
-        // position.z -= 100;
         const camera = new UniversalCamera("selectCamera", Vector3.Zero(), this.scene);
-        // camera.setTarget(Vector3.Zero());
         this.scene.activeCamera = camera;
         // attach to canvas
         this.scene.activeCamera.attachControl(this.engine.getRenderingCanvas(), true);

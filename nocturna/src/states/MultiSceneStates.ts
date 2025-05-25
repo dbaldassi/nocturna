@@ -5,13 +5,12 @@ import { Player, PlayerFactory } from "../GameObjects/Player";
 import { FixedRocket, FixedRocketFactory } from "../GameObjects/Rocket";
 import { SpikeTrapFactory, SpikeTrapObject } from "../GameObjects/SpikeTrap";
 import { VictoryCondition, VictoryConditionFactory } from "../GameObjects/Victory";
-import { LooseCondition } from "../Loose";
 import { NetworkManager, NetworkObserver } from "../network/NetworkManager";
 import { MultiScene } from "../scene/MultiScene";
 import { CharacterInput, GameObject, GameObjectConfig, GameObjectFactory, Utils } from "../types";
 import { LevelLoader, LevelLoaderObserver } from "../LevelLoader";
 import { Cube } from "../Cube";
-import { RemoteGameObject, RemotePlayer } from "../GameObjects/RemoteGameObject";
+import { RemotePlayer } from "../GameObjects/RemoteGameObject";
 import { Lobby, LobbyObserver } from "../Lobby";
 import { ParentNode } from "../ParentNode";
 
@@ -28,14 +27,10 @@ export abstract class AbstractGameSceneState implements NetworkObserver {
         this.gameScene = gameScene;
     }
 
-    public enter(): void {
-        // console.log(`Entering state: ${this.constructor.name}`);
-    }
-    public exit(): void {
-       
-    }
-
+    public enter(): void {}
+    public exit(): void {}
     public render() : void {}
+
     public update(_: number, __: CharacterInput): AbstractGameSceneState|null {
         return null;
     }
@@ -104,7 +99,12 @@ export class InGameState extends AbstractGameSceneState {
     public render(): void {
         this.gameScene.getScene().render();
     }
-    
+
+    public onParticipantLeft(id: string): void {
+        console.log("Participant left:", id);
+        this.gameScene.removeRemotePlayer(id);
+    }
+
     public onPeerMessage(participantId: string, action: string, data: any): void {
         if(action === "updateObject") {
             this.gameScene.updateRemoteObject(data.id, participantId, data.position, data.timestamp);
