@@ -1,6 +1,6 @@
 import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, AbstractMesh, SceneLoader, Mesh, Ray, AssetsManager, ImportMeshAsync, BoundingBox, NodeMaterial } from "@babylonjs/core";
 import { CharacterInput, EditorObject, Utils, GameObject, GameObjectConfig, GameObjectFactory, AbstractState, Enemy } from "../types";
-import { IdleState, PlayerDamageableState, PlayerDamageState } from "../states/PlayerStates";
+import { IdleState, KnockbackState, PlayerDamageableState, PlayerDamageState } from "../states/PlayerStates";
 import { ObjectEditorImpl } from "./EditorObject";
 import { App } from "../app";
 
@@ -141,9 +141,33 @@ export class Player implements GameObject {
         return this.hp;
     }
 
+    public dashBack() {
+        const mesh = this.getMesh();
+        const physicsBody = mesh.physicsBody;
+        if (!physicsBody) {
+            console.warn("Physics body not found for the player mesh.");
+            return;
+        }
+        const currentVelocity = physicsBody.getLinearVelocity();
+        let backward : Vector3;
+        if (currentVelocity.length() > 0.01) {
+            backward = currentVelocity.scale(-1).normalize();
+        } else {
+            backward = mesh.forward.scale(-1); // Utilise l'orientation du mesh si à l'arrêt
+        }
+        const impulseStrength = 10000;
+        const impulse = backward.scale(impulseStrength);
+
+        physicsBody.applyImpulse(impulse, mesh.getAbsolutePosition());
+    }
+
     public doTakeDamage(damage: number): void {
         this.hp -= damage;
         if (this.hp <= 0) this.hp = 0;
+        this.state.exit();
+        this.state = new KnockbackState(this);
+        this.state.enter();
+        this.dashBack();
     }
 
     public takeDamage(damage: number): void {

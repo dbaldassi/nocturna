@@ -1,5 +1,5 @@
 import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, Mesh, ParticleSystem, Texture, Color4 } from "@babylonjs/core";
-import { GameObject, GameObjectConfig, GameObjectFactory, EditorObject, Utils, CharacterInput, GameObjectVisitor, Enemy, CollisionGroup } from "../types";
+import { GameObjectConfig, GameObjectFactory, EditorObject, GameObjectVisitor, Enemy, CollisionGroup } from "../types";
 import { ObjectEditorImpl } from "./EditorObject";
 
 export class RocketObject implements Enemy {
