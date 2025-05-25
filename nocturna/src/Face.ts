@@ -35,7 +35,7 @@ export class Face {
         const material = new StandardMaterial(this.cubeFace + "Material", this.scene);
         material.diffuseColor = new Color3(0.1, 0.1, 0.1); // Dark color, but not completely black
         material.backFaceCulling = false; // Ensure the texture is visible from all angles
-        material.specularColor = new Color3(0, 0, 0);
+        material.specularColor = Color3.Black(); // No specular highlights
         plane.material = material;
 
         const pointLight = new HemisphericLight("hemisphericLight", new Vector3(this.position.x / 2, this.position.y / 2, this.position.z / 2), this.scene); // Place light at the center

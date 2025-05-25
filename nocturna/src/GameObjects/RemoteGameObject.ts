@@ -105,8 +105,15 @@ export class RemotePlayer extends RemoteGameObject {
     public hp: number = 100;
     public inventory: string[] = [];
 
-    constructor(object: GameObject, id: string, ownerId: string) {
+    private subcube: number = 0;
+
+    constructor(object: GameObject, id: string, ownerId: string, subcube: number) {
         super(object, id, ownerId);
+        this.subcube = subcube;
+    }
+
+    public getSubcube(): number {
+        return this.subcube;
     }
 
     public getType(): string {

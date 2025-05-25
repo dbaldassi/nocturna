@@ -21,7 +21,7 @@ export interface GameObject {
 }
 
 export interface Enemy extends GameObject {
-    damage: number;
+    getDamage(): number;
 }
 
 export interface GameObjectVisitor {

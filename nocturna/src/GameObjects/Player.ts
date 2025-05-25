@@ -134,8 +134,7 @@ x
         return this.hp;
     }
 
-    public visitEnemy(Enemy: Enemy): void {
-        const damage = Enemy.damage;
+    public takeDamage(damage: number): void {
         this.hp -= damage;
         if (this.hp <= 0) this.hp = 0;
     }

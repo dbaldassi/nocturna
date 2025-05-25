@@ -8,7 +8,7 @@ export class SpikeTrapObject implements Enemy {
     private id: string;
     protected mesh: Mesh;
     protected scene: Scene;
-    public damage: number = 1;
+    private damage: number = 1;
     private isDelayed: boolean = false;
     private delay: number = 1; // Delay before the trap can be triggered again
 
@@ -32,6 +32,10 @@ export class SpikeTrapObject implements Enemy {
 
     public getType(): string {
         return SpikeTrapObject.Type;
+    }
+
+    public getDamage(): number {
+        return this.damage;
     }
 
     public accept(visitor: GameObjectVisitor): void {
@@ -62,6 +66,8 @@ export class SpikeTrapFactory implements GameObjectFactory {
         const mesh = MeshBuilder.CreateBox("spikeTrap", { width: config.size.x, height: 0.1, depth: config.size.z }, config.scene);
         mesh.position = config.position;
         mesh.rotation = config.rotation;
+
+        console.log("Creating SpikeTrap mesh with position:", config.position, "and size:", config.size);
 
         const material = new StandardMaterial("spikeTrapMaterial", config.scene);
         material.diffuseColor = Color3.Gray();

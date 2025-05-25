@@ -9,7 +9,7 @@ export class RocketObject implements Enemy {
 
     protected mesh: Mesh;
     protected scene: Scene;
-    public damage: number = 5;
+    private damage: number = 5;
     public explosionRadius: number = 10;
 
     constructor(mesh: Mesh, scene: Scene) {
@@ -32,6 +32,10 @@ export class RocketObject implements Enemy {
 
     public getType(): string {
         return RocketObject.Type;
+    }
+
+    public getDamage(): number {
+        return this.damage;
     }
 
     public accept(visitor: GameObjectVisitor): void {
