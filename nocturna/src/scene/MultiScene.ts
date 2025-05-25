@@ -92,6 +92,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
 
     public async createGameScene() {
         this.scene = new Scene(this.engine);
+        // this.enableDebug();
         this.coinSpawner = new CoinSpawner(this.scene);
         for(let i = 0; i < this.inventorySize; i++) {
             this.inventory.push(null);
@@ -289,16 +290,36 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
     // === LOCAL OBJECTS     ===
     // =========================
 
-    private addLocalObject(object: GameObject): void {
+    private doAddLocalObject(object: GameObject): void {
         this.localObjects.push(object);
         const body = object.getMesh().physicsBody;
         if(body) {
             body.getCollisionObservable().add((collider) => {
+                console.log(`Collision detected between ${object.getId()}`);    
+
                 if(collider.collidedAgainst === this.localObjects[0].getMesh().physicsBody) {
                     object.accept(this);
                 }
+                const should_destroy = object.onContact();
+                const networkManager = NetworkManager.getInstance();
+                networkManager.sendUpdate("objectContact", {
+                    id: object.getId(),
+                    owner: this.playerId,
+                });
+
+                if(should_destroy) {
+                    object.getMesh().physicsBody.dispose();
+                    object.getMesh().physicsBody = null;
+                    object.getMeshes().forEach(mesh => mesh.dispose());
+                    this.localObjects = this.localObjects.filter(o => o !== object);
+                }
             });
         }
+    }
+
+    private addLocalObject(object: GameObject): void {
+        this.doAddLocalObject(object);
+
         const networkManager = NetworkManager.getInstance();
         networkManager.sendUpdate("createObject", {
             id: object.getId(),
@@ -382,6 +403,15 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         }
     }
 
+    public onRemoteObjectContact(objectId: string, ownerId: string): void {
+        const object = this.remoteObjects.find(o => o.getId() === objectId && o.getOwnerId() === ownerId);
+        if(object && object.onContact()) {
+            object.getMesh().physicsBody?.dispose();
+            object.getMeshes().forEach(mesh => mesh.dispose());
+            this.remoteObjects = this.remoteObjects.filter(o => o !== object);
+        }
+    }
+
     public removeRemoteObject(id: string, owner: string): void {
         const object = this.remoteObjects.find(o => id === o.getId() && owner === o.getOwnerId());
         if(!object) return;
@@ -399,15 +429,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
 
     public addNetworkObject(object: GameObject, id: string, ownerId: string): void {
         if(ownerId === this.playerId) {
-            this.localObjects.push(object);
-            const body = object.getMesh().physicsBody;
-            if(body) {
-                body.getCollisionObservable().add((collider) => {
-                    if(collider.collidedAgainst === this.localObjects[0].getMesh().physicsBody) {
-                        object.accept(this);
-                    }
-                });
-            }
+            this.doAddLocalObject(object);
         }
         else {
             const remoteObject = new RemoteGameObject(object, id, ownerId);
@@ -452,7 +474,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
 
     public addAction() {
         // const action = Action.ActionBase.create(Math.floor(Math.random() * 3), this);
-        const action = Action.ActionBase.create(Action.Type.SPIKE, this);
+        const action = Action.ActionBase.create(Action.Type.ROCKET, this);
         if(action) {
             for(let i = 0; i < this.inventory.length; i++) {
                 if(this.inventory[i] === null) {

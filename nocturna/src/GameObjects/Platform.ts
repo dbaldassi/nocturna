@@ -39,6 +39,10 @@ export class Platform implements GameObject {
     public getType(): string {
         return Platform.Type;
     }
+
+    public onContact(): boolean {
+        return false;
+    }
 }
 
 export class ParentedPlatform extends Platform implements ParentNodeObserver {
@@ -94,7 +98,6 @@ export class ParentedPlatformFactory implements GameObjectFactory {
 
             const path = App.selectedGraphics + "/" + ParentedPlatform.Type + ".glb";
 
-    
             Utils.createMeshTask(config, ParentedPlatform.Type, path, (task) => {
                 const meshes = task.loadedMeshes;
     

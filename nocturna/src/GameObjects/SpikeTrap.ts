@@ -47,6 +47,10 @@ export class SpikeTrapObject implements Enemy {
         }, this.delay * 1000); 
     }
 
+    public onContact(): boolean {
+        return false;
+    }
+
     public update(_: number): void { }
 
     public enableCollision(): void {

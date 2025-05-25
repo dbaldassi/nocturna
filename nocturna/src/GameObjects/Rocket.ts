@@ -1,5 +1,5 @@
 import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, Mesh, ParticleSystem, Texture, Color4 } from "@babylonjs/core";
-import { GameObject, GameObjectConfig, GameObjectFactory, EditorObject, Utils, CharacterInput, GameObjectVisitor, Enemy } from "../types";
+import { GameObject, GameObjectConfig, GameObjectFactory, EditorObject, Utils, CharacterInput, GameObjectVisitor, Enemy, CollisionGroup } from "../types";
 import { ObjectEditorImpl } from "./EditorObject";
 
 export class RocketObject implements Enemy {
@@ -42,6 +42,12 @@ export class RocketObject implements Enemy {
         visitor.visitEnemy(this);
     }
 
+    public onContact(): boolean {
+        console.log("Rocket has contacted something.");
+        this.explode();
+        return true;
+    }
+
     public update(_: number): void {}
 
     public enableCollision(): void {
@@ -51,11 +57,12 @@ export class RocketObject implements Enemy {
             return;
         }
 
+        console.log(this.mesh.position);
+
+        physicsBody.shape.filterMembershipMask = CollisionGroup.ROCKET; // Set the membership mask for rockets
+        physicsBody.shape.filterCollideMask = 0xFFFFFFFF & ~CollisionGroup.FACES; // Allow collision with except faces
+
         physicsBody.setCollisionCallbackEnabled(true);
-        const collisionObservable = physicsBody.getCollisionObservable();
-        collisionObservable.add(() => {
-            this.explode();
-        });
     }
 
     private explode(): void {
@@ -65,6 +72,7 @@ export class RocketObject implements Enemy {
         // Set the texture for the particles
         particleSystem.particleTexture = new Texture("textures/flare.png", this.scene);
 
+        console.log("Explosion at position:", this.mesh.position);
         // Set the emitter to the rocket's position
         particleSystem.emitter = this.mesh.position.clone();
 
@@ -91,9 +99,6 @@ export class RocketObject implements Enemy {
             particleSystem.stop();
             particleSystem.dispose();
         }, 1000);
-
-        // Dispose of the rocket mesh
-        this.mesh.dispose();
     }
 }
 
@@ -111,6 +116,10 @@ export class FixedRocket extends RocketObject {
 
 export class FixedRocketFactory implements GameObjectFactory {
     public createMesh(config: GameObjectConfig): Mesh {
+        if (!config.size) {
+            config.size = new Vector3(10, 10, 10); // Default size for the rocket
+        }
+
         const mesh = MeshBuilder.CreateCylinder("rocket", { diameter: config.size.x, height: config.size.y }, config.scene);
         mesh.position = config.position;
         mesh.rotation = config.rotation;
@@ -124,8 +133,10 @@ export class FixedRocketFactory implements GameObjectFactory {
 
     public create(config: GameObjectConfig): RocketObject {
         const mesh = this.createMesh(config);
-        new PhysicsAggregate(mesh, PhysicsShapeType.CYLINDER, { mass: 5, friction: 0.5, restitution: 0.2 }, config.scene);
         const rocket = new FixedRocket(mesh, config.scene);
+
+        new PhysicsAggregate(mesh, PhysicsShapeType.CYLINDER, { mass: 5, friction: 0.5, restitution: 0.2 }, config.scene);
+
         rocket.enableCollision(); // Enable collision detection
         return rocket;
     }

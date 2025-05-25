@@ -96,6 +96,9 @@ export class RemoteGameObject implements IRemoteGameObject {
     public accept(_: GameObjectVisitor): void {
         
     }
+    public onContact(): boolean {
+        return this.object.onContact();
+    }
 }
 
 export class RemotePlayer extends RemoteGameObject {

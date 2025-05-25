@@ -5,6 +5,7 @@ import { MultiScene } from "./scene/MultiScene";
 import { GameObject, Utils } from "./types";
 import { RemoteGameObject } from "./GameObjects/RemoteGameObject";
 import { NetworkManager } from "./network/NetworkManager";
+import { FixedRocketFactory } from "./GameObjects/Rocket";
 
 
 export namespace Action {
@@ -46,8 +47,8 @@ export namespace Action {
                     return new RotateAction("Rotate Z", scene, "z");
                 case Type.SPIKE:
                     return new SpikeAction("Spike", scene);
-                /*case Type.ROCKET:
-                    return new RocketAction("Rocket", scene);*/
+                case Type.ROCKET:
+                    return new RocketAction("Rocket", scene);
                 default:
                     return null;
             }
@@ -85,7 +86,6 @@ export namespace Action {
             if(object.getType() === FixedPlatform.Type) {
                 const totalbox = Utils.getTotalBoundingBox(object.getMeshes());
                 const box = totalbox.maximum.subtract(totalbox.minimum);
-                console.log("SpikeAction.onSelect", object.getId(), box);
                 const position = object.getMesh().position.clone();
                 position.y += box.y / 2 + 1; // Adjust position to be on top of the platform
 
@@ -116,6 +116,49 @@ export namespace Action {
             }
 
             return false;
+        }
+    }
+
+    export class RocketAction extends ActionBase implements Action.SelectObjectCallback {
+        private factory: FixedRocketFactory;
+
+        constructor(name: string, scene: MultiScene) {
+            super(name, scene);
+            this.factory = new FixedRocketFactory();
+        }
+
+        public execute(): void {
+            this.scene.selectObjectDrop(this);
+        }
+
+        public onSelect(object: GameObject, playerTargetId: string): boolean {
+            const position = object.getMesh().position.clone();
+            const size = new Vector3(10, 10, 10); // Default size for the rocket
+            position.y += 100; // Position the rocket above the selected object
+            position.z -= size.z / 2; // Adjust position to be in front of the object
+
+            const config = {
+                scene: this.scene.getScene(),
+                position: position,
+                rotation: Vector3.Zero(),
+                size: size,
+            };
+            const rocket = this.factory.create(config);
+            const remote_rocket = new RemoteGameObject(rocket, rocket.getId(), playerTargetId);
+            this.scene.addRemoteObject(remote_rocket);
+            // notify other players
+            const network = NetworkManager.getInstance();
+            network.sendUpdate("createObject", {
+                id: object.getId(),
+                owner: playerTargetId,
+                position: config.position,
+                size: config.size,
+                type: rocket.getType(),
+            });
+
+            this.scene.doneSelectingObjectDrop();
+
+            return true;
         }
     }
 }

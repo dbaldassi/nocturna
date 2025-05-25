@@ -117,4 +117,7 @@ export class ObjectEditorImpl implements EditorObject {
     public getType(): string {
         return this.object.getType();
     }
+    public onContact(): boolean {
+        return this.object.onContact();
+    }
 }

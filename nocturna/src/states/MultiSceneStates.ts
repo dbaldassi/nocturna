@@ -8,7 +8,7 @@ import { VictoryCondition, VictoryConditionFactory } from "../GameObjects/Victor
 import { LooseCondition } from "../Loose";
 import { NetworkManager, NetworkObserver } from "../network/NetworkManager";
 import { MultiScene } from "../scene/MultiScene";
-import { CharacterInput, GameObject, GameObjectConfig, GameObjectFactory } from "../types";
+import { CharacterInput, GameObject, GameObjectConfig, GameObjectFactory, Utils } from "../types";
 import { LevelLoader, LevelLoaderObserver } from "../LevelLoader";
 import { Cube } from "../Cube";
 import { RemoteGameObject, RemotePlayer } from "../GameObjects/RemoteGameObject";
@@ -114,8 +114,8 @@ export class InGameState extends AbstractGameSceneState {
             if(!factory) return;
 
             const config: GameObjectConfig = {
-                position: data.position,
-                size: data.size,
+                position: Utils.createVec3FromData(data.position),
+                size: Utils.createVec3FromData(data.size),
                 rotation: Vector3.Zero(),
                 scene: this.gameScene.getScene(),
                 parent: this.gameScene.getParent(),
@@ -136,6 +136,9 @@ export class InGameState extends AbstractGameSceneState {
         }
         else if(action === "win") {
             this.gameScene.killPlayer();
+        }
+        else if(action === "objectContact") {
+            this.gameScene.onRemoteObjectContact(data.id, data.owner);
         }
     }
 }

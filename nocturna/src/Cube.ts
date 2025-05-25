@@ -1,6 +1,7 @@
 import { Scene, Vector3, MeshBuilder, Color3, PhysicsAggregate, PhysicsShapeType, PhysicsBody } from "@babylonjs/core";
 import { Face } from "./Face";
 import { createEvilPortalMaterial } from "./Shaders/NocturnaShaders";
+import { CollisionGroup } from "./types";
 
 export interface CubeCollisionObserver {
     onBottomCollision: (collider: PhysicsBody) => void;
@@ -85,6 +86,9 @@ export class Cube {
                 if(names[i] === "Bottom") {
                     aggregate.body.setCollisionCallbackEnabled(true);
                     // Add collision detection for the bottom face
+                    aggregate.shape.filterMembershipMask = CollisionGroup.FACES;
+                    aggregate.shape.filterCollideMask = 0xFFFFFFFF; // Allow all collisions
+                    
                     aggregate.body.getCollisionObservable().add((collider) => {
                         if (this.collisionObserver) {
                             this.collisionObserver.onBottomCollision(collider.collidedAgainst);

@@ -146,6 +146,10 @@ x
     public kill(): void {
         this.hp = 0;
     }
+
+    public onContact(): boolean {
+        return false; // Player does not handle contact events
+    }
 }
 
 // ========================= FACTORY =========================

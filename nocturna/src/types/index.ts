@@ -11,6 +11,11 @@ export interface CharacterInput {
     jump: boolean;
 }
 
+export enum CollisionGroup {
+    FACES = 0x0002,
+    ROCKET = 0x0004,
+}
+
 export interface GameObject {
     getType(): string;
     getMesh(): Mesh;
@@ -18,6 +23,7 @@ export interface GameObject {
     accept(visitor: GameObjectVisitor): void;
     update(dt: number, input: CharacterInput): void;
     getId(): string;
+    onContact(): boolean;
 }
 
 export interface Enemy extends GameObject {
@@ -184,6 +190,14 @@ export class Utils {
         const relativeRotation = quat.toEulerAngles();
 
         return relativeRotation;
+    }
+
+    static createVec3FromData(data: any): Vector3 {
+        if(data === undefined || data === null) {
+            return undefined;
+        }
+
+        return new Vector3(data._x, data._y, data._z);
     }
 }
 

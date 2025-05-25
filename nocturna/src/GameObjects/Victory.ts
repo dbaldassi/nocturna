@@ -162,6 +162,11 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
         this.scene.stopAnimation(this.mesh);
         visitor.visitVictory(this);
     }
+
+    public onContact(): boolean {
+        // Not used in this class
+        return false;
+    }
 }
 
 export class VictoryConditionFactory implements GameObjectFactory {
