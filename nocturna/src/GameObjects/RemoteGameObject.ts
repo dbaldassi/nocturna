@@ -1,6 +1,6 @@
 
 import { GameObject, IRemoteGameObject, CharacterInput, GameObjectVisitor } from "../types";
-import { Vector3, Mesh, PhysicsMassProperties, PhysicsBody, PhysicsAggregate } from "@babylonjs/core";
+import { Vector3, Mesh } from "@babylonjs/core";
 
 class Interpolator {
     private previousUpdate: { position: Vector3; timestamp: number } | null = null;
@@ -41,11 +41,11 @@ class Interpolator {
 
 export class RemoteGameObject implements IRemoteGameObject {
     public static readonly Type: string = "remote_game_object";
-    private object: GameObject;
-    private interpolator: Interpolator;
-    private id: string;
-    private ownerId: string;
-    private timestamp: number = 0;
+    protected object: GameObject;
+    protected interpolator: Interpolator;
+    protected id: string;
+    protected ownerId: string;
+    protected timestamp: number = 0;
 
     constructor(object: GameObject, id: string, ownerId: string) {
         this.object = object;
@@ -93,7 +93,31 @@ export class RemoteGameObject implements IRemoteGameObject {
     public getMeshes(): Mesh[] {
         return this.object.getMeshes();
     }
-    public accept(visitor: GameObjectVisitor): void {
+    public accept(_: GameObjectVisitor): void {
         
+    }
+}
+
+export class RemotePlayer extends RemoteGameObject {
+    public static readonly Type: string = "remote_player";
+
+    public score: number = 0;
+    public hp: number = 100;
+    public inventory: string[] = [];
+
+    constructor(object: GameObject, id: string, ownerId: string) {
+        super(object, id, ownerId);
+    }
+
+    public getType(): string {
+        return RemotePlayer.Type;
+    }
+
+    public isDead(): boolean {
+        return this.hp <= 0;
+    }
+
+    public isAlive(): boolean {
+        return this.hp > 0;
     }
 }

@@ -1,11 +1,17 @@
-import { Scene, Vector3, MeshBuilder, Color3, PhysicsAggregate, PhysicsShapeType } from "@babylonjs/core";
+import { Scene, Vector3, MeshBuilder, Color3, PhysicsAggregate, PhysicsShapeType, PhysicsBody } from "@babylonjs/core";
 import { Face } from "./Face";
+import { createEvilPortalMaterial } from "./Shaders/NocturnaShaders";
+
+export interface CubeCollisionObserver {
+    onBottomCollision: (collider: PhysicsBody) => void;
+}
 
 export class Cube {
     private scene: Scene;
     private size: number;
     private faces: Face[] = [];
     private mesh: any;
+    private collisionObserver: CubeCollisionObserver | null = null;
 
     public static readonly Type: string = "Cube";
     public static readonly DefaultSize: number = 1000;
@@ -13,6 +19,14 @@ export class Cube {
     constructor(scene: Scene, size: number) {
         this.scene = scene;
         this.size = size;
+    }
+
+    public setCollisionObserver(observer: CubeCollisionObserver): void {
+        this.collisionObserver = observer;
+    }
+
+    public getSize(): number {
+        return this.size;
     }
 
     public static create(scene: Scene, position: Vector3 = Vector3.Zero(), size: number = Cube.DefaultSize): Cube {
@@ -64,7 +78,30 @@ export class Cube {
         for (let i = 0; i < 6; i++) {
             const face = new Face(this.scene, this.size, this.mesh, positions[i], names[i], colors[i], rotations[i]);
             this.faces.push(face);
+            // add physics to the face if the physics engine is enabled
+            if (this.scene.getPhysicsEngine()) {
+                const aggregate = new PhysicsAggregate(face.getMesh(), PhysicsShapeType.BOX, { mass: 0 });
+
+                if(names[i] === "Bottom") {
+                    aggregate.body.setCollisionCallbackEnabled(true);
+                    // Add collision detection for the bottom face
+                    aggregate.body.getCollisionObservable().add((collider) => {
+                        if (this.collisionObserver) {
+                            this.collisionObserver.onBottomCollision(collider.collidedAgainst);
+                        }
+                    });
+                }
+            }
         }
+    }
+
+    public removePhysics() {
+        this.faces.forEach(face => {
+            if (face.getMesh().physicsBody) {
+                face.getMesh().physicsBody.dispose();
+                face.getMesh().physicsBody = null;
+            }
+        });
     }
 
     public setupMulti() {
@@ -74,8 +111,6 @@ export class Cube {
             console.error("Front face not found!");
             return;
         }
-
-        console.log("ADDING SEPARATORS");
 
         const mesh = frontFace.getMesh();
 
@@ -98,8 +133,6 @@ export class Cube {
             frontPosition.z // Légèrement en avant de la face
         );
 
-        console.log("horizontalPlatform", horizontalPlatform.position, frontPosition);
-
         // Créer la plateforme verticale
         const verticalPlatform = MeshBuilder.CreateBox("verticalSeparator", {
             width: sep,
@@ -116,9 +149,28 @@ export class Cube {
 
         // Add physics to the platforms if engine is enabled
        if (this.scene.getPhysicsEngine()) {
-            new PhysicsAggregate(horizontalPlatform, PhysicsShapeType.BOX, { mass: 0 });
+            console.log("Adding physics to separators");
+            const aggregate = new PhysicsAggregate(horizontalPlatform, PhysicsShapeType.BOX, { mass: 0 });
             new PhysicsAggregate(verticalPlatform, PhysicsShapeType.BOX, { mass: 0 });
+
+            aggregate.body.setCollisionCallbackEnabled(true);
+            aggregate.body.getCollisionObservable().add((collider) => {
+                if (this.collisionObserver) {
+                    this.collisionObserver.onBottomCollision(collider.collidedAgainst);
+                }
+            });
         }
+        else {
+            console.warn("Physics engine is not enabled, skipping physics setup for separators.");
+        }
+
+        const portalMat = createEvilPortalMaterial(this.scene);
+        horizontalPlatform.material = portalMat;
+        verticalPlatform.material = portalMat;
+
+        this.scene.registerBeforeRender(() => {
+            portalMat.setFloat("time", performance.now() / 1000);
+        });
 
         // Ajouter les plateformes comme enfants de la face "Front"
         // horizontalPlatform.parent = mesh;

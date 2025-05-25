@@ -17,6 +17,17 @@ export class Lobby {
         this.scene = scene;
     }
 
+    private getClientOS(): string {
+    const userAgent = navigator.userAgent;
+
+    if (userAgent.indexOf("Win") !== -1) return "Windows";
+    if (userAgent.indexOf("Mac") !== -1) return "MacOS";
+    if (userAgent.indexOf("X11") !== -1) return "UNIX";
+    if (userAgent.indexOf("Linux") !== -1) return "Linux";
+
+    return "Unknown";
+}
+
     public showStartMenu(): void {
         // Créer une texture GUI pour afficher le menu
         const guiTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this.scene);
@@ -44,6 +55,7 @@ export class Lobby {
         playerNameInput.background = "gray";
         playerNameInput.placeholderText = "Enter Player Name";
         playerNameInput.placeholderColor = "white";
+        playerNameInput.text = this.getClientOS();
         panel.addControl(playerNameInput);
     
         // Ajouter un bouton pour créer une nouvelle room
@@ -66,6 +78,7 @@ export class Lobby {
         roomIdInput.background = "gray";
         roomIdInput.placeholderText = "Enter Room ID";
         roomIdInput.placeholderColor = "white";
+        roomIdInput.text = "test";
         panel.addControl(roomIdInput);
     
         // Ajouter un bouton pour rejoindre une room existante

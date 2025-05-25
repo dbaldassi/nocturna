@@ -26,7 +26,7 @@ export interface Enemy extends GameObject {
 
 export interface GameObjectVisitor {
     visitCoin(coin: Coin): void;
-    // visitEnemy(enemy: Enemy): void;
+    visitEnemy(enemy: Enemy): void;
     visitVictory(portal: VictoryCondition): void;
 }
 

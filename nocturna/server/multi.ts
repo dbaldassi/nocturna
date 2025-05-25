@@ -83,6 +83,8 @@ class RoomManager {
 
     constructor() {
         this.rooms = new Map();
+        const room = new Room("test");
+        this.rooms.set("test", room);
     }
 
     getRoom(id) {
@@ -128,7 +130,7 @@ class RoomManager {
         connection.participantId = null;
 
         // If the room is empty, delete it
-        if(room.getNumberOfParticipants() === 0) {
+        if(room.getNumberOfParticipants() === 0 && roomId !== "test") {
             this.rooms.delete(roomId);
         }
     }

@@ -24,8 +24,7 @@ export class Player implements GameObject {
     private hp: number = 10;
     private id: string;
 x
-    private hpBar: HTMLElement = null;
-    private hpBarContainer: HTMLElement = null;
+    
     private maxHp: number = 10;
     
     constructor(mesh: Mesh, scene: Scene) {
@@ -36,15 +35,14 @@ x
         this.state = new IdleState(this);
 
         this.id = `${Player.Type}_${Player.nextId++}`;
-        this.hpBar = document.getElementById("hp-bar") as HTMLElement;
-        this.hpBarContainer = document.getElementById("hp-bar-container") as HTMLElement;
-        this.hpBar.classList.remove("hidden");
-        this.hpBarContainer.classList.remove("hidden");
-        this.updateHpBar();
     }
 
     public getId(): string {
         return this.id;
+    }
+
+    public setId(id: string): void {
+        this.id = id;
     }
 
     public jump() {
@@ -128,6 +126,10 @@ x
 
     public accept(_: any): void { }
 
+    public getMaxHp(): number {
+        return this.maxHp;
+    }
+
     public getHp(): number {
         return this.hp;
     }
@@ -135,19 +137,15 @@ x
     public visitEnemy(Enemy: Enemy): void {
         const damage = Enemy.damage;
         this.hp -= damage;
-        if (this.hp <= 0) {
-            this.hp = 0;
-        }
-        this.updateHpBar();
-    }
-
-    private updateHpBar() {
-        const percent = Math.max(0, Math.min(1, this.hp / this.maxHp));
-        this.hpBar.style.width = `${percent * 100}%`;
+        if (this.hp <= 0) this.hp = 0;
     }
 
     public isAlive(): boolean {
         return this.hp > 0;
+    }
+
+    public kill(): void {
+        this.hp = 0;
     }
 }
 

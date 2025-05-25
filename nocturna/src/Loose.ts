@@ -5,15 +5,11 @@ import { Cube } from "./Cube";
 
 export class LooseCondition {
     private player: Player;
-    private scene: Scene;
-    private timeBelowThreshold: number = 0;
-    private loseThreshold: number = 3000; // 3 seconds in milliseconds
-    private lastYPos: number; // Example threshold for y-axis
-    private lastTimer: number = 0; // Last timer value when the player was below the threshold
     private observers: EndConditionObserver[] = [];
     private current: number = 0;
     private targetScore: number;
     private ended: boolean = false;
+    private ground: number;
 
     private deathMessages: string[] = [
         "The darkness has consumed you...",
@@ -23,39 +19,14 @@ export class LooseCondition {
         "Your journey ends here... for now...",
     ];
 
-    constructor(player: Player, scene: Scene) {
+    constructor(player: Player, ground: number) {
         this.player = player;
-        this.scene = scene;
+        this.ground = ground;
     }
 
     public checkLoose(_: number): boolean {
-        // console.log(this.player.getMesh().position.y, -Cube.DefaultSize / 2);
-        // console.log(this.player.getHp(), this.player.isAlive());
-        
-        return this.player.getMesh().position.y < (-Cube.DefaultSize) || !this.player.isAlive();
+        return !this.player.isAlive();
     }
-
-    /*public checkLoose(timer: number): boolean {
-        if (this.lastYPos === undefined) {
-            this.lastYPos = this.player.getMesh().position.y; // Initialize lastYPos on first check
-        }
-        const playerY = this.player.getMesh().position.y;
-        if (playerY === this.lastYPos) {
-            this.lastTimer = 0;
-        }
-
-        if (playerY < this.lastYPos) {
-            this.lastYPos = playerY; // Update lastYPos if the player is below the previous position
-            if (this.lastTimer === 0) {
-                this.lastTimer = timer; // Set lastTimer when the player is below the threshold
-            }
-            if (timer - this.lastTimer > this.loseThreshold) {
-                return true;
-            }
-        }
-
-        return false;
-    }*/
 
     public addObserver(observer: EndConditionObserver): void {
         if (!this.observers.includes(observer)) {

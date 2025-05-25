@@ -1,7 +1,7 @@
-import { Engine, Vector3, FollowCamera, Scene } from "@babylonjs/core";
+import { Engine, Vector3, FollowCamera, Scene, PhysicsBody } from "@babylonjs/core";
 
 import { BaseScene } from "./BaseScene";
-import { Cube } from "../Cube";
+import { Cube, CubeCollisionObserver } from "../Cube";
 import { ParentNode } from "../ParentNode";
 import { InputHandler } from "../InputHandler";
 import { Player } from "../GameObjects/Player";
@@ -9,10 +9,12 @@ import { GameObject, GameObjectFactory, GameObjectVisitor, GameObjectConfig, Abs
 import { LevelLoaderObserver, LevelLoader, AbstractFactory } from "../LevelLoader";
 import { VictoryCondition } from "../GameObjects/Victory";
 import { LooseCondition } from "../Loose";
+import { Coin } from "../GameObjects/Coin";
+import { HpBar } from "../HpBar";
 
 const CUBE_SIZE = 3000;
 
-export class GameScene extends BaseScene implements LevelLoaderObserver, GameObjectVisitor, EndConditionObserver {
+export class GameScene extends BaseScene implements LevelLoaderObserver, GameObjectVisitor, EndConditionObserver, CubeCollisionObserver {
     protected cube: Cube;
     protected parent: ParentNode;
     protected player: Player;
@@ -24,6 +26,8 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     protected activeCameraIndex: number = 0;
     protected loseCondition: LooseCondition; // Replace with the actual type if available
     protected state: AbstractGameSceneState;
+    protected hpBar: HpBar;
+
     protected static sceneName: string = "scene.json";
 
     constructor(engine: Engine, inputHandler: InputHandler) {
@@ -57,6 +61,7 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
 
     public onCube(cube: Cube): void {
         this.cube = cube;
+        this.cube.setCollisionObserver(this);
     }
     public onPlayer(player: Player): void {
         this.player = player;
@@ -76,7 +81,9 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         this.setupCollisions();
         // start a timer from 0 to infinity
         this.startTimer();
-        this.loseCondition = new LooseCondition(this.player, this.scene); // Initialize the lose condition
+        this.loseCondition = new LooseCondition(this.player, this.cube.getSize()); // Initialize the lose condition
+
+        this.hpBar = new HpBar(this.player.getMaxHp());
 
         this.state.exit();
         this.state = new InGameState(this);
@@ -133,6 +140,14 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         this.player.visitEnemy(enemy);
     }
 
+    public visitCoin(coin: Coin): void {
+        
+    }
+
+    public hideUI() {
+        this.hpBar.dispose();
+    }
+
     public checkLoose() {
         if (this.loseCondition.checkLoose(this.timer)) {
             console.log("Loose condition met");
@@ -146,6 +161,7 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
             object.update(dt, input);
         });
         // this.player.update(dt, input);
+        this.hpBar.update(this.player.getHp());
     }
 
     public updateTimer(dt: number) {
@@ -211,6 +227,8 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
             }
         })
 
+        this.cube.removePhysics();
+
         this.scene.disablePhysicsEngine();
     }
 
@@ -226,6 +244,12 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         this.activeCameraIndex = (this.activeCameraIndex + 1) % this.cameras.length;
         this.scene.activeCamera = this.cameras[this.activeCameraIndex];
         this.scene.activeCamera.attachControl(this.scene.getEngine().getRenderingCanvas(), true);
+    }
+
+    public onBottomCollision(collider: PhysicsBody) {
+        if(this.player.getMesh().physicsBody === collider) {
+            this.player.kill();
+        }
     }
 }
 
@@ -259,6 +283,10 @@ class InGameState extends AbstractGameSceneState {
     constructor(gameScene: GameScene) {
         super(gameScene);
         this.condition = null;
+    }
+
+    public exit(): void {
+        this.gameScene.hideUI();
     }
 
     public setCondition(condition: VictoryCondition | LooseCondition) {
