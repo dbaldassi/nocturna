@@ -60,6 +60,8 @@ export const en = {
 export const QWERTY = {
     "left": ["a"],
     "right": ["d"],
+    "up": ["w"],
+    "down": ["s"],
     "rotate_left_x": ["x"],
     "rotate_right_x": ["c"],
     "rotate_left_y": ["y"],
