@@ -5,7 +5,7 @@ import { CharacterInput, EditorObject, GameObject } from "../types";
 export class ObjectEditorImpl implements EditorObject { 
     private object: GameObject;
     private selected: boolean = false;
-    private readonly lateralspeed: number = 0.5;
+    private readonly lateralspeed: number = 0.05;
     private readonly rotationspeed: number = 0.005;
     private originalEmissiveColor: Color3 | null = null; // Stocker la couleur d'origine
 
@@ -23,20 +23,6 @@ export class ObjectEditorImpl implements EditorObject {
                 mesh.rotation.x,
                 mesh.rotation.z
             );
-            
-            // invert sign if object rotation is PI/2 or -PI/2 for X Y and Z
-            /*if (Math.abs(parentMesh.rotation.y) === Math.PI / 2 || Math.abs(parentMesh.rotation.y) === -Math.PI / 2) {
-                localMovement.x *= -1;
-                localMovement.z *= -1;
-            }
-            if (Math.abs(parentMesh.rotation.x) === Math.PI / 2 || Math.abs(parentMesh.rotation.x) === -Math.PI / 2) {
-                localMovement.y *= -1;
-                localMovement.z *= -1;
-            }
-            if (Math.abs(parentMesh.rotation.z) === Math.PI / 2 || Math.abs(parentMesh.rotation.z) === -Math.PI / 2) {
-                localMovement.x *= -1;
-                localMovement.y *= -1;
-            }*/
 
             // Appliquer la rotation du parent au mouvement local
             const globalMovement = Vector3.TransformCoordinates(localMovement, parentRotationMatrix);
@@ -56,7 +42,7 @@ export class ObjectEditorImpl implements EditorObject {
         const localMovement = new Vector3(
             (input.right ? 1 : (input.left ? -1 : 0)) * moveSpeed,
             (input.up ? 1 : (input.down ? -1 : 0)) * moveSpeed,
-            0 // Pas de mouvement en profondeur
+            (input.forward ? 1 : (input.backward ? -1 : 0)) * moveSpeed
         );
     
         this.move(localMovement);
@@ -66,29 +52,45 @@ export class ObjectEditorImpl implements EditorObject {
         const moveSpeed = this.rotationspeed * dt;
         this.object.getMesh().rotation.y += (input.right ? 1 : (input.left ? -1 : 0)) * moveSpeed;
         this.object.getMesh().rotation.x += (input.up ? 1 : (input.down ? -1 : 0)) * moveSpeed;
+        this.object.getMesh().rotation.z += (input.forward ? 1 : (input.backward ? -1 : 0)) * moveSpeed;
     }
 
-    public updateScale(_: number, input: CharacterInput): void {
-        this.object.getMesh().scaling.x += (input.right ? 1 : (input.left ? -1 : 0));
-        this.object.getMesh().scaling.y += (input.up ? 1 : (input.down ? -1 : 0));
+    public updateScale(dt: number, input: CharacterInput): void {
+        const moveSpeed = this.rotationspeed * dt;
+
+        this.object.getMesh().scaling.x += (input.right ? 1 : (input.left ? -1 : 0)) * moveSpeed;
+        this.object.getMesh().scaling.y += (input.up ? 1 : (input.down ? -1 : 0)) * moveSpeed;
+        this.object.getMesh().scaling.z += (input.forward ? 1 : (input.backward ? -1 : 0)) * moveSpeed;
     }
 
     public setSelected(selected: boolean): void {
         this.selected = selected;
 
-        const material = this.object.getMesh().material as StandardMaterial;
-        if (!material) return;
+        // const material = this.object.getMesh().material as StandardMaterial;
+        // if (!material) return;
 
         if (selected) {
             // Save the original color
-            this.originalEmissiveColor = material.emissiveColor.clone();
-            this.object.getMesh().scaling.x *= 1.1;
-            this.object.getMesh().scaling.y *= 1.1;
-            material.emissiveColor = Color3.Yellow(); // Yellow
+            this.object.getMeshes().forEach((mesh) => {
+                mesh.scaling.x *= 1.1;
+                mesh.scaling.y *= 1.1;
+                
+                const material = mesh.material as StandardMaterial;
+                if (!material) return;
+                
+                this.originalEmissiveColor = material.emissiveColor.clone();
+                material.emissiveColor = Color3.Yellow(); // Yellow
+            });
+            
         } else {
-            this.object.getMesh().scaling.x /= 1.1;
-            this.object.getMesh().scaling.y /= 1.1;
-            material.emissiveColor = this.originalEmissiveColor; // White
+            this.object.getMeshes().forEach((mesh) => {
+                mesh.scaling.x /= 1.1;
+                mesh.scaling.y /= 1.1;
+
+                const material = mesh.material as StandardMaterial;
+                if (!material) return;
+                material.emissiveColor = this.originalEmissiveColor; // Yellow
+            });
         }
     }
 
