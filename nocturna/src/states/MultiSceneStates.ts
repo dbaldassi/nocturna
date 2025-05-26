@@ -1,17 +1,16 @@
-import { Vector3 } from "@babylonjs/core";
+import { AssetsManager, Vector3 } from "@babylonjs/core";
 import { Coin, CoinFactory, SuperCoin, SuperCoinFactory } from "../GameObjects/Coin";
 import { FixedPlatform, FixedPlatformFactory, ParentedPlatform, ParentedPlatformFactory } from "../GameObjects/Platform";
 import { Player, PlayerFactory } from "../GameObjects/Player";
 import { FixedRocket, FixedRocketFactory } from "../GameObjects/Rocket";
 import { SpikeTrapFactory, SpikeTrapObject } from "../GameObjects/SpikeTrap";
 import { VictoryCondition, VictoryConditionFactory } from "../GameObjects/Victory";
-import { LooseCondition } from "../Loose";
 import { NetworkManager, NetworkObserver } from "../network/NetworkManager";
 import { MultiScene } from "../scene/MultiScene";
-import { CharacterInput, GameObject, GameObjectConfig, GameObjectFactory } from "../types";
+import { CharacterInput, GameObject, GameObjectConfig, GameObjectFactory, Utils } from "../types";
 import { LevelLoader, LevelLoaderObserver } from "../LevelLoader";
 import { Cube } from "../Cube";
-import { RemoteGameObject, RemotePlayer } from "../GameObjects/RemoteGameObject";
+import { RemotePlayer } from "../GameObjects/RemoteGameObject";
 import { Lobby, LobbyObserver } from "../Lobby";
 import { ParentNode } from "../ParentNode";
 
@@ -28,14 +27,10 @@ export abstract class AbstractGameSceneState implements NetworkObserver {
         this.gameScene = gameScene;
     }
 
-    public enter(): void {
-        // console.log(`Entering state: ${this.constructor.name}`);
-    }
-    public exit(): void {
-       
-    }
-
+    public enter(): void {}
+    public exit(): void {}
     public render() : void {}
+
     public update(_: number, __: CharacterInput): AbstractGameSceneState|null {
         return null;
     }
@@ -54,9 +49,12 @@ export abstract class AbstractGameSceneState implements NetworkObserver {
 
 export class InGameState extends AbstractGameSceneState {
     private factories : Map<string, GameObjectFactory>;
+    private assetsManager: AssetsManager;
 
     constructor(gameScene: MultiScene) {
         super(gameScene);
+        this.assetsManager = new AssetsManager(gameScene.getScene());
+        this.assetsManager.useDefaultLoadingScreen = false;
 
         this.factories = new Map<string, GameObjectFactory>();
         this.factories.set(ParentedPlatform.Type, new ParentedPlatformFactory());
@@ -101,7 +99,12 @@ export class InGameState extends AbstractGameSceneState {
     public render(): void {
         this.gameScene.getScene().render();
     }
-    
+
+    public onParticipantLeft(id: string): void {
+        console.log("Participant left:", id);
+        this.gameScene.removeRemotePlayer(id);
+    }
+
     public onPeerMessage(participantId: string, action: string, data: any): void {
         if(action === "updateObject") {
             this.gameScene.updateRemoteObject(data.id, participantId, data.position, data.timestamp);
@@ -111,13 +114,18 @@ export class InGameState extends AbstractGameSceneState {
             if(!factory) return;
 
             const config: GameObjectConfig = {
-                position: data.position,
+                position: Utils.createVec3FromData(data.position),
+                size: Utils.createVec3FromData(data.size),
                 rotation: Vector3.Zero(),
                 scene: this.gameScene.getScene(),
+                parent: this.gameScene.getParent(),
+                assetsManager: this.assetsManager,
             };
+
+            this.assetsManager.load();
             
             const object = factory.create(config);
-
+            
             if(object) this.gameScene.addNetworkObject(object, data.id, data.owner);
         }
         else if(action === "removeObject") {
@@ -129,6 +137,29 @@ export class InGameState extends AbstractGameSceneState {
         else if(action === "win") {
             this.gameScene.killPlayer();
         }
+        else if(action === "objectContact") {
+            this.gameScene.onRemoteObjectContact(data.id, data.owner);
+        }
+    }
+}
+
+export class ActionSelectionState extends InGameState {
+    private fakeInput: CharacterInput = {
+        left: false,
+        right: false,
+        up: false,
+        down: false,
+        jump: false,
+    };
+
+    constructor(gameScene: MultiScene) {
+        super(gameScene);
+    }
+
+    public update(dt: number, input: CharacterInput): AbstractGameSceneState|null {
+        this.gameScene.updateSelectCamera(dt, input);
+        this.gameScene.updateObjects(dt, this.fakeInput);
+        return null;
     }
 }
 
@@ -215,7 +246,7 @@ export class LoadingState extends AbstractGameSceneState implements LevelLoaderO
                 const participant = this.remoteParticipant.find(p => p.num === subcube);
                 if(participant) {
                     // create remote object
-                    const remotePlayer = new RemotePlayer(player, participant.id, participant.id);
+                    const remotePlayer = new RemotePlayer(player, participant.id, participant.id, subcube);
                     // add remote object
                     this.gameScene.addRemotePlayer(remotePlayer);
                 }

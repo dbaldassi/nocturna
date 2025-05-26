@@ -44,6 +44,9 @@ export class Platform implements GameObject {
     }
     public onResume(): void {
     }
+    public onContact(): boolean {
+        return false;
+    }
 }
 
 export class ParentedPlatform extends Platform implements ParentNodeObserver {
@@ -99,12 +102,15 @@ export class ParentedPlatformFactory implements GameObjectFactory {
 
             const path = App.selectedGraphics + "/" + ParentedPlatform.Type + ".glb";
 
-    
             Utils.createMeshTask(config, ParentedPlatform.Type, path, (task) => {
                 const meshes = task.loadedMeshes;
     
                 meshes[0].name = Platform.Type;
                 config.position = Utils.calculatePositionRelativeToParent(config.parent, config.position);
+                // set rotation as if parent is not rotated
+                console.log(config.rotation);
+                config.rotation = Utils.calculateRotationRelativeToParent(config.parent, config.rotation);
+                console.log(config.rotation);
                 Utils.configureMesh(meshes, config);
                 
                 if(physics) {

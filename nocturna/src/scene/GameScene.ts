@@ -137,10 +137,10 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     }
 
     public visitEnemy(enemy: Enemy): void {
-        this.player.visitEnemy(enemy);
+        this.player.takeDamage(enemy.getDamage());
     }
 
-    public visitCoin(coin: Coin): void {
+    public visitCoin(_: Coin): void {
         
     }
 

@@ -13,6 +13,42 @@ export class ObjectEditorImpl implements EditorObject {
         this.object = object;
     }
 
+    public move(localMovement: Vector3): void {
+        // Si un parent existe, transformer le mouvement local en mouvement global
+        const mesh = this.object.getMesh();
+        const parentMesh = mesh.parent as Mesh;
+        if (parentMesh) {
+            const parentRotationMatrix = Matrix.RotationYawPitchRoll(
+                mesh.rotation.y,
+                mesh.rotation.x,
+                mesh.rotation.z
+            );
+            
+            // invert sign if object rotation is PI/2 or -PI/2 for X Y and Z
+            /*if (Math.abs(parentMesh.rotation.y) === Math.PI / 2 || Math.abs(parentMesh.rotation.y) === -Math.PI / 2) {
+                localMovement.x *= -1;
+                localMovement.z *= -1;
+            }
+            if (Math.abs(parentMesh.rotation.x) === Math.PI / 2 || Math.abs(parentMesh.rotation.x) === -Math.PI / 2) {
+                localMovement.y *= -1;
+                localMovement.z *= -1;
+            }
+            if (Math.abs(parentMesh.rotation.z) === Math.PI / 2 || Math.abs(parentMesh.rotation.z) === -Math.PI / 2) {
+                localMovement.x *= -1;
+                localMovement.y *= -1;
+            }*/
+
+            // Appliquer la rotation du parent au mouvement local
+            const globalMovement = Vector3.TransformCoordinates(localMovement, parentRotationMatrix);
+
+            // Ajouter le mouvement global à la position actuelle
+            this.object.getMesh().position.addInPlace(globalMovement);
+        } else {
+            // Si aucun parent, appliquer le mouvement local directement
+            this.object.getMesh().position.addInPlace(localMovement);
+        }
+    }
+
     public updatePosition(dt: number, input: CharacterInput): void {
         const moveSpeed = this.lateralspeed * dt;
     
@@ -23,24 +59,7 @@ export class ObjectEditorImpl implements EditorObject {
             0 // Pas de mouvement en profondeur
         );
     
-        // Si un parent existe, transformer le mouvement local en mouvement global
-        const parentMesh = this.object.getMesh().parent as Mesh;
-        if (parentMesh) {
-            const parentRotationMatrix = Matrix.RotationYawPitchRoll(
-                parentMesh.rotation.y,
-                parentMesh.rotation.x,
-                parentMesh.rotation.z
-            );
-    
-            // Appliquer la rotation du parent au mouvement local
-            const globalMovement = Vector3.TransformCoordinates(localMovement, parentRotationMatrix);
-
-            // Ajouter le mouvement global à la position actuelle
-            this.object.getMesh().position.addInPlace(globalMovement);
-        } else {
-            // Si aucun parent, appliquer le mouvement local directement
-            this.object.getMesh().position.addInPlace(localMovement);
-        }
+        this.move(localMovement);
     }
 
     public updateRotation(dt: number, input: CharacterInput): void {
@@ -97,5 +116,8 @@ export class ObjectEditorImpl implements EditorObject {
 
     public getType(): string {
         return this.object.getType();
+    }
+    public onContact(): boolean {
+        return this.object.onContact();
     }
 }

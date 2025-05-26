@@ -64,6 +64,10 @@ export class Coin implements GameObject {
         visitor.visitCoin(this); // Appelle la méthode `onCoin` du visiteur
     }
 
+    public onContact(): boolean {
+        return false;
+    }
+
     public getScore(): number {
         return this.score;
     }

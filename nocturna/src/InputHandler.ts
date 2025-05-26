@@ -9,11 +9,8 @@ export class InputHandler {
     private keyBindings: { [action: string]: string[] } = {
         left: ["a"],
         right: ["d"],
-        // up: ["w"],
-        // down: ["s"],
-        // forward: ["w"],
-        // backward: ["s"],
-        // dash: ["Shift"],
+        up: ["w"],
+        down: ["s"],
         rotate_left_x: ["x"],
         rotate_right_x: ["c"],
         rotate_left_y: ["y"],

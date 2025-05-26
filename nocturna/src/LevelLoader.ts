@@ -32,7 +32,6 @@ class PlayerAbstractFactory implements GameObjectFactory {
     }
     public createForEditor(GameObjectConfig: any): EditorObject {
         const player = this.factory.createForEditor(GameObjectConfig);
-        this.observer.onObjectCreated(player);
         return player;
     }
 }

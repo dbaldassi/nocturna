@@ -165,7 +165,10 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
 
     public onPause(): void {
     }
-    public onResume(): void {
+    public onResume(): void {}
+    public onContact(): boolean {
+        // Not used in this class
+        return false;
     }
 }
 

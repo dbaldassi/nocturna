@@ -1,4 +1,4 @@
-import { Engine, Vector3, FollowCamera, UniversalCamera, Scene, Camera, WebGPUEngine, PhysicsBody } from "@babylonjs/core";
+import { Engine, Vector3, FollowCamera, UniversalCamera, Scene, Camera, WebGPUEngine, PhysicsBody, Mesh, ExecuteCodeAction, ActionManager, FreeCamera } from "@babylonjs/core";
 
 import { BaseScene } from "./BaseScene";
 import { ParentNode } from "../ParentNode";
@@ -11,7 +11,7 @@ import { NetworkManager } from "../network/NetworkManager";
 import { RemoteGameObject, RemotePlayer } from "../GameObjects/RemoteGameObject";
 import { Coin, CoinFactory, SuperCoinFactory } from "../GameObjects/Coin";
 import { Platform } from "../GameObjects/Platform";
-import { AbstractGameSceneState, InGameState, LobbyState } from "../states/MultiSceneStates";
+import { AbstractGameSceneState, ActionSelectionState, InGameState, LobbyState } from "../states/MultiSceneStates";
 import { AdvancedDynamicTexture, Control, TextBlock } from "@babylonjs/gui";
 import { Action } from "../action";
 import { HpBar } from "../HpBar";
@@ -92,6 +92,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
 
     public async createGameScene() {
         this.scene = new Scene(this.engine);
+        // this.enableDebug();
         this.coinSpawner = new CoinSpawner(this.scene);
         for(let i = 0; i < this.inventorySize; i++) {
             this.inventory.push(null);
@@ -289,7 +290,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
     // === LOCAL OBJECTS     ===
     // =========================
 
-    private addLocalObject(object: GameObject): void {
+    private doAddLocalObject(object: GameObject): void {
         this.localObjects.push(object);
         const body = object.getMesh().physicsBody;
         if(body) {
@@ -297,8 +298,23 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
                 if(collider.collidedAgainst === this.localObjects[0].getMesh().physicsBody) {
                     object.accept(this);
                 }
+                const should_destroy = object.onContact();
+                const networkManager = NetworkManager.getInstance();
+                networkManager.sendUpdate("objectContact", {
+                    id: object.getId(),
+                    owner: this.playerId,
+                });
+
+                if(should_destroy) {
+                    this.disposeObject(object, this.localObjects);
+                }
             });
         }
+    }
+
+    private addLocalObject(object: GameObject): void {
+        this.doAddLocalObject(object);
+
         const networkManager = NetworkManager.getInstance();
         networkManager.sendUpdate("createObject", {
             id: object.getId(),
@@ -309,12 +325,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
     }
 
     private removeLocalObject(object: GameObject): void {
-        if(object.getMesh().physicsBody) {
-            object.getMesh().physicsBody.dispose();
-            object.getMesh().physicsBody = null;
-        }
-        object.getMesh().dispose();
-        this.localObjects = this.localObjects.filter(o => object !== o);
+        this.disposeObject(object, this.localObjects);
         const networkManager = NetworkManager.getInstance();
         networkManager.sendUpdate("removeObject", {
             id: object.getId(),
@@ -344,9 +355,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         const player = this.localObjects[0] as Player;
         this.inventory.fill(null);
         this.score = 0;
-        player.getMesh().physicsBody?.dispose();
-        player.getMesh().dispose();
-        this.localObjects = this.localObjects.filter(o => o !== player);
+        this.disposeObject(player, this.localObjects);
     }
 
     // =========================
@@ -363,7 +372,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
 
     public updateRemotePlayer(id: string, report: any): void {
         const remotePlayer = this.remotePlayers.find(p => p.getId() === id);
-        console.log(`Updating remote player with id ${id}`, report, this.remotePlayers);
+
         if(remotePlayer) {
             remotePlayer.score = report.score;
             remotePlayer.hp = report.hp;
@@ -382,15 +391,40 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         }
     }
 
+    public onRemoteObjectContact(objectId: string, ownerId: string): void {
+        const object = this.remoteObjects.find(o => o.getId() === objectId && o.getOwnerId() === ownerId);
+        if(object && object.onContact()) {
+            this.disposeObject(object, this.remoteObjects);
+        }
+    }
+
     public removeRemoteObject(id: string, owner: string): void {
         const object = this.remoteObjects.find(o => id === o.getId() && owner === o.getOwnerId());
+        this.disposeObject(object, this.remoteObjects);
+    }
+
+    public removeRemotePlayer(id: string): void {
+        const player = this.remotePlayers.find(p => p.getId() === id);
+        console.log(player, this.remotePlayers);
+        this.disposeObject(player, this.remotePlayers);
+        console.log(this.remotePlayers);
+
+        const todelete = this.remoteObjects.filter(o => o.getOwnerId() === id);
+        todelete.forEach(o => this.disposeObject(o, this.remoteObjects));
+    }
+
+    public disposeObject(object: GameObject, container: Array<GameObject>) {
         if(!object) return;
-        const body = object.getMesh().physicsBody;
-        if(body) {
-            body.dispose();
+
+        if(object.getMesh().physicsBody) {
+            object.getMesh().physicsBody.dispose();
+            object.getMesh().physicsBody = null;
         }
-        object.getMesh().dispose();
-        this.remoteObjects = this.remoteObjects.filter(o => o !== object);
+        object.getMeshes().forEach(mesh => mesh.dispose());
+        const index = container.indexOf(object);
+        if (index !== -1) {
+            container.splice(index, 1);
+        }
     }
 
     // =========================
@@ -399,7 +433,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
 
     public addNetworkObject(object: GameObject, id: string, ownerId: string): void {
         if(ownerId === this.playerId) {
-            this.localObjects.push(object);
+            this.doAddLocalObject(object);
         }
         else {
             const remoteObject = new RemoteGameObject(object, id, ownerId);
@@ -415,7 +449,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         this.gameObjects.push(object);
     }
 
-    public visitVictory(portal: VictoryCondition): void {
+    public visitVictory(_: VictoryCondition): void {
         const state = this.state as InGameState;
         
         // kill other players
@@ -435,11 +469,16 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
     };
 
     public visitEnemy(enemy: Enemy): void {
-        // ...
+        const player = this.localObjects[0] as Player;
+        if(player.getMesh().physicsBody) {
+            //player.getMesh().physicsBody.applyImpulse(enemy.getMesh().position.subtract(player.getMesh().position).normalize().scale(100000), player.getMesh().getAbsolutePosition());
+        }
+        player.takeDamage(enemy.getDamage());
     }
 
     public addAction() {
-        const action = Action.ActionBase.create(Math.floor(Math.random() * 3), this);
+        // const action = Action.ActionBase.create(Math.floor(Math.random() * 3), this);
+        const action = Action.ActionBase.create(Action.Type.ROCKET, this);
         if(action) {
             for(let i = 0; i < this.inventory.length; i++) {
                 if(this.inventory[i] === null) {
@@ -499,8 +538,65 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         if(remoteObject) remoteObject.updatePosition(position, timestamp);
     }
 
+    public updateSelectCamera(dt: number, input: CharacterInput): void {
+        // move the camera based on input
+        const camera = this.scene.activeCamera as UniversalCamera;
+        camera.position.x += (input.right ? 1 : (input.left ? -1 : 0)) * dt;
+        camera.position.y += (input.up ? 1 : (input.down ? -1 : 0)) * dt;
+    }
+
     public render(): void {
         this.state.render();
+    }
+
+    public selectObjectDrop(callback: Action.SelectObjectCallback): void {
+        const camera = new UniversalCamera("selectCamera", Vector3.Zero(), this.scene);
+        this.scene.activeCamera = camera;
+        // attach to canvas
+        this.scene.activeCamera.attachControl(this.engine.getRenderingCanvas(), true);
+
+        this.inputHandler.removeAction("pov");
+
+        console.log(this.gameObjects);
+        this.gameObjects.forEach(obj => {
+            const meshes = obj.getMeshes();
+            console.log(`Adding action to object: ${obj.getId()}`);
+            meshes.forEach(mesh => {
+                mesh.isPickable = true;
+                mesh.actionManager = new ActionManager(this.scene);
+                mesh.actionManager.registerAction(
+                    new ExecuteCodeAction({ trigger : ActionManager.OnPickTrigger }, () => {
+                        // find in which subcube the object is
+                        const subcube = this.getSubcube(obj.getMesh().position);
+                        const target = this.remotePlayers.find(player => player.getSubcube() === subcube);
+
+                        console.log(target, subcube, obj.getMesh().position);
+                        if(target) callback.onSelect(obj, target.getId());
+                }));
+            });
+        });
+
+        this.state = new ActionSelectionState(this);
+    }
+
+    public doneSelectingObjectDrop(): void {
+        console.log("Done selecting object drop");
+
+        this.gameObjects.forEach(obj => {
+            const mesh = obj.getMesh();
+            if(mesh.actionManager) {
+                mesh.actionManager.dispose();
+                mesh.actionManager = null;
+            }
+        });
+
+        this.inputHandler.addAction("pov", () => this.switchCamera());
+
+        this.scene.activeCamera.detachControl(this.engine.getRenderingCanvas());
+        this.scene.activeCamera.dispose();
+        this.scene.activeCamera = this.cameras[this.activeCameraIndex];
+
+        this.state = new InGameState(this);
     }
 
     // =========================
@@ -519,6 +615,14 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
             case 3:  return position.x > 0 && position.y < 0;
             default: return false;
         }
+    }
+
+    public getSubcube(position: Vector3): number {
+        if(position.x < 0 && position.y > 0) return 0;
+        if(position.x > 0 && position.y > 0) return 1;
+        if(position.x < 0 && position.y < 0) return 2;
+        if(position.x > 0 && position.y < 0) return 3;
+        return -1;
     }
 
     public onBottomCollision(collider: PhysicsBody) {

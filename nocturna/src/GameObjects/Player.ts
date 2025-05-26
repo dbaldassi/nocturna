@@ -1,6 +1,6 @@
 import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, AbstractMesh, SceneLoader, Mesh, Ray, AssetsManager, ImportMeshAsync, BoundingBox, NodeMaterial } from "@babylonjs/core";
 import { CharacterInput, EditorObject, Utils, GameObject, GameObjectConfig, GameObjectFactory, AbstractState, Enemy } from "../types";
-import { RayHelper } from "@babylonjs/core";
+import { IdleState, KnockbackState, PlayerDamageableState, PlayerDamageState } from "../states/PlayerStates";
 import { ObjectEditorImpl } from "./EditorObject";
 import { App } from "../app";
 
@@ -21,6 +21,7 @@ export class Player implements GameObject {
     private speed: number = 5.0;
     private jumpForce: Vector3 = undefined;
     private state: AbstractState = null;
+    private damageState: PlayerDamageState = null;
     private hp: number = 10;
     private id: string;
     
@@ -32,6 +33,7 @@ export class Player implements GameObject {
         this.hp = this.maxHp;
         if (mesh) this.mesh.push(mesh);
         this.state = new IdleState(this);
+        this.damageState = new PlayerDamageableState(this);
 
         this.id = `${Player.Type}_${Player.nextId++}`;
     }
@@ -100,6 +102,12 @@ export class Player implements GameObject {
             this.state = newState;
             this.state.enter();
         }
+        const damageState = this.damageState.update(dt, input);
+        if (damageState) {
+            this.damageState.exit();
+            this.damageState = damageState as PlayerDamageState;
+            this.damageState.enter();
+        }
     }
 
     public getType(): string {
@@ -133,10 +141,37 @@ export class Player implements GameObject {
         return this.hp;
     }
 
-    public visitEnemy(Enemy: Enemy): void {
-        const damage = Enemy.damage;
+    public dashBack() {
+        const mesh = this.getMesh();
+        const physicsBody = mesh.physicsBody;
+        if (!physicsBody) {
+            console.warn("Physics body not found for the player mesh.");
+            return;
+        }
+        const currentVelocity = physicsBody.getLinearVelocity();
+        let backward : Vector3;
+        if (currentVelocity.length() > 0.01) {
+            backward = currentVelocity.scale(-1).normalize();
+        } else {
+            backward = mesh.forward.scale(-1); // Utilise l'orientation du mesh si à l'arrêt
+        }
+        const impulseStrength = 10000;
+        const impulse = backward.scale(impulseStrength);
+
+        physicsBody.applyImpulse(impulse, mesh.getAbsolutePosition());
+    }
+
+    public doTakeDamage(damage: number): void {
         this.hp -= damage;
         if (this.hp <= 0) this.hp = 0;
+        this.state.exit();
+        this.state = new KnockbackState(this);
+        this.state.enter();
+        this.dashBack();
+    }
+
+    public takeDamage(damage: number): void {
+        this.damageState.takeDamage(damage);
     }
 
     public isAlive(): boolean {
@@ -152,6 +187,9 @@ export class Player implements GameObject {
     }
     public onResume(): void {
         this.mesh[0].physicsBody.setMassProperties({ mass: 70 });
+    }
+    public onContact(): boolean {
+        return false; // Player does not handle contact events
     }
 }
 
@@ -201,110 +239,3 @@ export class PlayerFactory implements GameObjectFactory {
     }
 }
 
-// ========================= STATES =========================
-// This section contains the implementation of the player's states,
-// including JumpingState, MovingState, and IdleState. Each state
-// manages specific behaviors and transitions based on player input
-// and interactions with the environment.
-// ==========================================================
-
-class JumpingState implements AbstractState {
-    public static readonly Type: string = "jumping";
-    private player: Player;
-    constructor(player: Player) {
-        this.player = player;
-    }
-
-    public enter(): void {
-        // Set jumping animation
-    }
-    public exit(): void {
-        // Stop jumping animation
-    }
-    public name(): string {
-        return JumpingState.Type;
-    }
-
-    public update(dt: number, input: CharacterInput): AbstractState | null {
-        this.player.move(dt, input);
-
-        const isGrounded = this.player.isGrounded();
-
-        if (isGrounded) {
-            if (input.left || input.right) return new MovingState(this.player);
-            else return new IdleState(this.player);
-        }
-
-        return null;
-    }
-}
-
-class MovingState implements AbstractState {
-    public static readonly Type: string = "moving";
-    private player: Player;
-
-    constructor(player: Player) {
-        this.player = player;
-    }
-
-    public enter(): void {
-        // Set moving animation
-    }
-    public exit(): void {
-        // Stop moving animation
-    }
-    public name(): string {
-        return MovingState.Type;
-    }
-    public update(dt: number, input: CharacterInput): AbstractState | null {
-        // console.log("MovingState", dt, input);
-        if (input.jump) {
-            this.player.jump();
-            return new JumpingState(this.player);
-        }
-        else if (!input.left && !input.right) {
-            return new IdleState(this.player);
-        }
-        else if (!this.player.isGrounded()) {
-            return new JumpingState(this.player);
-        }
-
-        this.player.move(dt, input);
-
-        return null;
-    }
-}
-
-class IdleState implements AbstractState {
-    public static readonly Type: string = "idle";
-    private player: Player;
-    constructor(player: Player) {
-        this.player = player;
-    }
-    public enter(): void {
-    }
-    public exit(): void {
-        // Stop idle animation
-    }
-    public name(): string {
-        return IdleState.Type;
-    }
-    public update(dt: number, input: CharacterInput): AbstractState | null {
-        // must update the velocity to 0, becuase of moving state inertia
-        const velocity = this.player.getMesh().physicsBody.getLinearVelocity();
-        velocity.x = 0;
-        this.player.getMesh().physicsBody.setLinearVelocity(velocity);
-
-        // console.log("IdleState", dt, input);
-        if (input.jump) {
-            this.player.jump();
-            return new JumpingState(this.player);
-        }
-        else if (input.left || input.right) {
-            this.player.move(dt, input);
-            return new MovingState(this.player);
-        }
-
-        return null;
-    }
-}
