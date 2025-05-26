@@ -11,6 +11,8 @@ export class InputHandler {
         right: ["d"],
         up: ["w"],
         down: ["s"],
+        forward: ["q"],
+        backward: ["e"],
         rotate_left_x: ["x"],
         rotate_right_x: ["c"],
         rotate_left_y: ["y"],
@@ -114,6 +116,8 @@ export class InputHandler {
             up: this.isKeyPressed("up"),
             down: this.isKeyPressed("down"),
             jump: this.isKeyPressed("jump"),
+            forward: this.isKeyPressed("forward"),
+            backward: this.isKeyPressed("backward"),
         };
 
         return input;

@@ -79,6 +79,8 @@ export const QWERTY = {
     "right": ["d"],
     "up": ["w"],
     "down": ["s"],
+    "forward": ["q"],
+    "backward": ["e"],
     "rotate_left_x": ["x"],
     "rotate_right_x": ["c"],
     "rotate_left_y": ["y"],

@@ -446,6 +446,7 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
         const moveSpeed = this.camera.speed * dt;
         this.camera.position.x += (input.right ? 1 : (input.left ? -1 : 0)) * moveSpeed;
         this.camera.position.y += (input.up ? 1 : (input.down ? -1 : 0)) * moveSpeed;
+        this.camera.position.z += (input.forward ? 1 : (input.backward ? -1 : 0)) * moveSpeed;
     }
 
     public moveSelection(dt: number, input: CharacterInput) {

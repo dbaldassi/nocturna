@@ -79,6 +79,8 @@ export const AZERTY = {
     "right": ["d"],
     "up": ["z"],
     "down": ["s"],
+    "forward": ["a"],
+    "backward": ["e"],
     "rotate_left_x": ["x"],
     "rotate_right_x": ["c"],
     "rotate_left_y": ["a"],
