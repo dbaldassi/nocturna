@@ -9,3 +9,13 @@ export function createEvilPortalMaterial(scene) {
     shaderMaterial.setFloat("time", 0);
     return shaderMaterial;
 }
+
+export function createLavaMaterial(scene) {
+    const shaderMaterial = new ShaderMaterial("lavaMaterial", scene, "/shaders/lava", {
+        attributes: ["position", "normal", "uv"],
+        uniforms: ["worldViewProjection", "time"],
+    });
+
+    shaderMaterial.setFloat("time", 0);
+    return shaderMaterial;
+}

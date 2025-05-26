@@ -1,6 +1,6 @@
 import { Scene, Vector3, MeshBuilder, Color3, PhysicsAggregate, PhysicsShapeType, PhysicsBody } from "@babylonjs/core";
 import { Face } from "./Face";
-import { createEvilPortalMaterial } from "./Shaders/NocturnaShaders";
+import { createEvilPortalMaterial, createLavaMaterial } from "./Shaders/NocturnaShaders";
 import { CollisionGroup } from "./types";
 
 export interface CubeCollisionObserver {
@@ -95,6 +95,15 @@ export class Cube {
                         }
                     });
                 }
+            }
+
+            if(names[i] === "Bottom") {
+                // Set lava shader for the bottom face
+                const lavaMaterial = createLavaMaterial(this.scene);
+                face.getMesh().material = lavaMaterial;
+                this.scene.registerBeforeRender(() => {
+                    lavaMaterial.setFloat("time", performance.now() / 1000);
+                });
             }
         }
     }
