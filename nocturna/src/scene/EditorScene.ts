@@ -13,6 +13,7 @@ import { LevelSelectionScene, LevelSelectionObserver } from "../LevelSelection";
 import { FixedRocket, FixedRocketFactory } from "../GameObjects/Rocket";
 import { SpikeTrapFactory, SpikeTrapObject } from "../GameObjects/SpikeTrap";
 import { Coin, CoinFactory } from "../GameObjects/Coin";
+import { createHUDEditor, IHUDEditor } from "../HUD/EditorHUD";
 
 abstract class EditorState implements AbstractState {
     protected scene: EditorScene;
@@ -277,6 +278,7 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
     private editorObjects: EditorObject[] = [];
     private levelLoader: LevelLoader;
     private assetsManager: AssetsManager;
+    private hud : IHUDEditor | null = null;
 
     constructor(engine: Engine, inputHandler: InputHandler) {
         super(engine, inputHandler);
@@ -333,6 +335,8 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
     public onLevelLoaded(): void {
         this.currentState = new AdditionState(this, this.inputHandler);
         this.currentState.enter();
+
+        this.hud = createHUDEditor(this.getScene());
     }
     public onObjectCreated(object: EditorObject): void {
         this.editorObjects.push(object);
@@ -382,7 +386,7 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
 
     public showMenu(text: string) {
         // Créer une texture GUI pour afficher les instructions
-        this.guiTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this.scene);
+        /*this.guiTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this.scene);
     
         // Créer un bloc de texte pour les instructions
         const instructions = new TextBlock();
@@ -394,14 +398,14 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
         instructions.paddingBottom = 20; // Ajouter un peu d'espace en bas
     
         // Ajouter le texte à la texture GUI
-        this.guiTexture.addControl(instructions);
+        this.guiTexture.addControl(instructions);*/
     }
 
     public hideMenu() {
-        if (this.guiTexture) {
+        /*if (this.guiTexture) {
             this.guiTexture.dispose(); // Supprime la texture GUI
             this.guiTexture = null;
-        }
+        }*/
     }
 
     public addObject(factory: GameObjectFactory, size?: Vector3, rotation?: Vector3) {
