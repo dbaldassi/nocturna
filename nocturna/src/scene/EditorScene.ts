@@ -12,6 +12,7 @@ import { LevelLoader, LevelLoaderObserver } from "../LevelLoader";
 import { LevelSelectionScene, LevelSelectionObserver } from "../LevelSelection";
 import { FixedRocket, FixedRocketFactory } from "../GameObjects/Rocket";
 import { SpikeTrapFactory, SpikeTrapObject } from "../GameObjects/SpikeTrap";
+import { Coin, CoinFactory } from "../GameObjects/Coin";
 
 abstract class EditorState implements AbstractState {
     protected scene: EditorScene;
@@ -98,6 +99,7 @@ class AdditionState extends EditorState {
         this.factories.set(Player.Type, new PlayerFactory());
         this.factories.set(FixedRocket.Type, new FixedRocketFactory());
         this.factories.set(SpikeTrapObject.Type, new SpikeTrapFactory());
+        this.factories.set(Coin.Type, new CoinFactory());
     }
 
     public name(): string {
@@ -111,13 +113,14 @@ class AdditionState extends EditorState {
     enter() {
         super.enter();
 
-        this.scene.showMenu(`${this.name()} -> 1: Fixed Platform 2: Parented Platform 3: Spike Trap 4: Player 5: Victory f: clone ${this.getModeChangeText()}`);
+        this.scene.showMenu(`${this.name()} -> 1: Fixed Platform 2: Parented Platform 3: Spike Trap 4: Coin 5: Player 6: Victory f: clone ${this.getModeChangeText()}`);
 
         this.inputHandler.addAction("action_1", () => this.scene.addObject(this.factories.get(FixedPlatform.Type)));
         this.inputHandler.addAction("action_2", () => this.scene.addObject(this.factories.get(ParentedPlatform.Type)));
         this.inputHandler.addAction("action_3", () => this.scene.addObject(this.factories.get(SpikeTrapObject.Type)));
-        this.inputHandler.addAction("action_4", () => this.scene.addObject(this.factories.get(Player.Type)));
-        this.inputHandler.addAction("action_5", () => this.scene.addObject(this.factories.get(VictoryCondition.Type)));
+        this.inputHandler.addAction("action_4", () => this.scene.addObject(this.factories.get(Coin.Type)));
+        this.inputHandler.addAction("action_5", () => this.scene.addObject(this.factories.get(Player.Type)));
+        this.inputHandler.addAction("action_6", () => this.scene.addObject(this.factories.get(VictoryCondition.Type)));
         this.inputHandler.addAction("clone", () => this.scene.clone(this.factories));
         this.inputHandler.addAction("delete", () => this.scene.deleteSelection());
     }
