@@ -13,7 +13,7 @@ import { LevelSelectionScene, LevelSelectionObserver } from "../LevelSelection";
 import { FixedRocket, FixedRocketFactory } from "../GameObjects/Rocket";
 import { SpikeTrapFactory, SpikeTrapObject } from "../GameObjects/SpikeTrap";
 import { Coin, CoinFactory } from "../GameObjects/Coin";
-import { createHUDEditor, IHUDEditor } from "../HUD/EditorHUD";
+import { createHUDEditor, IHUDEditor, IHUDEditorListener } from "../HUD/EditorHUD";
 
 abstract class EditorState implements AbstractState {
     protected scene: EditorScene;
@@ -104,7 +104,7 @@ class AdditionState extends EditorState {
     }
 
     public name(): string {
-        return "Addition Mode";
+        return "Addition";
     }
 
     public clone(): EditorState {
@@ -148,7 +148,7 @@ class MoveState extends EditorState {
     }
 
     public name(): string {
-        return "Move mode";
+        return "Move";
     }
 
     public clone(): EditorState {
@@ -192,7 +192,7 @@ class RotationState extends EditorState {
     }
 
     public name(): string {
-        return "Rotation mode";
+        return "Rotation";
     }
 }
 
@@ -214,7 +214,7 @@ class ResizeState extends EditorState {
     }
 
     public name(): string {
-        return "Resize mode";
+        return "Resize";
     }
 
     public clone(): EditorState {
@@ -267,7 +267,7 @@ class SelectionState implements AbstractState, LevelSelectionObserver {
     }
 }
 
-export class EditorScene extends BaseScene implements LevelLoaderObserver {
+export class EditorScene extends BaseScene implements LevelLoaderObserver, IHUDEditorListener {
 
     private parentNode: ParentNode;
     private cube: Cube;
@@ -336,7 +336,7 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
         this.currentState = new AdditionState(this, this.inputHandler);
         this.currentState.enter();
 
-        this.hud = createHUDEditor(this.getScene());
+        this.hud = createHUDEditor(this.getScene(), this);
     }
     public onObjectCreated(object: EditorObject): void {
         this.editorObjects.push(object);
@@ -384,28 +384,10 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
         };
     }
 
-    public showMenu(text: string) {
-        // Créer une texture GUI pour afficher les instructions
-        /*this.guiTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this.scene);
-    
-        // Créer un bloc de texte pour les instructions
-        const instructions = new TextBlock();
-        instructions.text = `${text} enter: Save Scene`;
-        instructions.color = "white";
-        instructions.fontSize = 24;
-        instructions.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
-        instructions.textVerticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
-        instructions.paddingBottom = 20; // Ajouter un peu d'espace en bas
-    
-        // Ajouter le texte à la texture GUI
-        this.guiTexture.addControl(instructions);*/
+    public showMenu(_: string) {
     }
 
     public hideMenu() {
-        /*if (this.guiTexture) {
-            this.guiTexture.dispose(); // Supprime la texture GUI
-            this.guiTexture = null;
-        }*/
     }
 
     public addObject(factory: GameObjectFactory, size?: Vector3, rotation?: Vector3) {
@@ -495,6 +477,7 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
             this.currentState.exit();
             this.currentState = nextState;
             this.currentState.enter();
+            this.hud?.setMode(this.currentState.name());
         }
     }
 
@@ -537,5 +520,26 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver {
                 this.addObject(factory, config.scaling, config.rotation);
             }
         }
+    }
+
+    onNextMode(): void {
+        
+    }
+
+    onPreviousMode(): void {
+        console.log("Previous mode");
+    }
+
+    onCancelSelection(): void {
+        // unselect the current selection
+        this.deselectCurrentSelection();
+    }
+
+    onRemoveSelection(): void {
+        this.deleteSelection();
+    }
+
+    onCloneSelection(): void {
+        // this.clone(this.parentNode.getFactories());
     }
 }

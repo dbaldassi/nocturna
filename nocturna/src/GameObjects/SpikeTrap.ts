@@ -1,4 +1,4 @@
-import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, Mesh, Animation } from "@babylonjs/core";
+import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, Mesh, Animation, Texture } from "@babylonjs/core";
 import { GameObject, GameObjectConfig, GameObjectFactory, EditorObject, Utils, CharacterInput, GameObjectVisitor, Enemy } from "../types";
 import { ObjectEditorImpl } from "./EditorObject";
 
@@ -76,7 +76,7 @@ export class SpikeTrapFactory implements GameObjectFactory {
         console.log("Creating SpikeTrap mesh with position:", config.position, "and size:", config.size);
 
         const material = new StandardMaterial("spikeTrapMaterial", config.scene);
-        material.diffuseColor = Color3.Red();
+        material.diffuseColor = Color3.Gray();
         mesh.material = material;
 
         return mesh;

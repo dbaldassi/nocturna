@@ -16,7 +16,7 @@ export class App {
     private translation: Translation;
 
     constructor() {
-        this.inputHandler = new InputHandler();
+        this.inputHandler = InputHandler.getInstance();
         Translation.initialize();
         document.addEventListener('DOMContentLoaded', () => {
             const cards: NodeListOf<HTMLElement> = document.querySelectorAll('.mode-card');
