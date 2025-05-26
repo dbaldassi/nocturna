@@ -18,6 +18,8 @@ export interface GameObject {
     accept(visitor: GameObjectVisitor): void;
     update(dt: number, input: CharacterInput): void;
     getId(): string;
+    onPause(): void;
+    onResume(): void;
 }
 
 export interface Enemy extends GameObject {

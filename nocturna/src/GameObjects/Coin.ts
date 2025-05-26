@@ -71,6 +71,11 @@ export class Coin implements GameObject {
     public update(_: number, __: CharacterInput): void {
         
     }
+
+    public onPause(): void {
+    }
+    public onResume(): void {
+    }
 }
 
 export class SuperCoin extends Coin {

@@ -277,7 +277,7 @@ abstract class AbstractGameSceneState {
     }
 }
 
-class InGameState extends AbstractGameSceneState {
+export class InGameState extends AbstractGameSceneState {
     protected condition: VictoryCondition | LooseCondition;
 
     constructor(gameScene: GameScene) {

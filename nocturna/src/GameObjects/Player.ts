@@ -23,7 +23,6 @@ export class Player implements GameObject {
     private state: AbstractState = null;
     private hp: number = 10;
     private id: string;
-x
     
     private maxHp: number = 10;
     
@@ -146,6 +145,13 @@ x
 
     public kill(): void {
         this.hp = 0;
+    }
+
+    public onPause(): void {
+        this.mesh[0].physicsBody.setMassProperties({ mass: 0 });
+    }
+    public onResume(): void {
+        this.mesh[0].physicsBody.setMassProperties({ mass: 70 });
     }
 }
 

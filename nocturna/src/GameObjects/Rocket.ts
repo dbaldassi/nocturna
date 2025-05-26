@@ -91,6 +91,12 @@ export class RocketObject implements Enemy {
         // Dispose of the rocket mesh
         this.mesh.dispose();
     }
+    public onPause(): void {
+        this.mesh.physicsBody.setMassProperties({ mass: 0 });
+    }
+    public onResume(): void {
+        this.mesh.physicsBody.setMassProperties({ mass: 5 });
+    }
 }
 
 export class FixedRocket extends RocketObject {

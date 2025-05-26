@@ -55,6 +55,11 @@ export class SpikeTrapObject implements Enemy {
         physicsBody.setCollisionCallbackEnabled(true);
     }
 
+    public onPause(): void {
+    }
+    public onResume(): void {
+    }
+
 }
 
 export class SpikeTrapFactory implements GameObjectFactory {
@@ -64,7 +69,7 @@ export class SpikeTrapFactory implements GameObjectFactory {
         mesh.rotation = config.rotation;
 
         const material = new StandardMaterial("spikeTrapMaterial", config.scene);
-        material.diffuseColor = Color3.Gray();
+        material.diffuseColor = Color3.Red();
         mesh.material = material;
 
         return mesh;

@@ -39,6 +39,11 @@ export class Platform implements GameObject {
     public getType(): string {
         return Platform.Type;
     }
+
+    public onPause(): void {
+    }
+    public onResume(): void {
+    }
 }
 
 export class ParentedPlatform extends Platform implements ParentNodeObserver {

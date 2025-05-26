@@ -54,7 +54,24 @@ export const en = {
     "action_plus": "Action +",
     "save": "Save",
     "delete": "Delete",
-    "clone": "Clone"
+    "clone": "Clone",
+    "tutorial.phase1.title1": "Objective",
+    "tutorial.phase1.desc1": "Reach the crystal.",
+    "tutorial.phase1.title2": "Movement",
+    "tutorial.phase1.desc2": "Move left and right.",
+    "tutorial.phase1.title3": "Jump",
+    "tutorial.phase1.desc3": "Jump using the spacebar.",
+    "tutorial.phase2.title1": "Map",
+    "tutorial.phase2.desc1": "The platforms can rotate in 6 different directions along each axis, with 90° left or right for each rotation.",
+    "tutorial.phase3.title1": "Health Points & Traps",
+    "tutorial.phase3.desc1": "You have 10 HP, and ground traps reduce HP every second. You can see your HP in the top of the screen.",
+    "tutorial.phase3.title2": "Vision & Traps",
+    "tutorial.phase3.desc2": "There may be ground traps; changing your point of view (POV) improves visibility.",
+    "tutorial.phase4.title1": "Rockets",
+    "tutorial.phase4.desc1": "Rockets can fall from the sky and deal 5 HP of instant damage upon collision.",
+    "pause.subtitle": "Take a moment to catch your breath",
+    "pause.title": "Game Paused",
+    "keybinds.instructions": "You can change all your keybinds using the wheel at the top right",
 };
 
 export const QWERTY = {

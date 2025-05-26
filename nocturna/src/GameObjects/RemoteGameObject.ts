@@ -96,6 +96,10 @@ export class RemoteGameObject implements IRemoteGameObject {
     public accept(_: GameObjectVisitor): void {
         
     }
+    public onPause(): void {
+    }
+    public onResume(): void {
+    }
 }
 
 export class RemotePlayer extends RemoteGameObject {

@@ -162,6 +162,11 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
         this.scene.stopAnimation(this.mesh);
         visitor.visitVictory(this);
     }
+
+    public onPause(): void {
+    }
+    public onResume(): void {
+    }
 }
 
 export class VictoryConditionFactory implements GameObjectFactory {

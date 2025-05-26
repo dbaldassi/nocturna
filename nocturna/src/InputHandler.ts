@@ -4,6 +4,7 @@ import { QWERTY } from "./utils/en";
 import { AZERTY } from "./utils/fr";
 
 export class InputHandler {
+    private isPaused: boolean = false;
     private keys: { [key: string]: boolean } = {};
     private keyBindings: { [action: string]: string[] } = {
         left: ["a"],
@@ -44,6 +45,7 @@ export class InputHandler {
 
     constructor() {
         window.addEventListener("keydown", (event) => {
+            if (this.isPaused) return;
             if (!this.keybindManager.isEditingKeybinds()) {
                 // Iterate through actions and call the function if the key is pressed
 
@@ -56,6 +58,7 @@ export class InputHandler {
         });
 
         window.addEventListener("keyup", (event) => {
+            if (this.isPaused) return;
             if (!this.keybindManager.isEditingKeybinds()) {
                 this.keys[event.key] = false;
             }
@@ -64,6 +67,7 @@ export class InputHandler {
         const radios = document.querySelectorAll('input[name="keybind-preset"]');
         radios.forEach((radio) => {
             radio.addEventListener("click", (event) => {
+                if (this.isPaused) return;
                 const target = event.target as HTMLInputElement;
                 if (target.checked) {
                     this.setPreset(target.value);
@@ -156,5 +160,13 @@ export class InputHandler {
 
         // Update the keybinds manager to reflect the new bindings
         this.keybindManager.renderKeybindItems(document.getElementById("keybinds-modal") as HTMLElement);
+    }
+
+    public onPause(): void {
+        this.isPaused = true;
+    }
+
+    public onResume(): void {
+        this.isPaused = false;
     }
 }
