@@ -61,17 +61,22 @@ export class ParentedPlatform extends Platform implements ParentNodeObserver {
     public onRotationStart(): void {}
 
     public onRotationChange() {
-        this.recreatePhysicsBody();
-    }
+        const mesh = this.getMesh();
+        const physicsBody = mesh.physicsBody;
+        if (physicsBody) {
+            // Obtenez la position et la rotation actuelles du mesh
+            const newPosition = mesh.position;
+            const newRotation = mesh.rotationQuaternion;
 
-    public recreatePhysicsBody() {
-        // Supprimez l'ancien corps physique
-        if (this.mesh[0].physicsBody) {
-            this.mesh[0].physicsBody.dispose();
+            physicsBody.disablePreStep = false;
+            // The position where you want to move the body to
+            physicsBody.transformNode.position.set(newPosition.x, newPosition.y, newPosition.z);
+            physicsBody.transformNode.rotationQuaternion.set(newRotation.x, newRotation.y, newRotation.z, newRotation.w);
+            this.scene.onAfterRenderObservable.addOnce(() => {
+                // Turn disablePreStep on again for maximum performance
+                physicsBody.disablePreStep = true;
+            });
         }
-    
-        // Créez un nouveau corps physique avec les nouvelles transformations
-        new PhysicsAggregate(this.mesh[0], PhysicsShapeType.BOX, { mass: 0, friction: 10, restitution: 0 }, this.scene);
     }
 
     public getType(): string {

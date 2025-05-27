@@ -58,15 +58,21 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
     }
 
     public onRotationChange(): void {
-        if (this.mesh[0].physicsBody) {
-            // this.mesh[0].physicsBody.dispose();
-            const physicsBody = this.mesh[0].physicsBody;
-
+        const mesh = this.getMesh();
+        const physicsBody = mesh.physicsBody;
+        if (physicsBody) {
             // Obtenez la position et la rotation actuelles du mesh
-            const newPosition = this.mesh[0].absolutePosition;
-            const newRotation = this.mesh[0].absoluteRotationQuaternion;
+            const newPosition = mesh.position;
+            const newRotation = mesh.rotationQuaternion;
 
-            physicsBody.setTargetTransform(newPosition, newRotation);
+            physicsBody.disablePreStep = false;
+            // The position where you want to move the body to
+            physicsBody.transformNode.position.set(newPosition.x, newPosition.y, newPosition.z);
+            physicsBody.transformNode.rotationQuaternion.set(newRotation.x, newRotation.y, newRotation.z, newRotation.w);
+            this.scene.onAfterRenderObservable.addOnce(() => {
+                // Turn disablePreStep on again for maximum performance
+                physicsBody.disablePreStep = true;
+            });
         }
     }
 
