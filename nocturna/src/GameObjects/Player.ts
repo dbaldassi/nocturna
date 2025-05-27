@@ -183,10 +183,10 @@ export class Player implements GameObject {
     }
 
     public onPause(): void {
-        this.mesh[0].physicsBody.setMassProperties({ mass: 0 });
+        // this.mesh[0].physicsBody.setMassProperties({ mass: 0 });
     }
     public onResume(): void {
-        this.mesh[0].physicsBody.setMassProperties({ mass: 70 });
+        // this.mesh[0].physicsBody.setMassProperties({ mass: 70 });
         this.state = new IdleState(this);
         this.state.update(0, {
             left: false, right: false, jump: true,

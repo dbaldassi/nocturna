@@ -109,6 +109,7 @@ class WinScreenHUD extends BaseEndScreenHUD {
         } else if (this.mode == "continue") {
             restartButton.textContent = "Continue";
             restartButton.addEventListener("click", () => {
+                this.observers.forEach(obs => obs.onContinue());
             });
         }
 

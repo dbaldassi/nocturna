@@ -6,11 +6,13 @@ import { VictoryCondition } from "../GameObjects/Victory";
 import { GameScene, LoadingState, InGameState } from "./GameScene";
 import { HpBar } from "../HpBar";
 import { Translation } from "../utils/translation";
+import { NocturnaAudio } from "../NocturnaAudio";
 
 export class TutorialScene extends GameScene {
     protected static override sceneName: string = "tutorial.json";
     protected static readonly sceneOrder: string[] = ["jump.json", "platforms.json", "spike_trap.json", "rocket.json"];
     private static readonly explainationsByScene: number[] = [3, 1, 2, 2];
+    private static nextStep: boolean = false;
     protected static sceneIndex: number = 0;
 
     static async createScene(engine: Engine, inputHandler: InputHandler, tutorialScene: TutorialScene = null): Promise<BaseScene> {
@@ -22,7 +24,6 @@ export class TutorialScene extends GameScene {
         }
         await scene.addPhysic();
         scene.state = new LoadingState(scene);
-        console.error("Loading tutorial scene:", this.sceneOrder[this.sceneIndex]);
         scene.loadLevel(this.sceneOrder[this.sceneIndex]);
         return scene;
     }
@@ -43,10 +44,13 @@ export class TutorialScene extends GameScene {
         this.state = new InGameState(this);
         this.state.enter();
         this.pauseScene();
+        NocturnaAudio.getInstance().then(audio => {
+            audio.setBackgroundMusic("assets/music/background.mp3");
+        });
     }
 
-    public async recreateScene(nextStep: boolean = false) {
-        if (nextStep) {
+    public async recreateScene() {
+        if (TutorialScene.nextStep) {
             TutorialScene.sceneIndex += 1;
         }
         this.state.exit();
@@ -58,6 +62,7 @@ export class TutorialScene extends GameScene {
         this.parent = null;
 
         this.cube = null;
+        this.win = false;
 
         this.scene.dispose();
         this.scene = new Scene(this.engine);
@@ -133,6 +138,7 @@ export class TutorialScene extends GameScene {
     }
 
     public onRetry() {
+        TutorialScene.nextStep = false;
         this.recreateScene();
     }
 
@@ -141,6 +147,7 @@ export class TutorialScene extends GameScene {
     }
 
     public onContinue() {
-        this.recreateScene(true);
+        TutorialScene.nextStep = true;
+        this.recreateScene();
     }
 }
