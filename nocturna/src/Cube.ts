@@ -13,6 +13,7 @@ export class Cube {
     private faces: Face[] = [];
     private mesh: any;
     private collisionObserver: CubeCollisionObserver | null = null;
+    private lavaObserver: any;
 
     public static readonly Type: string = "Cube";
     public static readonly DefaultSize: number = 1000;
@@ -101,11 +102,40 @@ export class Cube {
                 // Set lava shader for the bottom face
                 const lavaMaterial = createLavaMaterial(this.scene);
                 face.getMesh().material = lavaMaterial;
-                this.scene.registerBeforeRender(() => {
+                const lavaObserver = this.scene.registerBeforeRender(() => {
                     lavaMaterial.setFloat("time", performance.now() / 1000);
                 });
             }
         }
+    }
+
+    public dispose() {
+        this.removePhysics();
+
+        this.faces.forEach(face => {
+            if (face.getMesh().physicsBody) {
+                face.getMesh().physicsBody.dispose();
+                face.getMesh().physicsBody = null;
+            }
+            // Dispose material
+            if (face.getMesh().material) {
+                face.getMesh().material.dispose();
+                face.getMesh().material = null;
+            }
+            // Dispose mesh
+            face.getMesh().dispose();
+        });
+
+        if (this.mesh) {
+            this.mesh.dispose();
+        }
+
+        this.scene.onBeforeRenderObservable.remove(this.lavaObserver);
+        this.lavaObserver = null;
+
+        this.faces = [];
+        this.mesh = null;
+        this.collisionObserver = null;
     }
 
     public removePhysics() {

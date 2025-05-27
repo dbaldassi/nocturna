@@ -142,6 +142,7 @@ export class Utils {
         task.onSuccess = (task) => {
             console.log(`Loaded ${name} successfully`);
             callback(task);
+            console.log(`Callback ${name} successfully`);
         }
         task.onError = (_, message) => {
             console.error(`Failed to load ${name}: ${message}`);

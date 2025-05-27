@@ -113,6 +113,16 @@ export class LevelLoader {
         }
 
         this.assetManager = new AssetsManager(this.scene);
+        this.assetManager.onTaskError = (task) => {
+            console.error(`Error loading asset: ${task.name}`, task.errorObject);
+            // Handle the error, e.g., notify the observer or log it
+        };
+        this.assetManager.onFinish = () => {
+            // All assets are loaded, you can start the scene or do other things here
+            console.log("All assets loaded");
+            // Notify that the level has been loaded
+            this.observer.onLevelLoaded();
+        };
 
         objects.forEach((object: any) => {
             const factory = this.factories.get(object.type);
@@ -134,13 +144,6 @@ export class LevelLoader {
         });
 
         this.assetManager.load();
-        this.assetManager.onFinish = () => {
-            // All assets are loaded, you can start the scene or do other things here
-            console.log("All assets loaded");
-            // Notify that the level has been loaded
-            this.observer.onLevelLoaded();
-        };
-        
     }
 
 }

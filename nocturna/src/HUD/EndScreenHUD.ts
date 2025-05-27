@@ -98,24 +98,28 @@ class WinScreenHUD extends BaseEndScreenHUD {
         this.display();
     }
 
+    public onRetry(): void {
+        this.observers.forEach(obs => obs.onRetry());
+    }
+    public onContinue(): void {
+        this.observers.forEach(obs => obs.onContinue());
+    }
+    public onQuit(): void {
+        this.observers.forEach(obs => obs.onQuit());
+    }
+
     protected initialiseButtons(): void {
         const restartButton = document.getElementById("continue-button") as HTMLElement;
         const menuButton = document.getElementById("win-menu-button") as HTMLElement;
         if (this.mode == "normal") {
             restartButton.textContent = "Restart";
-            restartButton.addEventListener("click", () => {
-                this.observers.forEach(obs => obs.onRetry());
-            });
+            restartButton.addEventListener("click", this.onRetry.bind(this));
         } else if (this.mode == "continue") {
             restartButton.textContent = "Continue";
-            restartButton.addEventListener("click", () => {
-                this.observers.forEach(obs => obs.onContinue());
-            });
+            restartButton.addEventListener("click", this.onContinue.bind(this));
         }
 
-        menuButton.addEventListener("click", () => {
-            this.observers.forEach(obs => obs.onQuit());
-        });
+        menuButton.addEventListener("click", this.onQuit.bind(this));
     }
 
     protected display(): void {
@@ -126,6 +130,13 @@ class WinScreenHUD extends BaseEndScreenHUD {
 
     public dispose(): void {
         this.hide("win-screen");
+        const restartButton = document.getElementById("continue-button") as HTMLElement;
+        if(this.mode == "normal") restartButton.removeEventListener("click", this.onRetry.bind(this));
+        else restartButton.removeEventListener("click", this.onContinue.bind(this));
+        const menuButton = document.getElementById("win-menu-button") as HTMLElement;
+        menuButton.removeEventListener("click", this.onQuit.bind(this));
+
+        this.observers = []; // Clear observers to prevent memory leaks
     }
 
     public update(dt: number, _: CharacterInput): void {
@@ -157,17 +168,26 @@ class loseScreenHUD extends BaseEndScreenHUD {
 
     public dispose(): void {
         this.hide("game-over-screen");
+        const restartButton = document.getElementById("retry-button") as HTMLElement;
+        restartButton.removeEventListener("click", this.onRetry.bind(this));
+        const menuButton = document.getElementById("game-over-menu-button") as HTMLElement;
+        menuButton.removeEventListener("click", this.onQuit.bind(this));
+
+        this.observers = []; // Clear observers to prevent memory leaks
+    }
+
+    public onRetry(): void {
+        this.observers.forEach(obs => obs.onRetry());
+    }
+    public onQuit(): void {
+        this.observers.forEach(obs => obs.onQuit());
     }
 
     protected initialiseButtons(): void {
         const restartButton = document.getElementById("retry-button") as HTMLElement;
         const menuButton = document.getElementById("game-over-menu-button") as HTMLElement;
-        restartButton.addEventListener("click", () => {
-            this.observers.forEach(obs => obs.onRetry());
-        });
-        menuButton.addEventListener("click", () => {
-            this.observers.forEach(obs => obs.onQuit());
-        });
+        restartButton.addEventListener("click", this.onRetry.bind(this));
+        menuButton.addEventListener("click", this.onQuit.bind(this));
     }
 
     public update(dt: number, _: CharacterInput): void {

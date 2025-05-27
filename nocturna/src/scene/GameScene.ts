@@ -20,7 +20,7 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     protected gameObjects: GameObject[] = [];
     protected levelLoader: LevelLoader;
     protected timer: number = 0;
-    protected score: number = 100;
+    protected score: number = 0;
     protected cameras: FollowCamera[] = [];
     protected activeCameraIndex: number = 0;
     protected state: AbstractGameSceneState;
@@ -58,13 +58,16 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     }
 
     public onCube(cube: Cube): void {
+        console.log("Cube created in GameScene");
         this.cube = cube;
         this.cube.setCollisionObserver(this);
     }
     public onPlayer(player: Player): void {
+        console.log("Player created in GameScene");
         this.player = player;
     }
     public onParent(parent: ParentNode): void {
+        console.log("Parent created in GameScene");
         this.parent = parent;
         this.parent.setupKeyActions(this.inputHandler);
         this.setupKeyActions();
@@ -201,9 +204,14 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     }
 
     public async recreateScene() {
+        console.log("Recreating GameScene...");
+
         this.state.exit();
         this.state = new LoadingState(this);
         this.state.enter();
+
+        this.cube.dispose();
+        this.parent.dispose();
 
         this.gameObjects = []
         this.player = null;
@@ -212,13 +220,19 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         this.cube = null;
         this.win = false;
 
+        this.scene.meshes.forEach(mesh => mesh.dispose());
+        this.scene.materials.forEach(mat => mat.dispose());
+        this.scene.textures.forEach(tex => tex.dispose());
+
         this.scene.dispose();
         this.scene = new Scene(this.engine);
         this.levelLoader.setScene(this.scene);
 
+        this.hpBar = null;
+
         await this.addPhysic();
         // this.scene.enablePhysics(new Vector3(0, -1000, 0), this.hk);
-        this.loadLevel("scene.json");
+        this.loadLevel(GameScene.sceneName);
     }
 
     public removePhysics() {
@@ -233,16 +247,18 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         this.scene.disablePhysicsEngine();
     }
 
+    public onContinue() {
+        console.log("Continuing to the next level...");
+        this.recreateScene();
+    }
+
     public onRetry() {
+        console.log("Retrying the level...");
         this.recreateScene();
     }
 
     public onQuit() {
         window.location.reload();
-    }
-
-    public onContinue() {
-        this.onRetry();
     }
 
     public changeCamera() {
@@ -341,6 +357,7 @@ class EndState extends AbstractGameSceneState {
     }
     exit() {
         this.hud.dispose();
+        this.hud = null;
     }
 
     update(dt: number, input: CharacterInput): AbstractGameSceneState | null {
