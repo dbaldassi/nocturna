@@ -1,5 +1,5 @@
-import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, Mesh, ParticleSystem, Texture, Color4 } from "@babylonjs/core";
-import { GameObjectConfig, GameObjectFactory, EditorObject, GameObjectVisitor, Enemy, CollisionGroup } from "../types";
+import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, Mesh, ParticleSystem, Texture, Color4, StaticSound } from "@babylonjs/core";
+import { GameObjectConfig, GameObjectFactory, EditorObject, GameObjectVisitor, Enemy, CollisionGroup, Utils } from "../types";
 import { ObjectEditorImpl } from "./EditorObject";
 
 export class RocketObject implements Enemy {
@@ -12,10 +12,31 @@ export class RocketObject implements Enemy {
     private damage: number = 5;
     public explosionRadius: number = 10;
 
+    private sounds: Map<string, StaticSound> = new Map();
+
     constructor(mesh: Mesh, scene: Scene) {
         this.mesh = mesh;
         this.scene = scene;
         this.id = `${RocketObject.Type}_${RocketObject.nextId++}`;
+    }
+    public addSound(name: string, sound: StaticSound): void {
+        this.sounds.set(name, sound);
+    }
+    public playSound(name: string): void {
+        const sound = this.sounds.get(name);
+        if (sound) {
+            sound.play();
+        } else {
+            console.warn(`Sound ${name} not found for rocket.`);
+        }
+    }
+    public stopSound(name: string): void {
+        const sound = this.sounds.get(name);
+        if (sound) {
+            sound.stop();
+        } else {
+            console.warn(`Sound ${name} not found for rocket.`);
+        }
     }
 
     public getMesh(): Mesh {
@@ -63,13 +84,15 @@ export class RocketObject implements Enemy {
     }
 
     private explode(): void {
+        this.stopSound("drop");
+        this.playSound("explosion");
+
         // Create a particle system for the explosion
         const particleSystem = new ParticleSystem("explosion", 2000, this.scene);
 
         // Set the texture for the particles
         particleSystem.particleTexture = new Texture("textures/flare.png", this.scene);
 
-        console.log("Explosion at position:", this.mesh.position);
         // Set the emitter to the rocket's position
         particleSystem.emitter = this.mesh.position.clone();
 
@@ -145,9 +168,19 @@ export class FixedRocketFactory implements GameObjectFactory {
 
     public create(config: GameObjectConfig): RocketObject {
         const mesh = this.createMesh(config);
-        new PhysicsAggregate(mesh, PhysicsShapeType.CYLINDER, { mass: 0, friction: 0.5, restitution: 0.2 }, config.scene);
+        new PhysicsAggregate(mesh, PhysicsShapeType.CYLINDER, { mass: 20, friction: 0.5, restitution: 0.2 }, config.scene);
         const rocket = new FixedRocket(mesh, config.scene);
         rocket.enableCollision(); // Enable collision detection
+
+        Utils.loadSound(config.assetsManager, "drop", "assets/sounds/drop.mp3", (sound) => {
+            rocket.addSound("drop", sound);
+            rocket.playSound("drop");
+        });
+        Utils.loadSound(config.assetsManager, "explosion", "assets/sounds/explosion.ogg", (sound) => {
+            sound.spatial.attach(mesh);
+            rocket.addSound("explosion", sound);
+        }, true);
+
         return rocket;
     }
 

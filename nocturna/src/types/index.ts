@@ -150,11 +150,11 @@ export class Utils {
         return task;
     }
 
-    static loadSound(assetsManager: AssetsManager, name: string, file: string, callback: (sound: StaticSound) => void): void {
+    static loadSound(assetsManager: AssetsManager, name: string, file: string, callback: (sound: StaticSound) => void, spatial?: boolean): void {
         const soundTask = assetsManager.addBinaryFileTask(name, file);
         soundTask.onSuccess = async (task) => {
             console.log(`Loaded sound ${name} successfully`);
-            const sound = await CreateSoundAsync(name, task.data);
+            const sound = await CreateSoundAsync(name, task.data, {spatialEnabled: spatial || false, loop: false, autoplay: false});
             sound.volume = 1; // Set volume to 100%
             callback(sound);
         };

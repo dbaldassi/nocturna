@@ -1,4 +1,4 @@
-import { Animation, Mesh, PhysicsAggregate, PhysicsShapeType, Scene, Vector3 } from '@babylonjs/core';
+import { Animation, Mesh, PhysicsAggregate, PhysicsShapeType, Scene, StaticSound, Vector3 } from '@babylonjs/core';
 import { GameObject, CharacterInput, Utils } from '../types';
 import { GameObjectConfig, GameObjectFactory, EditorObject, GameObjectVisitor } from '../types';
 import { ParentNodeObserver } from '../ParentNode';
@@ -13,6 +13,7 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
     public mesh: Mesh[] = [];
     private id: string;
     public victoryAggregate: PhysicsAggregate;
+    private sounds: Map<string, StaticSound> = new Map();
 
     constructor(mesh: Mesh, scene: Scene) {
         this.scene = scene;
@@ -21,6 +22,18 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
         }
 
         this.id = `${VictoryCondition.Type}_${VictoryCondition.nextId++}`;
+    }
+
+    public addSound(name: string, sound: StaticSound): void {
+        this.sounds.set(name, sound);
+    }
+    public playSound(name: string): void {
+        const sound = this.sounds.get(name);
+        if (sound) {
+            sound.play();
+        } else {
+            console.warn(`Sound ${name} not found for victory condition.`);
+        }
     }
 
     public getId(): string {
@@ -82,6 +95,7 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
     public accept(visitor: GameObjectVisitor): void {
         this.scene.stopAnimation(this.mesh);
         visitor.visitVictory(this);
+        this.playSound("victory");
     }
 
     public onPause(): void {
@@ -123,6 +137,10 @@ export class VictoryConditionFactory implements GameObjectFactory {
                 victory.victoryAggregate = p;
                 victory.startAnimation();
             }
+        });
+
+        Utils.loadSound(config.assetsManager, "victory", "assets/sounds/crystal.ogg", (sound) => {
+            victory.addSound("victory", sound);
         });
 
         return victory;

@@ -1,4 +1,4 @@
-import { Vector3 } from "@babylonjs/core";
+import { AssetsManager, Vector3 } from "@babylonjs/core";
 import { FixedPlatform, ParentedPlatform, Platform } from "./GameObjects/Platform";
 import { SpikeTrapFactory } from "./GameObjects/SpikeTrap";
 import { MultiScene } from "./scene/MultiScene";
@@ -138,7 +138,11 @@ export namespace Action {
             position.y += 100; // Position the rocket above the selected object
             position.z -= size.z / 2; // Adjust position to be in front of the object
 
+            const assetsManager = new AssetsManager(this.scene.getScene());
+            assetsManager.useDefaultLoadingScreen = false;
+
             const config = {
+                assetsManager: assetsManager,
                 scene: this.scene.getScene(),
                 position: position,
                 rotation: Vector3.Zero(),
@@ -146,17 +150,21 @@ export namespace Action {
             };
             const rocket = this.factory.create(config);
             const remote_rocket = new RemoteGameObject(rocket, rocket.getId(), playerTargetId);
-            this.scene.addRemoteObject(remote_rocket);
-            // notify other players
-            const network = NetworkManager.getInstance();
-            network.sendUpdate("createObject", {
-                id: object.getId(),
-                owner: playerTargetId,
-                position: config.position,
-                size: config.size,
-                type: rocket.getType(),
-            });
+           
+            assetsManager.onFinish = () => {
+                this.scene.addRemoteObject(remote_rocket);
+                // notify other players
+                const network = NetworkManager.getInstance();
+                network.sendUpdate("createObject", {
+                    id: object.getId(),
+                    owner: playerTargetId,
+                    position: config.position,
+                    size: config.size,
+                    type: rocket.getType(),
+                });
+            }
 
+            assetsManager.load();
             this.scene.doneSelectingObjectDrop();
 
             return true;
