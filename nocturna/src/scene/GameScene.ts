@@ -26,7 +26,7 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     protected state: AbstractGameSceneState;
     protected hpBar: HpBar;
 
-    protected static sceneName: string = "scene.json";
+    protected static sceneName: string = "test_level.json";
 
     constructor(engine: Engine, inputHandler: InputHandler) {
         super(engine, inputHandler);

@@ -18,7 +18,6 @@ export class TutorialScene extends GameScene {
     private static readonly explainationsByScene: number[] = [3, 1, 2, 1];
     protected static sceneIndex: number = 0;
 
-
     static async createScene(engine: Engine, inputHandler: InputHandler, tutorialScene: TutorialScene = null): Promise<BaseScene> {
         let scene = null;
         if (tutorialScene) {
