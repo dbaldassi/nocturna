@@ -65,4 +65,12 @@ export class NocturnaAudio {
             console.warn("No background music is currently playing.");
         }
     }
+
+    public muteBackgroundMusic(mute: boolean): void {
+        if (this.background) {
+            this.background.volume = mute ? 0 : 1;
+        } else {
+            console.warn("No background music is currently playing.");
+        }
+    }
 }

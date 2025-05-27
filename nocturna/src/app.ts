@@ -138,6 +138,25 @@ export class App {
                     isMuted = true;
                 }
             });
+
+            const musicControl = document.getElementById("music-control");
+            const musicIcon = document.getElementById("music-icon") as HTMLImageElement;
+            let musicMuted = false;
+
+            if (musicControl && musicIcon) {
+                musicControl.addEventListener("click", async () => {
+                    const audio = await NocturnaAudio.getInstance();
+                    if (musicMuted) {
+                        audio.muteBackgroundMusic(false);
+                        musicIcon.src = "/assets/hud/musicOn.png";
+                        musicMuted = false;
+                    } else {
+                        audio.muteBackgroundMusic(true);
+                        musicIcon.src = "/assets/hud/musicOff.png";
+                        musicMuted = true;
+                    }
+                });
+            }
         }
     }
 
