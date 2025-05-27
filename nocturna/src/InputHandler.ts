@@ -2,6 +2,7 @@ import { CharacterInput } from "./types";
 import { KeybindsManager } from "./Keybinds";
 import { QWERTY } from "./utils/en";
 import { AZERTY } from "./utils/fr";
+import { GetForwardRay } from "@babylonjs/core";
 
 export class InputHandler {
     private isPaused: boolean = false;
@@ -11,8 +12,8 @@ export class InputHandler {
         right: ["d"],
         up: ["w"],
         down: ["s"],
-        forward: ["q"],
-        backward: ["e"],
+        // forward: ["q"],
+        // backward: ["e"],
         rotate_left_x: ["x"],
         rotate_right_x: ["c"],
         rotate_left_y: ["y"],
@@ -37,6 +38,8 @@ export class InputHandler {
         save: ["Enter"],
         delete: ["Backspace"],
         clone: ["f"],
+        forward: ["q"],
+        backward: ["e"],
     };
     private keybindManager: KeybindsManager;
     // Store actions, which call a function when the key is pressed

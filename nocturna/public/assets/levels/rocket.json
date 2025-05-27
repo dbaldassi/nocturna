@@ -1,7 +1,7 @@
 {
     "objects": [
         {
-            "type": "fixed_platform",
+            "type": "fixed_rocket_activation_platform",
             "position": {
                 "_isDirty": false,
                 "_x": 0,
@@ -47,7 +47,7 @@
             "position": {
                 "_isDirty": false,
                 "_x": 10,
-                "_y": 1000,
+                "_y": 100,
                 "_z": 0
             },
             "rotation": {

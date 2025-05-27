@@ -72,6 +72,8 @@ export const en = {
     "pause.subtitle": "Take a moment to catch your breath",
     "pause.title": "Game Paused",
     "keybinds.instructions": "You can change all your keybinds using the wheel at the top right",
+    "forward": "Forward",
+    "backward": "Backward",
 };
 
 export const QWERTY = {
@@ -79,8 +81,6 @@ export const QWERTY = {
     "right": ["d"],
     "up": ["w"],
     "down": ["s"],
-    "forward": ["q"],
-    "backward": ["e"],
     "rotate_left_x": ["x"],
     "rotate_right_x": ["c"],
     "rotate_left_y": ["y"],
@@ -103,5 +103,7 @@ export const QWERTY = {
     "action_plus": ["+"],
     "save": ["Enter"],
     "delete": ["Backspace"],
-    "clone": ["f"]
+    "clone": ["f"],
+    "forward": ["q"],
+    "backward": ["e"],
 }

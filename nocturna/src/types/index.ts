@@ -4,11 +4,14 @@ import { ParentNode } from "../ParentNode";
 import { Coin } from "../GameObjects/Coin";
 
 export interface CharacterInput {
+    backward: boolean;
+    forward: boolean;
     left: boolean;
     right: boolean;
     up: boolean;
     down: boolean;
     jump: boolean;
+
 }
 
 export enum CollisionGroup {

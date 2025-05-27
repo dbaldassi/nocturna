@@ -72,6 +72,8 @@ export const fr = {
     "pause.subtitle": "Prenez un moment pour reprendre votre souffle",
     "pause.title": "Jeu en pause",
     "keybinds.instructions": "Vous pouvez modifier toutes vos touches via l'écrou en haut à droite",
+    "forward": "Avant",
+    "backward": "Arrière",
 };
 
 export const AZERTY = {
@@ -79,8 +81,6 @@ export const AZERTY = {
     "right": ["d"],
     "up": ["z"],
     "down": ["s"],
-    "forward": ["a"],
-    "backward": ["e"],
     "rotate_left_x": ["x"],
     "rotate_right_x": ["c"],
     "rotate_left_y": ["a"],
@@ -103,5 +103,7 @@ export const AZERTY = {
     "action_plus": ["="],
     "save": ["Enter"],
     "delete": ["Backspace"],
-    "clone": ["f"]
+    "clone": ["f"],
+    "forward": ["a"],
+    "backward": ["e"],
 }

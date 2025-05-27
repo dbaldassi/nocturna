@@ -3,6 +3,7 @@ import { ParentNodeObserver } from "../ParentNode";
 import { CharacterInput, EditorObject, GameObject, GameObjectConfig, GameObjectFactory, Utils } from "../types";
 import { ObjectEditorImpl } from "./EditorObject";
 import { App } from "../app";
+import { RocketObject } from "./Rocket";
 
 export class Platform implements GameObject {
     public static readonly Type: string = "platform";
@@ -178,4 +179,61 @@ export class FixedPlatformFactory implements GameObjectFactory {
         const platform = new ObjectEditorImpl(actual_platform);        
         return platform;
     }
+}
+
+export interface RocketActivationPlatform extends GameObject {
+    addRocket(rocket: RocketObject): void;
+    activateRockets(): void;
+}
+
+export class ParentedRocketActivationPlatform extends ParentedPlatform implements RocketActivationPlatform {
+    public static readonly Type: string = "parented_rocket_activation_platform";
+    public rockets: RocketObject[] = [];
+
+    constructor(mesh: Mesh, scene: Scene) {
+        super(mesh, scene);
+    }
+
+    public getType(): string {
+        return ParentedRocketActivationPlatform.Type;
+    }
+
+    public addRocket(rocket: RocketObject) {
+        this.rockets.push(rocket);
+    }
+
+    public activateRockets() {
+        this.rockets.forEach((rocket) => {
+            rocket.activate();
+        });
+    }
+}
+
+export class ParentedRocketActivationPlatformFactory extends ParentedPlatformFactory {
+}
+
+export class FixedRocketActivationPlatform extends FixedPlatform implements RocketActivationPlatform {
+    public static readonly Type: string = "fixed_rocket_activation_platform";
+    public rockets: RocketObject[] = [];
+
+    constructor(mesh: Mesh, scene: Scene) {
+        super(mesh, scene);
+    }
+
+    public getType(): string {
+        return ParentedRocketActivationPlatform.Type;
+    }
+
+    public addRocket(rocket: RocketObject) {
+        this.rockets.push(rocket);
+    }
+
+    public activateRockets() {
+        this.rockets.forEach((rocket) => {
+            rocket.activate();
+        });
+    }
+}
+
+export class FixedRocketActivationPlatformFactory extends FixedPlatformFactory {
 }

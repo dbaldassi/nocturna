@@ -4,7 +4,7 @@ import { ParentNode } from "./ParentNode";
 import { Player, PlayerFactory } from "./GameObjects/Player";
 import { AssetsManager, Scene, Vector3 } from "@babylonjs/core";
 import { GameObjectFactory, GameObjectConfig, EditorObject, GameObject } from "./types";
-import { ParentedPlatform, ParentedPlatformFactory, FixedPlatform, FixedPlatformFactory } from "./GameObjects/Platform";
+import { ParentedPlatform, ParentedPlatformFactory, FixedPlatform, FixedPlatformFactory, ParentedRocketActivationPlatform, ParentedRocketActivationPlatformFactory, FixedRocketActivationPlatform, FixedRocketActivationPlatformFactory } from "./GameObjects/Platform";
 import { VictoryCondition, VictoryConditionFactory } from "./GameObjects/Victory";
 import { FixedRocket, FixedRocketFactory } from "./GameObjects/Rocket";
 import { SpikeTrapFactory, SpikeTrapObject } from "./GameObjects/SpikeTrap";
@@ -61,6 +61,8 @@ export class LevelLoader {
         this.factories.set(Player.Type, new PlayerAbstractFactory(observer));
         this.factories.set(FixedRocket.Type, new FixedRocketFactory());
         this.factories.set(SpikeTrapObject.Type, new SpikeTrapFactory());
+        this.factories.set(ParentedRocketActivationPlatform.Type, new ParentedRocketActivationPlatformFactory());
+        this.factories.set(FixedRocketActivationPlatform.Type, new FixedRocketActivationPlatformFactory());
     }
 
     public setScene(scene: Scene): void {

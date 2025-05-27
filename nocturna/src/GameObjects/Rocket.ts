@@ -43,12 +43,11 @@ export class RocketObject implements Enemy {
     }
 
     public onContact(): boolean {
-        console.log("Rocket has contacted something.");
         this.explode();
         return true;
     }
 
-    public update(_: number): void {}
+    public update(_: number): void { }
 
     public enableCollision(): void {
         const physicsBody = this.mesh.physicsBody;
@@ -56,8 +55,6 @@ export class RocketObject implements Enemy {
             console.warn("Physics body not found for the rocket mesh.");
             return;
         }
-
-        console.log(this.mesh.position);
 
         physicsBody.shape.filterMembershipMask = CollisionGroup.ROCKET; // Set the membership mask for rockets
         physicsBody.shape.filterCollideMask = 0xFFFFFFFF & ~CollisionGroup.FACES; // Allow collision with except faces
@@ -92,6 +89,7 @@ export class RocketObject implements Enemy {
         particleSystem.maxEmitPower = 3;
 
         // Start the particle system
+        this.mesh.dispose(); // Dispose the rocket mesh
         particleSystem.start();
 
         // Stop the particle system after a short duration
@@ -101,10 +99,18 @@ export class RocketObject implements Enemy {
         }, 1000);
     }
     public onPause(): void {
-        this.mesh.physicsBody.setMassProperties({ mass: 0 });
+        // if (this.mesh.physicsBody) {
+        //     this.mesh.physicsBody.dispose();
+        //     this.mesh.physicsBody = null;
+        // }
     }
+    
     public onResume(): void {
-        this.mesh.physicsBody.setMassProperties({ mass: 5 });
+    }
+
+    public activate(): void {
+        new PhysicsAggregate(this.mesh, PhysicsShapeType.CYLINDER, { mass: 5, friction: 0.5, restitution: 0.2 }, this.scene);
+        this.enableCollision();
     }
 }
 
@@ -133,16 +139,14 @@ export class FixedRocketFactory implements GameObjectFactory {
         const material = new StandardMaterial("rocketMaterial", config.scene);
         material.diffuseColor = Color3.Red();
         mesh.material = material;
-        
+
         return mesh;
     }
 
     public create(config: GameObjectConfig): RocketObject {
         const mesh = this.createMesh(config);
+        new PhysicsAggregate(mesh, PhysicsShapeType.CYLINDER, { mass: 0, friction: 0.5, restitution: 0.2 }, config.scene);
         const rocket = new FixedRocket(mesh, config.scene);
-
-        new PhysicsAggregate(mesh, PhysicsShapeType.CYLINDER, { mass: 5, friction: 0.5, restitution: 0.2 }, config.scene);
-
         rocket.enableCollision(); // Enable collision detection
         return rocket;
     }

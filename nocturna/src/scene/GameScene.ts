@@ -1,4 +1,4 @@
-import { Engine, Vector3, FollowCamera, Scene, PhysicsBody } from "@babylonjs/core";
+import { Engine, FollowCamera, Scene, PhysicsBody } from "@babylonjs/core";
 
 import { BaseScene } from "./BaseScene";
 import { Cube, CubeCollisionObserver } from "../Cube";
@@ -11,8 +11,6 @@ import { VictoryCondition } from "../GameObjects/Victory";
 import { LooseCondition } from "../Loose";
 import { Coin } from "../GameObjects/Coin";
 import { HpBar } from "../HpBar";
-
-const CUBE_SIZE = 3000;
 
 export class GameScene extends BaseScene implements LevelLoaderObserver, GameObjectVisitor, EndConditionObserver, CubeCollisionObserver {
     protected cube: Cube;
@@ -50,7 +48,7 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         // scene.enableDebug();
         scene.state = new LoadingState(scene);
         scene.loadLevel(this.sceneName);
-        VictoryCondition.mode = "normal";
+        VictoryCondition.mode = "normal"
         return scene;
     }
 
@@ -84,7 +82,6 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         this.loseCondition = new LooseCondition(this.player, this.cube.getSize()); // Initialize the lose condition
 
         this.hpBar = new HpBar(this.player.getMaxHp());
-
         this.state.exit();
         this.state = new InGameState(this);
         this.state.enter();
@@ -141,7 +138,7 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     }
 
     public visitCoin(_: Coin): void {
-        
+
     }
 
     public hideUI() {
@@ -247,7 +244,7 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     }
 
     public onBottomCollision(collider: PhysicsBody) {
-        if(this.player.getMesh().physicsBody === collider) {
+        if (this.player.getMesh().physicsBody === collider) {
             this.player.kill();
         }
     }
