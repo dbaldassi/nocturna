@@ -1,4 +1,4 @@
-import { Mesh, Vector3, Scene, AssetsManager, MeshAssetTask, Matrix, TransformNode, Quaternion } from "@babylonjs/core";
+import { Mesh, Vector3, Scene, AssetsManager, MeshAssetTask, Matrix, TransformNode, Quaternion, Sound, CreateSoundAsync, StaticSound } from "@babylonjs/core";
 import { VictoryCondition } from "../GameObjects/Victory";
 import { ParentNode } from "../ParentNode";
 import { Coin } from "../GameObjects/Coin";
@@ -142,13 +142,25 @@ export class Utils {
         task.onSuccess = (task) => {
             console.log(`Loaded ${name} successfully`);
             callback(task);
-            console.log(`Callback ${name} successfully`);
         }
         task.onError = (_, message) => {
             console.error(`Failed to load ${name}: ${message}`);
         };
 
         return task;
+    }
+
+    static loadSound(assetsManager: AssetsManager, name: string, file: string, callback: (sound: StaticSound) => void): void {
+        const soundTask = assetsManager.addBinaryFileTask(name, file);
+        soundTask.onSuccess = async (task) => {
+            console.log(`Loaded sound ${name} successfully`);
+            const sound = await CreateSoundAsync(name, task.data);
+            sound.volume = 1; // Set volume to 100%
+            callback(sound);
+        };
+        soundTask.onError = (_, message) => {
+            console.error(`Failed to load sound ${name}: ${message}`);
+        };
     }
 
     static configureMesh(meshes: Mesh[], config: GameObjectConfig): void {

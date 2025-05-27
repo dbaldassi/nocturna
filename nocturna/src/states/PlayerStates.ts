@@ -12,18 +12,63 @@ import { AbstractState, CharacterInput } from "../types";
 class JumpingState implements AbstractState {
     public static readonly Type: string = "jumping";
     private player: Player;
+    private doubleJumped: boolean = false;
+    private canDoubleJump: boolean = false;
 
     constructor(player: Player) {
         this.player = player;
     }
 
     public enter(): void {
-  
+        this.player.playSound("jump");
     }
     public exit(): void {
+        this.player.playSound("land");
     }
     public name(): string {
         return JumpingState.Type;
+    }
+
+    public update(dt: number, input: CharacterInput): AbstractState | null {
+        this.player.move(dt, input);
+
+        if(!this.doubleJumped && !this.canDoubleJump) {
+            this.canDoubleJump = !input.jump;
+        }
+
+        if(input.jump && this.canDoubleJump) {
+            this.player.jump();
+            this.doubleJumped = true;
+            this.canDoubleJump = false;
+        }
+
+        const isGrounded = this.player.isGrounded();
+        const velocity = this.player.getMesh().physicsBody.getLinearVelocity().y;
+
+        if (isGrounded && velocity <= 0) {
+            if (input.left || input.right) return new MovingState(this.player);
+            else return new IdleState(this.player);
+        }
+
+        return null;
+    }
+}
+
+class FallingState implements AbstractState {
+    public static readonly Type: string = "falling";
+    private player: Player;
+
+    constructor(player: Player) {
+        this.player = player;
+    }
+
+    public enter(): void {
+    }
+    public exit(): void {
+        this.player.playSound("land");
+    }
+    public name(): string {
+        return FallingState.Type;
     }
 
     public update(dt: number, input: CharacterInput): AbstractState | null {
@@ -43,6 +88,8 @@ class JumpingState implements AbstractState {
 class MovingState implements AbstractState {
     public static readonly Type: string = "moving";
     private player: Player;
+    private currentSoundTime: number = 0;
+    private soundInterval: number = 150; // Interval in milliseconds to play sound
 
     constructor(player: Player) {
         this.player = player;
@@ -67,10 +114,18 @@ class MovingState implements AbstractState {
             return new IdleState(this.player);
         }
         else if (!this.player.isGrounded()) {
-            return new JumpingState(this.player);
+            return new FallingState(this.player);
         }
 
         this.player.move(dt, input);
+
+        if(this.currentSoundTime >= this.soundInterval) {
+            this.currentSoundTime = 0;
+        }
+        if(this.currentSoundTime === 0) {
+            this.player.playSound("move");
+        }
+        this.currentSoundTime += dt;
 
         return null;
     }
@@ -104,6 +159,9 @@ export class IdleState implements AbstractState {
         else if (input.left || input.right) {
             this.player.move(dt, input);
             return new MovingState(this.player);
+        }
+        else if (!this.player.isGrounded()) {
+            return new FallingState(this.player);
         }
 
         return null;

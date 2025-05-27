@@ -7,6 +7,7 @@ export class NocturnaAudio {
     private static instance: NocturnaAudio;
     private audioEngine: AudioEngineV2;
     private background: StreamingSound = null;
+    private backgroundMuted: boolean = false;
 
     // private constructor to prevent instantiation
     private constructor() {
@@ -18,6 +19,10 @@ export class NocturnaAudio {
     private async initialize(): Promise<void> {
         this.audioEngine = await CreateAudioEngineAsync();
         // Wait until audio engine is ready to play sounds.
+        await this.audioEngine.unlockAsync();
+    }
+
+    public async unlock(): Promise<void> {
         await this.audioEngine.unlockAsync();
     }
 
@@ -45,6 +50,7 @@ export class NocturnaAudio {
 
         this.background = await CreateStreamingSoundAsync("background", musicUrl, { loop: true, autoplay: true });
         if (this.background) {
+            if(this.backgroundMuted) this.background.volume = 0; // Mute if previously muted
             this.background.loop = true;
             this.background.play();
         }
@@ -72,5 +78,7 @@ export class NocturnaAudio {
         } else {
             console.warn("No background music is currently playing.");
         }
+
+        this.backgroundMuted = mute;
     }
 }

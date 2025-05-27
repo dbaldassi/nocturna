@@ -1,8 +1,9 @@
-import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, AbstractMesh, SceneLoader, Mesh, Ray, AssetsManager, ImportMeshAsync, BoundingBox, NodeMaterial } from "@babylonjs/core";
+import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, AbstractMesh, SceneLoader, Mesh, Ray, AssetsManager, ImportMeshAsync, BoundingBox, NodeMaterial, Sound, StaticSound } from "@babylonjs/core";
 import { CharacterInput, EditorObject, Utils, GameObject, GameObjectConfig, GameObjectFactory, AbstractState, Enemy } from "../types";
 import { IdleState, KnockbackState, PlayerDamageableState, PlayerDamageState } from "../states/PlayerStates";
 import { ObjectEditorImpl } from "./EditorObject";
 import { App } from "../app";
+import { name } from "@babylonjs/gui";
 
 // ========================= PLAYER =========================
 // This section contains the Player class, which represents the
@@ -24,6 +25,7 @@ export class Player implements GameObject {
     private damageState: PlayerDamageState = null;
     private hp: number = 10;
     private id: string;
+    private sounds: Map<string, StaticSound> = new Map();
 
     private maxHp: number = 10;
 
@@ -46,6 +48,19 @@ export class Player implements GameObject {
         this.id = id;
     }
 
+    public addSound(name: string, sound: StaticSound): void {
+        this.sounds.set(name, sound);
+    }
+
+    public playSound(name: string): void {
+        const sound = this.sounds.get(name);
+        if (sound) {
+            sound.play();
+        } else {
+            console.warn(`Sound ${name} not found for player.`);
+        }
+    }
+
     public jump() {
         const physicsBody = this.getMesh().physicsBody;
         if (!physicsBody) {
@@ -66,9 +81,9 @@ export class Player implements GameObject {
         // const rayHelper = new RayHelper(ray);
         // rayHelper.show(this.scene);
 
-        const result = this.scene.pickWithRay(ray, (mesh) => !this.mesh.includes(mesh as Mesh));
+        const result = this.scene.pickWithRay(ray, (mesh) => !this.mesh.includes(mesh as Mesh) && mesh.name === "platform");
 
-        return !!(result?.hit && result.pickedMesh);;
+        return result?.hit;
     }
 
     public move(dt: number, input: CharacterInput) {
@@ -163,7 +178,13 @@ export class Player implements GameObject {
 
     public doTakeDamage(damage: number): void {
         this.hp -= damage;
-        if (this.hp <= 0) this.hp = 0;
+        if (this.hp <= 0) {
+            this.kill();
+            return;
+        }
+
+        this.playSound("hit");
+
         this.state.exit();
         this.state = new KnockbackState(this);
         this.state.enter();
@@ -179,6 +200,7 @@ export class Player implements GameObject {
     }
 
     public kill(): void {
+        this.playSound("death");
         this.hp = 0;
     }
 
@@ -217,7 +239,6 @@ export class PlayerFactory implements GameObjectFactory {
 
         const path = App.selectedGraphics + "/" + Player.Type + ".glb";
 
-
         Utils.createMeshTask(config, "player", path, (task) => {
             const meshes = task.loadedMeshes;
 
@@ -230,6 +251,22 @@ export class PlayerFactory implements GameObjectFactory {
 
             meshes[0].name = "player";
             meshes.forEach((mesh) => { player.mesh.push(mesh); });
+        });
+
+        const sounds = [
+            { name: "jump", path: "/assets/sounds/sfx_jump.flac" },
+            { name: "land", path: "/assets/sounds/jumpland.wav" },
+            { name: "death", path: "/assets/sounds/death.wav" },
+            { name: "move", path: "/assets/sounds/footstep_wood_001.ogg", volume: 0.5 },
+            { name: "hit", path: "/assets/sounds/playerhit.mp3" },
+        ];
+
+        // load sounds
+        sounds.forEach(({ name, path, volume }) => {
+            Utils.loadSound(config.assetsManager, name, path, (sound) => {
+                if (volume) sound.volume = volume;
+                player.addSound(name, sound);
+            });
         });
 
         return player;

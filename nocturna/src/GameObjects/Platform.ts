@@ -106,7 +106,6 @@ export class ParentedPlatformFactory implements GameObjectFactory {
             Utils.createMeshTask(config, ParentedPlatform.Type, path, (task) => {
                 const meshes = task.loadedMeshes;
     
-                meshes[0].name = Platform.Type;
                 config.position = Utils.calculatePositionRelativeToParent(config.parent, config.position);
                 // set rotation as if parent is not rotated
                 config.rotation = Utils.calculateRotationRelativeToParent(config.parent, config.rotation);
@@ -120,6 +119,7 @@ export class ParentedPlatformFactory implements GameObjectFactory {
                 config.parent.addChild(meshes[0]);
 
                 meshes.forEach((m) => {
+                    m.name = Platform.Type;
                     platform.mesh.push(m as Mesh);
                 });
             });
@@ -152,7 +152,6 @@ export class FixedPlatformFactory implements GameObjectFactory {
         Utils.createMeshTask(config, FixedPlatform.Type, path, (task) => {
             const meshes = task.loadedMeshes;
 
-            meshes[0].name = Platform.Type;
             Utils.configureMesh(meshes, config);
            
             if (physics) {
@@ -161,6 +160,7 @@ export class FixedPlatformFactory implements GameObjectFactory {
 
             // platform.mesh[0] = mesh;
             meshes.forEach((m) => {
+                m.name = Platform.Type;
                 platform.mesh.push(m as Mesh);
             });
         });
