@@ -141,6 +141,9 @@ export class InGameState extends AbstractGameSceneState {
         else if(action === "objectContact") {
             this.gameScene.onRemoteObjectContact(data.id, data.owner);
         }
+        else if(action === "rotate") {
+            this.gameScene.rotate(data.axis);
+        }
     }
 }
 

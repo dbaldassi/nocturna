@@ -444,6 +444,10 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
     // === GAME LOGIC        ===
     // =========================
 
+    public rotate(axis: "x" | "y" | "z"): void {
+        this.parent.rotate(axis);
+    }
+
     public onObjectCreated(object: GameObject): void {
         this.gameObjects.push(object);
     }

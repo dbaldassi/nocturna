@@ -68,6 +68,11 @@ export namespace Action {
             // Implementation for rotating the scene around the specified axis
             const parent = this.scene.getParent();
             parent.rotate(this.axis);            
+
+            const network = NetworkManager.getInstance();
+            network.sendUpdate("rotate", {
+                axis: this.axis
+            });
         }
     }
 
