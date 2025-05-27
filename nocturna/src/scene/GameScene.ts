@@ -11,6 +11,7 @@ import { VictoryCondition } from "../GameObjects/Victory";
 import { LooseCondition } from "../Loose";
 import { Coin } from "../GameObjects/Coin";
 import { HpBar } from "../HpBar";
+import { NocturnaAudio } from "../NocturnaAudio";
 
 export class GameScene extends BaseScene implements LevelLoaderObserver, GameObjectVisitor, EndConditionObserver, CubeCollisionObserver {
     protected cube: Cube;
@@ -85,6 +86,11 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         this.state.exit();
         this.state = new InGameState(this);
         this.state.enter();
+
+        // Start background music
+        NocturnaAudio.getInstance().then(audio => {
+            audio.setBackgroundMusic("assets/music/background.mp3");
+        });
     }
 
     protected setupCollisions() {

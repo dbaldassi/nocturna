@@ -8,6 +8,8 @@ const handlers = {
 	"multi"	        : new MultiProtocol(),
 };
 
+
+
 export default defineConfig({
   plugins: [
     {
@@ -37,4 +39,10 @@ export default defineConfig({
       },
     },
   ],
+
+  optimizeDeps: {
+    exclude: [
+      "@babylonjs/core/Audio/webAudioStreamingSound", // ou le nom du module qui pose problème
+    ]
+  }
 });
