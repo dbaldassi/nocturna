@@ -1,4 +1,3 @@
-import { AdvancedDynamicTexture, TextBlock, Control } from "@babylonjs/gui";
 import { Engine, Vector3, FreeCamera, Mesh, Scene, AssetsManager } from "@babylonjs/core";
 
 import { BaseScene } from "./BaseScene";import { ParentNode } from "../ParentNode";
@@ -114,8 +113,6 @@ class AdditionState extends EditorState {
     enter() {
         super.enter();
 
-        this.scene.showMenu(`${this.name()} -> 1: Fixed Platform 2: Parented Platform 3: Spike Trap 4: Coin 5: Player 6: Victory f: clone ${this.getModeChangeText()}`);
-
         this.inputHandler.addAction("action_1", () => this.scene.addObject(this.factories.get(FixedPlatform.Type)));
         this.inputHandler.addAction("action_2", () => this.scene.addObject(this.factories.get(ParentedPlatform.Type)));
         this.inputHandler.addAction("action_3", () => this.scene.addObject(this.factories.get(SpikeTrapObject.Type)));
@@ -133,7 +130,6 @@ class AdditionState extends EditorState {
         this.inputHandler.removeAction("action_3");
         this.inputHandler.removeAction("action_4");
         this.inputHandler.removeAction("delete");
-        this.scene.hideMenu();
     }
 
     update(dt: number, input: CharacterInput): AbstractState | null {
@@ -157,11 +153,9 @@ class MoveState extends EditorState {
 
     enter() {
         super.enter();
-        this.scene.showMenu(`${this.name()} -> WASD: Move Selection ${this.getModeChangeText()}`);
     }
     exit() {
         super.exit();
-        this.scene.hideMenu();
     }
 
     update(dt: number, input: CharacterInput): AbstractState | null {
@@ -177,11 +171,9 @@ class RotationState extends EditorState {
     
     enter() {
         super.enter();
-        this.scene.showMenu(`${this.name()} -> WASD: Move Selection ${this.getModeChangeText()}`);
     }
     exit() {
         super.exit();
-        this.scene.hideMenu();
     }
     update(dt: number, input: CharacterInput): AbstractState | null {
         this.scene.rotateSelection(dt,input);
@@ -202,11 +194,9 @@ class ResizeState extends EditorState {
     }
     enter() {
         super.enter();
-        this.scene.showMenu(`${this.name()} -> WASD: Move Selection ${this.getModeChangeText()}`);
     }
     exit() {
         super.exit();
-        this.scene.hideMenu();
     }
     update(dt: number, input: CharacterInput): AbstractState | null {
         this.scene.resizeSelection(dt,input);
@@ -273,7 +263,6 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver, IHUDE
     private cube: Cube;
     private camera: FreeCamera;
     private currentState: AbstractState;
-    private guiTexture: AdvancedDynamicTexture | null = null;
     private currentSelection: EditorObject | null = null;
     private editorObjects: EditorObject[] = [];
     private levelLoader: LevelLoader;
@@ -382,12 +371,6 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver, IHUDE
                 }
             }
         };
-    }
-
-    public showMenu(_: string) {
-    }
-
-    public hideMenu() {
     }
 
     public addObject(factory: GameObjectFactory, size?: Vector3, rotation?: Vector3) {
