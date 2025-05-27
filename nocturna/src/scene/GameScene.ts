@@ -335,11 +335,8 @@ class EndState extends AbstractGameSceneState {
         this.hud = hud;   
     }
 
-    render(): void {
-        // this.gameScene.getScene().render();
-    }
+    render(): void {}
     enter(): void {
-        console.log(`Entering state: ${this.constructor.name}`);
         this.gameScene.removePhysics()
     }
     exit() {
@@ -348,7 +345,6 @@ class EndState extends AbstractGameSceneState {
 
     update(dt: number, input: CharacterInput): AbstractGameSceneState | null {
         this.hud.update(dt, input);
-
         return null;
     }
 }

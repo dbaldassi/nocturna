@@ -15,7 +15,8 @@ export namespace Action {
         ROTATE_Y,
         ROTATE_Z,
         SPIKE,
-        ROCKET
+        ROCKET,
+        LENGTH
     }
 
     export interface SelectObjectCallback {

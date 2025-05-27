@@ -469,15 +469,12 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
 
     public visitEnemy(enemy: Enemy): void {
         const player = this.localObjects[0] as Player;
-        if(player.getMesh().physicsBody) {
-            //player.getMesh().physicsBody.applyImpulse(enemy.getMesh().position.subtract(player.getMesh().position).normalize().scale(100000), player.getMesh().getAbsolutePosition());
-        }
         player.takeDamage(enemy.getDamage());
     }
 
     public addAction() {
-        // const action = Action.ActionBase.create(Math.floor(Math.random() * 3), this);
-        const action = Action.ActionBase.create(Action.Type.ROCKET, this);
+        const action = Action.ActionBase.create(Math.floor(Math.random() * Action.Type.LENGTH), this);
+        // const action = Action.ActionBase.create(Action.Type.ROCKET, this);
         if(action) {
             for(let i = 0; i < this.inventory.length; i++) {
                 if(this.inventory[i] === null) {
