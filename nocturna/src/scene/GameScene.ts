@@ -147,7 +147,6 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
 
     public checkLoose() {
         if (this.loseCondition.checkLoose(this.timer)) {
-            console.log("Loose condition met");
             const state = this.state as InGameState;
             state.setCondition(this.loseCondition);
         }
@@ -237,6 +236,10 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         window.location.reload();
     }
 
+    public onContinue() {
+        this.onRetry();
+    }
+
     public changeCamera() {
         this.activeCameraIndex = (this.activeCameraIndex + 1) % this.cameras.length;
         this.scene.activeCamera = this.cameras[this.activeCameraIndex];
@@ -288,6 +291,10 @@ export class InGameState extends AbstractGameSceneState {
 
     public setCondition(condition: VictoryCondition | LooseCondition) {
         this.condition = condition;
+    }
+
+    public getCOndition(): VictoryCondition | LooseCondition {
+        return this.condition;
     }
 
     public update(dt: number, input: CharacterInput): AbstractGameSceneState | null {

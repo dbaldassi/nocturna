@@ -69,6 +69,8 @@ export const fr = {
     "tutorial.phase3.desc2": "Il peut y avoir des pièges au sol, meilleure visibilité en changeant de point de vue (POV).",
     "tutorial.phase4.title1": "Rockets",
     "tutorial.phase4.desc1": "Des roquettes peuvent tomber du ciel et infliger 5 PV de dégâts instantanés en cas de collision.",
+    "tutorial.phase4.title2": "Activation",
+    "tutorial.phase4.desc2": "Les roquettes ne sont activées que lorsque vous touchez certaines plateformes. Restez vigilant, vous ne verrez pas la différence.",
     "pause.subtitle": "Prenez un moment pour reprendre votre souffle",
     "pause.title": "Jeu en pause",
     "keybinds.instructions": "Vous pouvez modifier toutes vos touches via l'écrou en haut à droite",

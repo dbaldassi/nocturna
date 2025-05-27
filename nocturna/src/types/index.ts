@@ -209,4 +209,5 @@ export class Utils {
 export interface EndConditionObserver {
     onRetry();
     onQuit();
+    onContinue();
 }

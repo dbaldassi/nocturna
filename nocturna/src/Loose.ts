@@ -10,6 +10,7 @@ export class LooseCondition {
     private targetScore: number;
     private ended: boolean = false;
     private ground: number;
+    public static mode: string = "normal";
 
     private deathMessages: string[] = [
         "The darkness has consumed you...",

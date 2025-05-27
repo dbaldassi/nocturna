@@ -132,7 +132,7 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
             restartButton.textContent = "Continue";
         }
         restartButton.addEventListener("click", () => {
-            this.observers.forEach(obs => obs.onRetry());
+            this.observers.forEach(obs => obs.onContinue());
         });
         menuButton.addEventListener("click", () => {
             this.observers.forEach(obs => obs.onQuit());

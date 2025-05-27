@@ -24,9 +24,9 @@ export class Player implements GameObject {
     private damageState: PlayerDamageState = null;
     private hp: number = 10;
     private id: string;
-    
+
     private maxHp: number = 10;
-    
+
     constructor(mesh: Mesh, scene: Scene) {
         this.scene = scene;
         this.jumpForce = new Vector3(0, 100000, 0); // Force de saut initiale
@@ -149,7 +149,7 @@ export class Player implements GameObject {
             return;
         }
         const currentVelocity = physicsBody.getLinearVelocity();
-        let backward : Vector3;
+        let backward: Vector3;
         if (currentVelocity.length() > 0.01) {
             backward = currentVelocity.scale(-1).normalize();
         } else {
@@ -187,6 +187,14 @@ export class Player implements GameObject {
     }
     public onResume(): void {
         this.mesh[0].physicsBody.setMassProperties({ mass: 70 });
+        this.state = new IdleState(this);
+        this.state.update(0, {
+            left: false, right: false, jump: true,
+            backward: false,
+            forward: false,
+            up: false,
+            down: false
+        });
     }
     public onContact(): boolean {
         return false; // Player does not handle contact events
@@ -215,7 +223,7 @@ export class PlayerFactory implements GameObjectFactory {
 
             Utils.configureMesh(meshes, config);
 
-            if(physics) {
+            if (physics) {
                 const aggregate = new PhysicsAggregate(meshes[0], PhysicsShapeType.SPHERE, { mass: 70, friction: 10, restitution: 0 }, config.scene);
                 aggregate.body.setMassProperties({ mass: 70, inertia: new Vector3(0, 0, 1) });
             }

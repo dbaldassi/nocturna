@@ -25,7 +25,7 @@
             "type": "fixed_platform",
             "position": {
                 "_isDirty": false,
-                "_x": 75,
+                "_x": 50,
                 "_y": 0,
                 "_z": 0
             },

@@ -69,6 +69,8 @@ export const en = {
     "tutorial.phase3.desc2": "There may be ground traps; changing your point of view (POV) improves visibility.",
     "tutorial.phase4.title1": "Rockets",
     "tutorial.phase4.desc1": "Rockets can fall from the sky and deal 5 HP of instant damage upon collision.",
+    "tutorial.phase4.title2": "Activation",
+    "tutorial.phase4.desc2": "The rockets are not activated until you touch some platforms. Stay aware, you wont tell the difference.",
     "pause.subtitle": "Take a moment to catch your breath",
     "pause.title": "Game Paused",
     "keybinds.instructions": "You can change all your keybinds using the wheel at the top right",

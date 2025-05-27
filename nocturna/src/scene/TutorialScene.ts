@@ -15,7 +15,7 @@ import { Translation } from "../utils/translation";
 export class TutorialScene extends GameScene {
     protected static override sceneName: string = "tutorial.json";
     protected static readonly sceneOrder: string[] = ["jump.json", "platforms.json", "spike_trap.json", "rocket.json"];
-    private static readonly explainationsByScene: number[] = [3, 1, 2, 1];
+    private static readonly explainationsByScene: number[] = [3, 1, 2, 2];
     protected static sceneIndex: number = 0;
 
     static async createScene(engine: Engine, inputHandler: InputHandler, tutorialScene: TutorialScene = null): Promise<BaseScene> {
@@ -29,6 +29,7 @@ export class TutorialScene extends GameScene {
         scene.state = new LoadingState(scene);
         scene.loadLevel(this.sceneOrder[this.sceneIndex]);
         VictoryCondition.mode = "tutorial";
+        LooseCondition.mode = "tutorial";
         return scene;
     }
 
@@ -47,8 +48,10 @@ export class TutorialScene extends GameScene {
         this.pauseScene();
     }
 
-    public async recreateScene() {
-        TutorialScene.sceneIndex += 1;
+    public async recreateScene(nextStep: boolean = false) {
+        if (nextStep) {
+            TutorialScene.sceneIndex += 1;
+        }
         this.state.exit();
         this.state = new LoadingState(this);
         this.state.enter();
@@ -132,4 +135,15 @@ export class TutorialScene extends GameScene {
         container.appendChild(section);
     }
 
+    public onRetry() {
+        this.recreateScene();
+    }
+
+    public onQuit() {
+        window.location.reload();
+    }
+
+    public onContinue() {
+        this.recreateScene(true);
+    }
 }

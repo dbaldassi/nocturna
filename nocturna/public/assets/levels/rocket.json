@@ -1,7 +1,7 @@
 {
     "objects": [
         {
-            "type": "fixed_rocket_activation_platform",
+            "type": "fixed_platform",
             "position": {
                 "_isDirty": false,
                 "_x": 0,
@@ -22,7 +22,7 @@
             }
         },
         {
-            "type": "fixed_platform",
+            "type": "fixed_rocket_activation_platform",
             "position": {
                 "_isDirty": false,
                 "_x": 75,
@@ -43,11 +43,32 @@
             }
         },
         {
+            "type": "fixed_platform",
+            "position": {
+                "_isDirty": false,
+                "_x": 150,
+                "_y": 0,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 50,
+                "_y": 50,
+                "_z": 50
+            }
+        },
+        {
             "type": "rocket",
             "position": {
                 "_isDirty": false,
-                "_x": 10,
-                "_y": 100,
+                "_x": 100,
+                "_y": 200,
                 "_z": 0
             },
             "rotation": {
@@ -88,7 +109,7 @@
             "type": "victory_condition",
             "position": {
                 "_isDirty": false,
-                "_x": 75,
+                "_x": 150,
                 "_y": 20,
                 "_z": 0
             },
