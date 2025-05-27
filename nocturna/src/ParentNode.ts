@@ -1,4 +1,4 @@
-import { Scene, Vector3, TransformNode, Animation, Mesh } from "@babylonjs/core";
+import { Scene, Vector3, TransformNode, Animation, Mesh, CreateSoundAsync, StaticSound } from "@babylonjs/core";
 
 import { CharacterInput } from "./types";
 import { InputHandler } from "./InputHandler";
@@ -19,12 +19,19 @@ export class ParentNode {
         y: Math.PI / 2,
         z: Math.PI / 2,
     };
+    private sound: StaticSound;
 ß
     constructor(position: Vector3, scene: Scene) {
         this.scene = scene;
 
         this.node = new TransformNode("parent", this.scene);
         this.node.position = position;
+
+        this.createSound();
+    }
+
+    async createSound() {
+        this.sound = await CreateSoundAsync("rotate_sound", "/assets/sounds/rotation.ogg");
     }
 
     public addChild(child: Mesh) {
@@ -85,6 +92,7 @@ export class ParentNode {
 
     public rotate(axis: "x" | "y" | "z", inverted: boolean = false) {
         this.animateRotation(axis, inverted ? -this.rotationConstants[axis] : this.rotationConstants[axis]);
+        this.sound.play(); // Play sound on rotation
     }
 
     public setupKeyActions(inputHandler: InputHandler) {
