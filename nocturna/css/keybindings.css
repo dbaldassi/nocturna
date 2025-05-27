@@ -1,5 +1,4 @@
-.settings-button {
-    position: fixed;
+ .settings-button {
     top: 1rem;
     right: 1rem;
     background: rgba(255, 255, 255, 0.1);
@@ -14,7 +13,7 @@
     color: white;
     transition: all 0.3s ease;
     z-index: 1000;
-}
+} 
 
 .settings-button:hover {
     background: rgba(255, 255, 255, 0.2);

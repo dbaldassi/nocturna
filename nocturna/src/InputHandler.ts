@@ -45,7 +45,16 @@ export class InputHandler {
     // Store actions, which call a function when the key is pressed
     private actions: { [key: string]: () => void } = {};
 
-    constructor() {
+    // singleton
+    private static instance: InputHandler;
+    public static getInstance(): InputHandler {
+        if (!InputHandler.instance) {
+            InputHandler.instance = new InputHandler();
+        }
+        return InputHandler.instance;
+    }
+
+    private constructor() {
         window.addEventListener("keydown", (event) => {
             if (this.isPaused) return;
             if (!this.keybindManager.isEditingKeybinds()) {
@@ -172,5 +181,9 @@ export class InputHandler {
 
     public onResume(): void {
         this.isPaused = false;
+    }
+
+    public getKeyName(key: string): string {
+        return this.keyBindings[key]?.[0] || key;
     }
 }

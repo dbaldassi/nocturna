@@ -8,6 +8,7 @@ import { ParentedPlatform, ParentedPlatformFactory, FixedPlatform, FixedPlatform
 import { VictoryCondition, VictoryConditionFactory } from "./GameObjects/Victory";
 import { FixedRocket, FixedRocketFactory } from "./GameObjects/Rocket";
 import { SpikeTrapFactory, SpikeTrapObject } from "./GameObjects/SpikeTrap";
+import { Coin, CoinFactory } from "./GameObjects/Coin";
 
 export interface LevelLoaderObserver {
     onCube(cube : Cube): void;
@@ -63,6 +64,7 @@ export class LevelLoader {
         this.factories.set(SpikeTrapObject.Type, new SpikeTrapFactory());
         this.factories.set(ParentedRocketActivationPlatform.Type, new ParentedRocketActivationPlatformFactory());
         this.factories.set(FixedRocketActivationPlatform.Type, new FixedRocketActivationPlatformFactory());
+        this.factories.set(Coin.Type, new CoinFactory());
     }
 
     public setScene(scene: Scene): void {

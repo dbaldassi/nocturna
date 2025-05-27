@@ -4,14 +4,13 @@ import { ParentNode } from "../ParentNode";
 import { Coin } from "../GameObjects/Coin";
 
 export interface CharacterInput {
-    backward: boolean;
-    forward: boolean;
     left: boolean;
     right: boolean;
     up: boolean;
     down: boolean;
     jump: boolean;
-
+    forward: boolean;
+    backward: boolean;
 }
 
 export enum CollisionGroup {
@@ -26,6 +25,7 @@ export interface GameObject {
     accept(visitor: GameObjectVisitor): void;
     update(dt: number, input: CharacterInput): void;
     getId(): string;
+    onContact(): boolean;
     onPause(): void;
     onResume(): void;
     onContact(): boolean;
@@ -204,10 +204,4 @@ export class Utils {
 
         return new Vector3(data._x, data._y, data._z);
     }
-}
-
-export interface EndConditionObserver {
-    onRetry();
-    onQuit();
-    onContinue();
 }

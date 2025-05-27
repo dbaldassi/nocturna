@@ -13,6 +13,7 @@ import { Cube } from "../Cube";
 import { RemotePlayer } from "../GameObjects/RemoteGameObject";
 import { Lobby, LobbyObserver } from "../Lobby";
 import { ParentNode } from "../ParentNode";
+import { createMultiLoseScreenHUD, createMultiWinScreenHUD, IEndScreenHUD, IEndScreenHUDListener } from "../HUD/EndScreenHUD";
 
 type Participant = {
     id: string;
@@ -150,6 +151,8 @@ export class ActionSelectionState extends InGameState {
         up: false,
         down: false,
         jump: false,
+        forward: false,
+        backward: false,
     };
 
     constructor(gameScene: MultiScene) {
@@ -285,56 +288,53 @@ export class LoadingState extends AbstractGameSceneState implements LevelLoaderO
     }
 }
 
-export class WinningState extends AbstractGameSceneState {
+export class WinningState extends AbstractGameSceneState implements IEndScreenHUDListener {
+    private hud: IEndScreenHUD;
+    
     constructor(scene: MultiScene) {
         super(scene);
     }
 
-    render(): void {
-        // this.gameScene.getScene().render();
-    }
+    render(): void {}
     enter(): void {
-        const winScreen = document.getElementById("win-screen") as HTMLElement;
-        winScreen.classList.remove("hidden");
-
-        const restartButton = document.getElementById("continue-button") as HTMLElement;
-        restartButton.classList.add("hidden");
-
-        const menuButton = document.getElementById("win-menu-button") as HTMLElement;
-        
-        menuButton.addEventListener("click", () => {
-            window.location.reload();
-        });
+        this.hud = createMultiWinScreenHUD(this);
     }
     exit() {
-        
+        this.hud.dispose();
+        this.hud = null;
     }
+
+    public update(dt: number, input: CharacterInput): AbstractGameSceneState | null {
+        this.hud.update(dt, input);
+        return null;
+    }
+
+    public onRetry(): void {}
+    public onContinue(): void {}
+    public onQuit(): void { window.location.reload(); }
 }
 
-export class LosingState extends AbstractGameSceneState {
+export class LosingState extends AbstractGameSceneState implements IEndScreenHUDListener {
+    private hud: IEndScreenHUD;
 
     constructor(gameScene: MultiScene) {
         super(gameScene);
     }
-    public render(): void {
-        // this.gameScene.getScene().render();
-    }
+    public render(): void {}
     public enter(): void {
-        const loseScreen = document.getElementById("game-over-screen") as HTMLElement;
-        loseScreen.classList.remove("hidden");
-
-        const restartButton = document.getElementById("retry-button") as HTMLElement;
-        // hide restart button
-        restartButton.classList.add("hidden");
-        const menuButton = document.getElementById("game-over-menu-button") as HTMLElement;
-        menuButton.addEventListener("click", () => {
-            // refresh the page to go back to the main menu
-            window.location.reload();
-        });
+        this.hud = createMultiLoseScreenHUD(this);
     }
     public exit(): void {
-        
+        this.hud.dispose();
+        this.hud = null;
     }
+    public update(dt: number, input: CharacterInput): AbstractGameSceneState | null {
+        this.hud.update(dt, input);
+        return null;
+    }
+    public onRetry(): void {}
+    public onContinue(): void {}
+    public onQuit(): void { window.location.reload(); }
 }
 
 export class LobbyState extends AbstractGameSceneState implements LobbyObserver {
