@@ -1,18 +1,17 @@
-import { Engine, Vector3, FollowCamera, UniversalCamera, Scene, Camera, WebGPUEngine, PhysicsBody, Mesh, ExecuteCodeAction, ActionManager, FreeCamera } from "@babylonjs/core";
+import { Engine, Vector3, FollowCamera, UniversalCamera, Scene, Camera, PhysicsBody, ExecuteCodeAction, ActionManager } from "@babylonjs/core";
 
 import { BaseScene } from "./BaseScene";
 import { ParentNode } from "../ParentNode";
 import { InputHandler } from "../InputHandler";
-import { GameObject, GameObjectVisitor, GameObjectConfig, CharacterInput, EndConditionObserver, IRemoteGameObject, Enemy } from "../types";
+import { GameObject, GameObjectVisitor, GameObjectConfig, CharacterInput, IRemoteGameObject, Enemy } from "../types";
 import { VictoryCondition } from "../GameObjects/Victory";
-import { LooseCondition } from "../Loose";
 
 import { NetworkManager } from "../network/NetworkManager";
 import { RemoteGameObject, RemotePlayer } from "../GameObjects/RemoteGameObject";
 import { Coin, CoinFactory, SuperCoinFactory } from "../GameObjects/Coin";
 import { Platform } from "../GameObjects/Platform";
 import { AbstractGameSceneState, ActionSelectionState, InGameState, LobbyState } from "../states/MultiSceneStates";
-import { AdvancedDynamicTexture, Control, TextBlock } from "@babylonjs/gui";
+import { AdvancedDynamicTexture, TextBlock } from "@babylonjs/gui";
 import { Action } from "../action";
 import { HpBar } from "../HpBar";
 import { Player } from "../GameObjects/Player";

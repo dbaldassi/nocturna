@@ -1,14 +1,9 @@
-import { Engine, Vector3, FreeCamera, MeshBuilder, StandardMaterial, Color3, DirectionalLight, FollowCamera, Scene } from "@babylonjs/core";
+import { Engine, Scene } from "@babylonjs/core";
 import { BaseScene } from "./BaseScene";
 import { InputHandler } from "../InputHandler";
-import { LevelLoader, LevelLoaderObserver } from "../LevelLoader";
-import { ParentNode } from "../ParentNode"; // Ensure correct ParentNode type is imported
-import { GameObject, GameObjectConfig, GameObjectFactory, GameObjectVisitor } from "../types";
-import { Player } from "../GameObjects/Player";
-import { Cube } from "../Cube";
+import { GameObject } from "../types";
 import { VictoryCondition } from "../GameObjects/Victory";
 import { GameScene, LoadingState, InGameState } from "./GameScene";
-import { LooseCondition } from "../Loose";
 import { HpBar } from "../HpBar";
 import { Translation } from "../utils/translation";
 
@@ -28,8 +23,11 @@ export class TutorialScene extends GameScene {
         await scene.addPhysic();
         scene.state = new LoadingState(scene);
         scene.loadLevel(this.sceneOrder[this.sceneIndex]);
-        VictoryCondition.mode = "tutorial";
         return scene;
+    }
+
+    public hasNextLevel(): boolean {
+        return true;
     }
 
     public onLevelLoaded(): void {
@@ -37,7 +35,6 @@ export class TutorialScene extends GameScene {
         this.setupCollisions();
         // start a timer from 0 to infinity
         // this.startTimer();
-        this.loseCondition = new LooseCondition(this.player, this.cube.getSize()); // Initialize the lose condition
 
         this.hpBar = new HpBar(this.player.getMaxHp());
 
