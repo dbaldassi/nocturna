@@ -59,9 +59,9 @@ class CoinSpawner {
 export class MultiScene extends BaseScene implements GameObjectVisitor, CubeCollisionObserver {
     public static readonly MaxPlayer: number = 4;
 
-    private readonly coinInterval: number = 10000; // 1 second
+    private readonly coinInterval: number = 5000; // 1 second
     private readonly inventorySize: number = 3;
-    private readonly powerupScore: number = 20;
+    private readonly powerupScore: number = 100;
 
     private gameObjects: GameObject[] = [];
     private remoteObjects: IRemoteGameObject[] = [];

@@ -16,7 +16,6 @@ export class Cube {
     private lavaObserver: any;
 
     public static readonly Type: string = "Cube";
-    public static readonly DefaultSize: number = 1000;
 
     constructor(scene: Scene, size: number) {
         this.scene = scene;
@@ -31,7 +30,7 @@ export class Cube {
         return this.size;
     }
 
-    public static create(scene: Scene, position: Vector3 = Vector3.Zero(), size: number = Cube.DefaultSize): Cube {
+    public static create(scene: Scene, position: Vector3 = Vector3.Zero(), size: number): Cube {
         const cube = new Cube(scene, size);
 
         const mesh = MeshBuilder.CreateBox("cubeMesh", { size: size }, scene);

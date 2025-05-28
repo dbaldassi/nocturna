@@ -55,7 +55,7 @@ export class Lobby {
         playerNameInput.background = "gray";
         playerNameInput.placeholderText = "Enter Player Name";
         playerNameInput.placeholderColor = "white";
-        playerNameInput.text = this.getClientOS();
+        // playerNameInput.text = this.getClientOS();
         panel.addControl(playerNameInput);
     
         // Ajouter un bouton pour créer une nouvelle room
@@ -78,7 +78,7 @@ export class Lobby {
         roomIdInput.background = "gray";
         roomIdInput.placeholderText = "Enter Room ID";
         roomIdInput.placeholderColor = "white";
-        roomIdInput.text = "test";
+        // roomIdInput.text = "test";
         panel.addControl(roomIdInput);
     
         // Ajouter un bouton pour rejoindre une room existante
