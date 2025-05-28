@@ -1,4 +1,4 @@
-import { Engine, Vector3, FollowCamera, UniversalCamera, Scene, Camera, PhysicsBody, ExecuteCodeAction, ActionManager, AssetsManager } from "@babylonjs/core";
+import { Engine, Vector3, FollowCamera, UniversalCamera, Scene, Camera, PhysicsBody, ExecuteCodeAction, ActionManager, AssetsManager, StaticSound, CreateSoundAsync } from "@babylonjs/core";
 
 import { BaseScene } from "./BaseScene";
 import { ParentNode } from "../ParentNode";
@@ -78,12 +78,22 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
     private scoreText: any;
     private inventory: Action.ActionBase[] = [];
     private hud: IHUDMulti;
+    private sounds: Map<string, StaticSound> = new Map();
 
     public activeCameraIndex: number = 0;
     private remotePlayers: RemotePlayer[] = [];
 
     constructor(engine: Engine, inputHandler: InputHandler) {
         super(engine, inputHandler);
+    }
+
+    playSound(name: string): void {
+        const sound = this.sounds.get(name);
+        if (sound) {
+            sound.play();
+        } else {
+            console.warn(`Sound "${name}" not found.`);
+        }
     }
 
     // =========================
@@ -134,6 +144,10 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         this.hud = createHUDMulti(this.scene, this, player.getMaxHp(), this.powerupScore);
         this.remotePlayers.forEach(player => {
             this.hud.addRemotePlayer(player.getId());
+        });
+
+        CreateSoundAsync("powerup", "/assets/sounds/powerup.ogg").then(sound => {
+            this.sounds.set("powerup", sound);
         });
     }
 
@@ -444,6 +458,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         this.score += coin.getScore();
         this.removeLocalObject(coin);
         if(this.score >= this.powerupScore) {
+            this.playSound("powerup");
             this.addAction();
             this.score = this.score % this.powerupScore;
         }

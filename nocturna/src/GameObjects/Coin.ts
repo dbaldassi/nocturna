@@ -1,4 +1,4 @@
-import { Mesh, MeshBuilder, StandardMaterial, Color3, Scene, Vector3, Animation, NodeGeometryConnectionPointDirection, PhysicsAggregate, PhysicsShapeType, PBRMaterial } from "@babylonjs/core";
+import { Mesh, MeshBuilder, StandardMaterial, Color3, Scene, Vector3, Animation, NodeGeometryConnectionPointDirection, PhysicsAggregate, PhysicsShapeType, PBRMaterial, StaticSound } from "@babylonjs/core";
 import { CharacterInput, EditorObject, GameObject, GameObjectConfig, GameObjectFactory, GameObjectVisitor, Utils } from "../types";
 import { ObjectEditorImpl } from "./EditorObject";
 import { App } from "../app";
@@ -7,6 +7,7 @@ export class Coin implements GameObject {
     public mesh: Mesh[] = [];
     private score: number;
     private scene: Scene;
+    private sound: Map<string, StaticSound> = new Map();
 
     public static readonly Type: string = "coin";
     private static nextId: number = 0;
@@ -21,6 +22,18 @@ export class Coin implements GameObject {
 
         if(mesh) {
             this.mesh.push(mesh);
+        }
+    }
+
+    public addSound(name: string, sound: StaticSound): void {
+        this.sound.set(name, sound);
+    }
+    public playSound(name: string): void {
+        const sound = this.sound.get(name);
+        if (sound) {
+            sound.play();
+        } else {
+            console.warn(`Sound "${name}" not found for coin.`);
         }
     }
 
@@ -66,6 +79,7 @@ export class Coin implements GameObject {
     }
 
     public accept(visitor: GameObjectVisitor): void {
+        this.playSound("collect"); // Joue le son de collecte
         visitor.visitCoin(this); // Appelle la méthode `onCoin` du visiteur
     }
 
@@ -162,6 +176,11 @@ export class CoinFactory implements GameObjectFactory {
                 coin.startAnimation();
             }
         });
+
+        Utils.loadSound(config.assetsManager, "collect", "/assets/sounds/coins.ogg", (sound) => {
+            coin.addSound("collect", sound);
+        });
+
         return coin;
     }
 
