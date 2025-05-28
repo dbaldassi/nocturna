@@ -14,6 +14,7 @@ import { RemotePlayer } from "../GameObjects/RemoteGameObject";
 import { Lobby, LobbyObserver } from "../Lobby";
 import { ParentNode } from "../ParentNode";
 import { createMultiLoseScreenHUD, createMultiWinScreenHUD, IEndScreenHUD, IEndScreenHUDListener } from "../HUD/EndScreenHUD";
+import { NocturnaAudio } from "../NocturnaAudio";
 
 type Participant = {
     id: string;
@@ -217,6 +218,12 @@ export class LoadingState extends AbstractGameSceneState implements LevelLoaderO
             this.levelLoader = new LevelLoader(this.gameScene.getScene(), this, 
             { create: (factory: GameObjectFactory, config: GameObjectConfig) => factory.create(config) } );
             this.levelLoader.loadLevel("multi.json");
+        });
+    }
+
+    public exit(): void {
+        NocturnaAudio.getInstance().then(audio => {
+            audio.setBackgroundMusic("assets/music/background.mp3");
         });
     }
 
