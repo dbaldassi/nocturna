@@ -486,7 +486,6 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
             if(object.getMesh().name === Platform.Type && this.isInSubcube(object.getMesh().position) && this.coinTimer >= this.coinInterval && Math.random() < 1/this.gameObjects.length) {
                 const position = object.getMesh().position.clone();
                 this.coinSpawner.spawnCoin(position).then((coin: Coin) => {
-                    console.log("adding coin: ", coin);
                     this.addLocalObject(coin);
                 });
                 this.coinTimer = 0;

@@ -76,8 +76,6 @@ export class SpikeTrapFactory implements GameObjectFactory {
         mesh.position = config.position;
         mesh.rotation = config.rotation;
 
-        console.log("Creating SpikeTrap mesh with position:", config.position, "and size:", config.size);
-
         const material = new StandardMaterial("spikeTrapMaterial", config.scene);
         material.diffuseColor = Color3.Gray();
         mesh.material = material;
