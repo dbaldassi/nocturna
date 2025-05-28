@@ -290,8 +290,7 @@ class MultiHUD implements IHUDMulti {
         value: number,
         max: number,
         fullAssets: { left: string, center: string, right: string },
-        emptyAssets: { left: string, center: string, right: string },
-        barHeight: number = 28
+        emptyAssets: { left: string, center: string, right: string }
     ): Rectangle {
         const percent = Math.max(0, Math.min(1, value / max));
 
