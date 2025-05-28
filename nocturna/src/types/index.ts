@@ -29,6 +29,11 @@ export interface GameObject {
     onPause(): void;
     onResume(): void;
     onContact(): boolean;
+    addObserver(observer: GameObjectObserver): void;
+}
+
+export interface GameObjectObserver {
+    onSpawnObject(gameObject: GameObject): void;
 }
 
 export interface Enemy extends GameObject {

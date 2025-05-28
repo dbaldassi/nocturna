@@ -1,5 +1,5 @@
 import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, Mesh, ParticleSystem, Texture, Color4, StaticSound } from "@babylonjs/core";
-import { GameObjectConfig, GameObjectFactory, EditorObject, GameObjectVisitor, Enemy, CollisionGroup, Utils } from "../types";
+import { GameObjectConfig, GameObjectFactory, EditorObject, GameObjectVisitor, Enemy, CollisionGroup, Utils, GameObjectObserver } from "../types";
 import { ObjectEditorImpl } from "./EditorObject";
 
 export class RocketObject implements Enemy {
@@ -134,6 +134,9 @@ export class RocketObject implements Enemy {
     public activate(): void {
         new PhysicsAggregate(this.mesh, PhysicsShapeType.CYLINDER, { mass: 5, friction: 0.5, restitution: 0.2 }, this.scene);
         this.enableCollision();
+    }
+
+    public addObserver(_: GameObjectObserver): void {
     }
 }
 

@@ -1,5 +1,5 @@
 import { Animation, Mesh, PhysicsAggregate, PhysicsShapeType, Scene, StaticSound, Vector3 } from '@babylonjs/core';
-import { GameObject, CharacterInput, Utils } from '../types';
+import { GameObject, CharacterInput, Utils, GameObjectObserver } from '../types';
 import { GameObjectConfig, GameObjectFactory, EditorObject, GameObjectVisitor } from '../types';
 import { ParentNodeObserver } from '../ParentNode';
 import "@babylonjs/loaders";
@@ -110,6 +110,9 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
     public onContact(): boolean {
         // Not used in this class
         return false;
+    }
+    public addObserver(_: GameObjectObserver): void {
+        // VictoryCondition does not support observers
     }
 }
 

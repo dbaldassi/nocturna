@@ -10,7 +10,7 @@ import { NocturnaAudio } from "../NocturnaAudio";
 
 export class TutorialScene extends GameScene {
     protected static override sceneName: string = "tutorial.json";
-    protected static readonly sceneOrder: string[] = ["jump.json", "platforms.json", "spike_trap.json", "rocket.json"];
+    protected static readonly sceneOrder: string[] = ["rocket.json", "jump.json", "platforms.json", "spike_trap.json", "rocket.json"];
     private static readonly explainationsByScene: number[] = [3, 1, 2, 2];
     private static nextStep: boolean = false;
     protected static sceneIndex: number = 0;

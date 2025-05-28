@@ -1,9 +1,9 @@
-import { Scene, Vector3, PhysicsAggregate, PhysicsShapeType, Mesh } from "@babylonjs/core";
+import { Scene, Vector3, PhysicsAggregate, PhysicsShapeType, Mesh, AssetsManager } from "@babylonjs/core";
 import { ParentNodeObserver } from "../ParentNode";
-import { CharacterInput, EditorObject, GameObject, GameObjectConfig, GameObjectFactory, Utils } from "../types";
+import { CharacterInput, EditorObject, GameObject, GameObjectConfig, GameObjectFactory, GameObjectObserver, Utils } from "../types";
 import { ObjectEditorImpl } from "./EditorObject";
 import { App } from "../app";
-import { RocketObject } from "./Rocket";
+import { FixedRocketFactory, RocketObject } from "./Rocket";
 
 export class Platform implements GameObject {
     public static readonly Type: string = "platform";
@@ -47,6 +47,9 @@ export class Platform implements GameObject {
     }
     public onContact(): boolean {
         return false;
+    }
+
+    public addObserver(_: GameObjectObserver): void {
     }
 }
 
@@ -98,10 +101,18 @@ export class FixedPlatform extends Platform  {
 
 export class ParentedPlatformFactory implements GameObjectFactory {
 
+    protected createPlatformObject(config: GameObjectConfig): ParentedPlatform {
+        return new ParentedPlatform(null, config.scene);
+    }
+
+    protected setupPhysics(mesh: Mesh, config: GameObjectConfig): void {
+        new PhysicsAggregate(mesh, PhysicsShapeType.BOX, { mass: 0, friction: 10, restitution: 0 }, config.scene);
+    }
+
     private createImpl(config: GameObjectConfig, physics: boolean): ParentedPlatform {
             // const mesh = this.createMesh(config);
             // const player = new Player(mesh, config.scene);
-            const platform = new ParentedPlatform(null, config.scene);
+            const platform = this.createPlatformObject(config);
             if(!config.size) {
                 config.size = new Vector3(50, 50, 50);
             }
@@ -117,7 +128,7 @@ export class ParentedPlatformFactory implements GameObjectFactory {
                 Utils.configureMesh(meshes, config);
                 
                 if(physics) {
-                    new PhysicsAggregate(meshes[0], PhysicsShapeType.BOX, { mass: 0, friction: 10, restitution: 0 }, config.scene);
+                    this.setupPhysics(meshes[0], config);
                     config.parent.addObserver(platform);
                 }
 
@@ -146,8 +157,16 @@ export class ParentedPlatformFactory implements GameObjectFactory {
 
 export class FixedPlatformFactory implements GameObjectFactory {
 
+    protected createPlatformObject(config: GameObjectConfig): Platform {
+        return new FixedPlatform(null, config.scene);
+    }
+
+    protected setupPhysics(mesh: Mesh, config: GameObjectConfig): void {
+        new PhysicsAggregate(mesh, PhysicsShapeType.BOX, { mass: 0, friction: 10, restitution: 0 }, config.scene);
+    }
+
     private createImpl(config: GameObjectConfig, physics: boolean): FixedPlatform {
-        const platform = new FixedPlatform(null, config.scene);
+        const platform = this.createPlatformObject(config);
         if(!config.size) {
             config.size = new Vector3(50, 50, 50);
         }
@@ -158,9 +177,8 @@ export class FixedPlatformFactory implements GameObjectFactory {
             const meshes = task.loadedMeshes;
 
             Utils.configureMesh(meshes, config);
-           
             if (physics) {
-                new PhysicsAggregate(meshes[0], PhysicsShapeType.BOX, { mass: 0, friction: 10, restitution: 0 }, config.scene);
+                this.setupPhysics(meshes[0], config);
             }
 
             // platform.mesh[0] = mesh;
@@ -184,14 +202,55 @@ export class FixedPlatformFactory implements GameObjectFactory {
     }
 }
 
-export interface RocketActivationPlatform extends GameObject {
-    addRocket(rocket: RocketObject): void;
-    activateRockets(): void;
+class RocketFactorySpawner {
+    private rocketFactory: FixedRocketFactory;
+    private assetsManager: AssetsManager; // Assuming assetsManager is part of the config
+    private platform: ParentedRocketActivationPlatform | FixedRocketActivationPlatform;
+
+    private readonly respawnTimer: number = 1500; // Static timer for the platform
+    private timer: number = 0;
+
+    constructor(platform: ParentedRocketActivationPlatform | FixedRocketActivationPlatform) {
+        this.platform = platform;
+        this.rocketFactory = new FixedRocketFactory();
+        this.assetsManager = new AssetsManager(platform.getScene());
+        this.assetsManager.useDefaultLoadingScreen = false; // Disable default loading screen
+    }
+
+    public createRocket() {
+        console.log("Adding rocket to platform");
+
+        const config = {
+            position: this.platform.getMesh().position.clone().addInPlace(Vector3.Up().scale(200)), // Position the rocket above the platform
+            rotation: Vector3.Zero(),
+            scene: this.platform.getScene(),
+            assetsManager: this.assetsManager,
+        }
+        const rocket = this.rocketFactory.create(config);
+
+        this.assetsManager.onFinish = () => {
+            this.platform.notifyObservers(rocket);
+        }
+
+        this.assetsManager.load();
+    }
+
+    public create() {
+        if (this.timer >= this.respawnTimer) {
+            this.createRocket();
+            this.timer = 0; // Reset timer after adding a rocket
+        }
+    }
+
+    public update(dt: number): void {
+        this.timer += dt;
+    }
 }
 
-export class ParentedRocketActivationPlatform extends ParentedPlatform implements RocketActivationPlatform {
+export class ParentedRocketActivationPlatform extends ParentedPlatform {
     public static readonly Type: string = "parented_rocket_activation_platform";
-    public rockets: RocketObject[] = [];
+    private spawner: RocketFactorySpawner = new RocketFactorySpawner(this);
+    private observers: GameObjectObserver[] = [];
 
     constructor(mesh: Mesh, scene: Scene) {
         super(mesh, scene);
@@ -201,23 +260,46 @@ export class ParentedRocketActivationPlatform extends ParentedPlatform implement
         return ParentedRocketActivationPlatform.Type;
     }
 
-    public addRocket(rocket: RocketObject) {
-        this.rockets.push(rocket);
+    public onContact(): boolean {
+        this.spawner.create(); // Check if we need to spawn a rocket
+        return false; // No specific contact behavior for this platform
     }
 
-    public activateRockets() {
-        this.rockets.forEach((rocket) => {
-            rocket.activate();
+    public getScene(): Scene {
+        return this.scene;
+    }
+
+    public notifyObservers(rocket: RocketObject): void {
+        this.observers.forEach(observer => {
+            observer.onSpawnObject(rocket);
         });
+    }
+
+    public addObserver(observer: GameObjectObserver): void {
+        // No observers for fixed platforms
+        this.observers.push(observer);
+    }
+
+    public update(dt: number, __: CharacterInput): void {
+        this.spawner.update(dt);
     }
 }
 
 export class ParentedRocketActivationPlatformFactory extends ParentedPlatformFactory {
+    protected createPlatformObject(config: GameObjectConfig): ParentedPlatform {
+        return new ParentedRocketActivationPlatform(null, config.scene);
+    }
+
+    protected setupPhysics(mesh: Mesh, config: GameObjectConfig): void {
+        const agggregate = new PhysicsAggregate(mesh, PhysicsShapeType.BOX, { mass: 0, friction: 10, restitution: 0 }, config.scene);
+        agggregate.body.setCollisionCallbackEnabled(true); // Enable collision callback
+    }
 }
 
-export class FixedRocketActivationPlatform extends FixedPlatform implements RocketActivationPlatform {
+export class FixedRocketActivationPlatform extends FixedPlatform {
     public static readonly Type: string = "fixed_rocket_activation_platform";
-    public rockets: RocketObject[] = [];
+    private spawner: RocketFactorySpawner = new RocketFactorySpawner(this);
+    private observers: GameObjectObserver[] = [];
 
     constructor(mesh: Mesh, scene: Scene) {
         super(mesh, scene);
@@ -227,16 +309,38 @@ export class FixedRocketActivationPlatform extends FixedPlatform implements Rock
         return ParentedRocketActivationPlatform.Type;
     }
 
-    public addRocket(rocket: RocketObject) {
-        this.rockets.push(rocket);
+    public onContact(): boolean {
+        this.spawner.create(); // Check if we need to spawn a rocket
+        return false; // No specific contact behavior for this platform
     }
 
-    public activateRockets() {
-        this.rockets.forEach((rocket) => {
-            rocket.activate();
+    public getScene(): Scene {
+        return this.scene;
+    }
+
+    public notifyObservers(rocket: RocketObject): void {
+        this.observers.forEach(observer => {
+            observer.onSpawnObject(rocket);
         });
+    }
+
+    public addObserver(observer: GameObjectObserver): void {
+        // No observers for fixed platforms
+        this.observers.push(observer);
+    }
+
+    public update(dt: number, __: CharacterInput): void {
+        this.spawner.update(dt);
     }
 }
 
 export class FixedRocketActivationPlatformFactory extends FixedPlatformFactory {
+    protected createPlatformObject(config: GameObjectConfig): FixedPlatform {
+        return new FixedRocketActivationPlatform(null, config.scene);
+    }
+
+    protected setupPhysics(mesh: Mesh, config: GameObjectConfig): void {
+        const agggregate = new PhysicsAggregate(mesh, PhysicsShapeType.BOX, { mass: 0, friction: 10, restitution: 0 }, config.scene);
+        agggregate.body.setCollisionCallbackEnabled(true); // Enable collision callback
+    }
 }

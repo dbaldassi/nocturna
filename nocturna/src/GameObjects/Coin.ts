@@ -80,6 +80,10 @@ export class Coin implements GameObject {
     }
     public onResume(): void {
     }
+
+    public addObserver(_: any): void {
+        // Pas d'observateurs pour les pièces
+    }
 }
 
 export class SuperCoin extends Coin {

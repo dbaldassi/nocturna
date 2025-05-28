@@ -1,5 +1,5 @@
 import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, AbstractMesh, SceneLoader, Mesh, Ray, AssetsManager, ImportMeshAsync, BoundingBox, NodeMaterial, Sound, StaticSound } from "@babylonjs/core";
-import { CharacterInput, EditorObject, Utils, GameObject, GameObjectConfig, GameObjectFactory, AbstractState, Enemy } from "../types";
+import { CharacterInput, EditorObject, Utils, GameObject, GameObjectConfig, GameObjectFactory, AbstractState, Enemy, GameObjectObserver } from "../types";
 import { IdleState, KnockbackState, PlayerDamageableState, PlayerDamageState } from "../states/PlayerStates";
 import { ObjectEditorImpl } from "./EditorObject";
 import { App } from "../app";
@@ -38,6 +38,9 @@ export class Player implements GameObject {
         this.damageState = new PlayerDamageableState(this);
 
         this.id = `${Player.Type}_${Player.nextId++}`;
+    }
+    addObserver(_: GameObjectObserver): void {
+        
     }
 
     public getId(): string {

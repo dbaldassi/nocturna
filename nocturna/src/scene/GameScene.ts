@@ -5,7 +5,7 @@ import { Cube, CubeCollisionObserver } from "../Cube";
 import { ParentNode } from "../ParentNode";
 import { InputHandler } from "../InputHandler";
 import { Player } from "../GameObjects/Player";
-import { GameObject, GameObjectFactory, GameObjectVisitor, GameObjectConfig, CharacterInput, Enemy } from "../types";
+import { GameObject, GameObjectFactory, GameObjectVisitor, GameObjectConfig, CharacterInput, Enemy, GameObjectObserver } from "../types";
 import { LevelLoaderObserver, LevelLoader } from "../LevelLoader";
 import { VictoryCondition } from "../GameObjects/Victory";
 import { Coin } from "../GameObjects/Coin";
@@ -13,7 +13,7 @@ import { HpBar } from "../HpBar";
 import { NocturnaAudio } from "../NocturnaAudio";
 import { createLoseScreenHUD, createWinScreenHUD, IEndScreenHUD, IEndScreenHUDListener } from "../HUD/EndScreenHUD";
 
-export class GameScene extends BaseScene implements LevelLoaderObserver, GameObjectVisitor, IEndScreenHUDListener, CubeCollisionObserver {
+export class GameScene extends BaseScene implements LevelLoaderObserver, GameObjectVisitor, IEndScreenHUDListener, CubeCollisionObserver, GameObjectObserver {
     protected cube: Cube;
     protected parent: ParentNode;
     protected player: Player;
@@ -96,19 +96,36 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
 
     protected setupCollisions() {
         this.gameObjects.forEach((object) => {
-            const mesh = object.getMesh();
-            if (object === this.player) return;
-
-            if (mesh.physicsBody) {
-                mesh.physicsBody.getCollisionObservable().add((collider) => {
-                    // console.log(`Collision detected with ??`);
-                    if (collider.collidedAgainst === this.player.getMesh().physicsBody) {
-                        console.log(`Player collision detected with ${mesh.name}`);
-                        object.accept(this);
-                    }
-                });
-            }
+            this.addCollisions(object);
         });
+    }
+
+    private addCollisions(object: GameObject) {
+        const mesh = object.getMesh();
+        if (object === this.player) return;
+
+        console.log(`Adding collision for object: ${object.getType()} with mesh: ${mesh.name}`);
+        if (mesh.physicsBody) {
+            console.log(`Setting up collision for ${object.getType()} with mesh: ${mesh.name}`);
+            mesh.physicsBody.getCollisionObservable().add((collider) => {
+                // console.log(`Collision detected with ??`);
+                if (collider.collidedAgainst === this.player.getMesh().physicsBody) {
+                    console.log(`Player collision detected with ${mesh.name}`);
+                    object.accept(this);
+                }
+
+                const should_delete = object.onContact();
+                if (should_delete) {
+                    this.gameObjects = this.gameObjects.filter(o => o !== object);
+                    object.getMeshes().forEach(m => {
+                        if (m.physicsBody) {
+                            m.physicsBody.dispose();
+                        }
+                        m.dispose();
+                    });
+                }
+            });
+        }
     }
 
     protected setupCamera() {
@@ -133,6 +150,13 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
 
     public onObjectCreated(object: GameObject): void {
         this.gameObjects.push(object);
+        object.addObserver(this);
+    }
+
+    public onSpawnObject(gameObject: GameObject): void {
+        this.gameObjects.push(gameObject);
+        gameObject.addObserver(this);
+        this.addCollisions(gameObject);
     }
 
     public visitVictory(_: VictoryCondition): void {

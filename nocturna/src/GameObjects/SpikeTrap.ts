@@ -1,5 +1,5 @@
 import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, PhysicsAggregate, PhysicsShapeType, Mesh, Animation, Texture } from "@babylonjs/core";
-import { GameObject, GameObjectConfig, GameObjectFactory, EditorObject, Utils, CharacterInput, GameObjectVisitor, Enemy } from "../types";
+import { GameObject, GameObjectConfig, GameObjectFactory, EditorObject, Utils, CharacterInput, GameObjectVisitor, Enemy, GameObjectObserver } from "../types";
 import { ObjectEditorImpl } from "./EditorObject";
 
 export class SpikeTrapObject implements Enemy {
@@ -61,6 +61,9 @@ export class SpikeTrapObject implements Enemy {
     public onResume(): void {
     }
 
+    public addObserver(_: GameObjectObserver): void {
+        // SpikeTrap does not support observers
+    }
 }
 
 export class SpikeTrapFactory implements GameObjectFactory {

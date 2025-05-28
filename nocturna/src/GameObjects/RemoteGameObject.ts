@@ -1,6 +1,6 @@
 
-import { GameObject, IRemoteGameObject, CharacterInput, GameObjectVisitor } from "../types";
-import { Vector3, Mesh } from "@babylonjs/core";
+import { GameObject, IRemoteGameObject, CharacterInput, GameObjectVisitor, GameObjectObserver } from "../types";
+import { Vector3, Mesh, Observable } from "@babylonjs/core";
 
 class Interpolator {
     private previousUpdate: { position: Vector3; timestamp: number } | null = null;
@@ -60,6 +60,10 @@ export class RemoteGameObject implements IRemoteGameObject {
         }
     }
 
+    public addObserver(observer: GameObjectObserver): void {
+        this.object.addObserver(observer);
+    }
+
     public getId(): string {
         return this.id;
     }
@@ -102,6 +106,7 @@ export class RemoteGameObject implements IRemoteGameObject {
     public onContact(): boolean {
         return this.object.onContact();
     }
+   
 }
 
 export class RemotePlayer extends RemoteGameObject {
