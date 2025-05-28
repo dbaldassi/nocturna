@@ -24,9 +24,7 @@ export function createHUDEditor(scene: Scene, listener: IHUDEditorListener): IHU
 class EditorHUD implements IHUDEditor {
     private scene: Scene;
     private gui: AdvancedDynamicTexture;
-    private modeTitle: TextBlock;
     private modeBars: Map<string, Rectangle> = new Map();
-    private currentMode: string = "";
     private listener: IHUDEditorListener | null = null;
 
     constructor(scene: Scene, listener: IHUDEditorListener) {
@@ -260,8 +258,6 @@ class EditorHUD implements IHUDEditor {
     }
 
     public setMode(mode: string): void {
-        this.currentMode = mode;
-        // this.modeTitle.text = mode;
         // Affiche uniquement la barre du mode courant
         this.modeBars.forEach((bar, key) => {
             bar.isVisible = (key === mode);

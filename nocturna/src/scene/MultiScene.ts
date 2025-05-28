@@ -13,9 +13,9 @@ import { Platform } from "../GameObjects/Platform";
 import { AbstractGameSceneState, ActionSelectionState, InGameState, LobbyState } from "../states/MultiSceneStates";
 import { AdvancedDynamicTexture, TextBlock } from "@babylonjs/gui";
 import { Action } from "../action";
-import { HpBar } from "../HpBar";
 import { Player } from "../GameObjects/Player";
 import { CubeCollisionObserver } from "../Cube";
+import { createHUDMulti, IHUDMulti } from "../HUD/MultiHUD";
 
 class CoinSpawner {
     private scene: Scene;
@@ -65,11 +65,9 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
     private parent: ParentNode = null;
     private scoreText: any;
     private inventory: Action.ActionBase[] = [];
-    private hpBar: HpBar;
-    private gui: AdvancedDynamicTexture;
+    private hud: IHUDMulti;
 
     public activeCameraIndex: number = 0;
-    private inventoryTextBlocks: any[];
     private remotePlayers: RemotePlayer[] = [];
 
     constructor(engine: Engine, inputHandler: InputHandler) {
@@ -99,6 +97,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
                 if(this.inventory[i]) {
                     this.inventory[i].execute();
                     this.inventory[i] = null;
+                    this.hud.removeAction(i);
                 }
             });
         }
@@ -119,44 +118,16 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
     }
 
     public setupUI() {
-        const gui = AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this.scene);
-        this.scoreText = new TextBlock();
-        this.scoreText.text = `Score : ${this.score}`;
-        this.scoreText.color = "white";
-        this.scoreText.fontSize = 32;
-        this.scoreText.width = "300px";
-        this.scoreText.height = "60px";
-        this.scoreText.horizontalAlignment = TextBlock.HORIZONTAL_ALIGNMENT_LEFT;
-        this.scoreText.verticalAlignment = TextBlock.VERTICAL_ALIGNMENT_BOTTOM;
-        this.scoreText.left = "20px";
-        this.scoreText.top = "-20px";
-        gui.addControl(this.scoreText);
-
-        // Inventaire
-        this.inventoryTextBlocks = [];
-        const slotWidth = 120;
-        for (let i = 0; i < this.inventorySize; i++) {
-            const itemText = new TextBlock();
-            itemText.text = this.inventory[i]?.getName?.() ?? "";
-            itemText.color = "white";
-            itemText.fontSize = 28;
-            itemText.width = `${slotWidth}px`;
-            itemText.height = "60px";
-            itemText.horizontalAlignment = TextBlock.HORIZONTAL_ALIGNMENT_LEFT;
-            itemText.verticalAlignment = TextBlock.VERTICAL_ALIGNMENT_BOTTOM;
-            itemText.left = `${340 + i * (slotWidth + 10)}px`;
-            itemText.top = "-20px";
-            gui.addControl(itemText);
-            this.inventoryTextBlocks.push(itemText);
-        }
-        this.gui = gui;
         const player = this.localObjects[0] as Player;
-        this.hpBar = new HpBar(player.getMaxHp());
+        this.hud = createHUDMulti(this.scene, this, player.getMaxHp(), this.powerupScore);
+        this.remotePlayers.forEach(player => {
+            this.hud.addRemotePlayer(player.getId());
+        });
     }
 
     public clearUI() {
-        this.gui.dispose();
-        this.gui = null;
+        this.hud.dispose();
+        this.hud = null;
     }
 
     // =========================
@@ -268,21 +239,12 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
     }
 
     public showActions() {
-        this.inventoryTextBlocks.forEach((textBlock, index) => {
-            const action = this.inventory[index];
-            if (action) {
-                textBlock.text = action.getName();
-                textBlock.alpha = 1;
-            } else {
-                textBlock.text = "";
-                textBlock.alpha = 0;
-            }
-        });
+        
     }
 
     public updateUI() {
-        this.showScore();
-        this.showActions();
+        this.hud.updateScore(this.score);
+        this.hud.updateHp((this.localObjects[0] as Player).getHp());
     }
 
     // =========================
@@ -377,6 +339,8 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
             remotePlayer.hp = report.hp;
             remotePlayer.inventory = [...report.inventory];
 
+            this.hud.updateRemotePlayer(remotePlayer.getId(), remotePlayer.hp, remotePlayer.score);
+
             // if the remote player is dead, we remove the dead camera
             if(!remotePlayer.isAlive()) {
                 const cameraIndex = this.cameras.findIndex(camera => camera.name === `dead_camera_${id}`);
@@ -410,6 +374,8 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
 
         const todelete = this.remoteObjects.filter(o => o.getOwnerId() === id);
         todelete.forEach(o => this.disposeObject(o, this.remoteObjects));
+
+        this.hud.removeRemotePlayer(id);
     }
 
     public disposeObject(object: GameObject, container: Array<GameObject>) {
@@ -477,12 +443,14 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
     }
 
     public addAction() {
-        const action = Action.ActionBase.create(Math.floor(Math.random() * Action.Type.LENGTH), this);
+        const type = Math.floor(Math.random() * Action.Type.LENGTH);
+        const action = Action.ActionBase.create(type, this);
         // const action = Action.ActionBase.create(Action.Type.ROCKET, this);
         if(action) {
             for(let i = 0; i < this.inventory.length; i++) {
                 if(this.inventory[i] === null) {
                     this.inventory[i] = action;
+                    this.hud.addAction(i, type);
                     break;
                 }
             }
@@ -491,7 +459,6 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
 
     public updatePlayer() : boolean {
         const player = this.localObjects[0] as Player;
-        this.hpBar.update(player.getHp());
         const networkManager = NetworkManager.getInstance();
         networkManager.sendUpdate("playerReport", {
             id: this.playerId,
