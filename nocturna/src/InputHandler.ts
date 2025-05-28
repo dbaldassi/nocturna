@@ -2,7 +2,7 @@ import { CharacterInput } from "./types";
 import { KeybindsManager } from "./Keybinds";
 import { QWERTY } from "./utils/en";
 import { AZERTY } from "./utils/fr";
-import { GetForwardRay } from "@babylonjs/core";
+import { CookieManager } from "./utils/CookieManager";
 
 export class InputHandler {
     private isPaused: boolean = false;
@@ -55,6 +55,8 @@ export class InputHandler {
     }
 
     private constructor() {
+        this.keybindManager = new KeybindsManager(this);
+
         window.addEventListener("keydown", (event) => {
             if (this.isPaused) return;
             if (!this.keybindManager.isEditingKeybinds()) {
@@ -75,6 +77,19 @@ export class InputHandler {
             }
         });
 
+        const savedPreset = CookieManager.get("keypreset");
+        if (savedPreset) {
+            this.setPreset(savedPreset);
+
+            // Coche le bon bouton radio visuellement
+            const radios = document.querySelectorAll('input[name="keybind-preset"]');
+            radios.forEach((radio) => {
+                if ((radio as HTMLInputElement).value.toUpperCase() === savedPreset.toUpperCase()) {
+                    (radio as HTMLInputElement).checked = true;
+                }
+            });
+        }
+        
         const radios = document.querySelectorAll('input[name="keybind-preset"]');
         radios.forEach((radio) => {
             radio.addEventListener("click", (event) => {
@@ -82,11 +97,10 @@ export class InputHandler {
                 const target = event.target as HTMLInputElement;
                 if (target.checked) {
                     this.setPreset(target.value);
+                    CookieManager.set("keypreset", target.value); // Save the selected preset in cookies
                 }
             });
         });
-
-        this.keybindManager = new KeybindsManager(this);
     }
 
     public addAction(key: string, action: () => void) {

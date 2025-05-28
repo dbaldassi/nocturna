@@ -51,6 +51,7 @@ export class NocturnaAudio {
         this.background = await CreateStreamingSoundAsync("background", musicUrl, { loop: true, autoplay: true });
         if (this.background) {
             if(this.backgroundMuted) this.background.volume = 0; // Mute if previously muted
+            else this.background.volume = 0.5; // Set default volume
             this.background.loop = true;
             this.background.play();
         }
@@ -74,7 +75,7 @@ export class NocturnaAudio {
 
     public muteBackgroundMusic(mute: boolean): void {
         if (this.background) {
-            this.background.volume = mute ? 0 : 1;
+            this.background.volume = mute ? 0 : 0.5;
         } else {
             console.warn("No background music is currently playing.");
         }

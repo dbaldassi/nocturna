@@ -1,3 +1,4 @@
+import { CookieManager } from "./CookieManager";
 import { en } from "./en";
 import { fr } from "./fr";
 
@@ -8,13 +9,13 @@ export class Translation {
     public static initialize(): void {
         if (!Translation.instance) {
             Translation.instance = new Translation();
-            Translation.instance.setLanguage("en"); // Default language
+            Translation.instance.setLanguage(CookieManager.get("lang") || "en"); // Default language
         }
     }
 
     public static getTranslation(key: string): string {
         if (!Translation.instance) {
-            throw new Error("Translation instance not initialized. Call Translation.initialize() first.");
+            Translation.initialize();
         }
         return Translation.instance.getTranslation(key);
     }
@@ -37,6 +38,7 @@ export class Translation {
             throw new Error("Unsupported language");
         }
         this.language = language === "fr" ? fr : en;
+        CookieManager.set("lang", language);  
         this.updateLanguage();
     }
 

@@ -1,12 +1,11 @@
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
-import { AudioEngine, AudioEngineV2, CreateAudioEngineAsync, CreateStreamingSoundAsync, Engine } from "@babylonjs/core";
+import { Engine } from "@babylonjs/core";
 import { BaseScene } from "./scene/BaseScene";
 import { SceneFactory } from "./scene/SceneFactory";
 import { InputHandler } from "./InputHandler";
-import { TutorialScene } from "./scene/TutorialScene";
-import { Translation } from "./utils/translation";
 import { NocturnaAudio } from "./NocturnaAudio";
+import { CookieManager } from "./utils/CookieManager";
 
 export class App {
     public static selectedGraphics: string = "low";
@@ -14,11 +13,9 @@ export class App {
     private scene: BaseScene;
     private canvas: HTMLCanvasElement;
     private inputHandler: InputHandler;
-    private translation: Translation;
 
     constructor() {
         this.inputHandler = InputHandler.getInstance();
-        Translation.initialize();
         document.addEventListener('DOMContentLoaded', () => {
             const cards: NodeListOf<HTMLElement> = document.querySelectorAll('.mode-card');
             const startButton: HTMLElement | null = document.getElementById('start-game');
@@ -91,11 +88,23 @@ export class App {
         const audioControl = document.getElementById("audio-control");
         const audioIcon = document.getElementById("audio-icon") as HTMLImageElement;
         const audioSlider = document.getElementById("audio-slider") as HTMLInputElement;
-
-        let isMuted = false;
-        let lastVolume = 1;
+        
 
         if (audioControl && audioIcon && audioSlider) {
+            let isMuted = CookieManager.get("muted") === "true";
+            audioSlider.value = CookieManager.get("volume") || "0.5"; // Default volume is 0.5 if not set in cookies
+            let lastVolume = parseFloat(audioSlider.value);
+
+            NocturnaAudio.getInstance().then(audio => {
+                if(isMuted) {
+                    audio.setVolume(0); // Mute audio if previously muted
+                    audioIcon.src = "/assets/hud/audioOff.png";
+                } else {
+                    audioIcon.src = "/assets/hud/audioOn.png";
+                    audio.setVolume(lastVolume); // Set last volume if not muted
+                }
+            });
+                
             // Affiche le slider au hover
             audioControl.addEventListener("mouseenter", () => {
                 audioSlider.style.display = "inline-block";
@@ -111,6 +120,7 @@ export class App {
                 const volume = parseFloat(audioSlider.value);
                 if (audio) {
                     audio.setVolume(volume);
+                    CookieManager.set("volume", volume.toString()); // Save volume in cookies
                 }
                 if (volume === 0) {
                     isMuted = true;
@@ -137,13 +147,25 @@ export class App {
                     audioIcon.src = "/assets/hud/audioOff.png";
                     isMuted = true;
                 }
+
+                CookieManager.set("muted", isMuted.toString()); // Save muted state in cookies
             });
 
             const musicControl = document.getElementById("music-control");
             const musicIcon = document.getElementById("music-icon") as HTMLImageElement;
-            let musicMuted = false;
 
             if (musicControl && musicIcon) {
+                let musicMuted = CookieManager.get("musicMuted") === "true";
+                if(musicMuted) {
+                    NocturnaAudio.getInstance().then(audio => {
+                        console.log("Music is muted by default");
+                        audio.muteBackgroundMusic(true); // Mute music if previously muted
+                    });
+                    musicIcon.src = "/assets/hud/musicOff.png";
+                } else {
+                    musicIcon.src = "/assets/hud/musicOn.png";
+                }
+
                 musicControl.addEventListener("click", async () => {
                     const audio = await NocturnaAudio.getInstance();
                     if (musicMuted) {
@@ -155,6 +177,8 @@ export class App {
                         musicIcon.src = "/assets/hud/musicOff.png";
                         musicMuted = true;
                     }
+
+                    CookieManager.set("musicMuted", musicMuted.toString()); // Save music muted state in cookies
                 });
             }
         }
