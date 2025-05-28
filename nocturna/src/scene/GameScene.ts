@@ -25,6 +25,8 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     protected activeCameraIndex: number = 0;
     protected state: AbstractGameSceneState;
     protected hpBar: HpBar;
+    protected multiplicators: number[] = [20, 10, 5];
+    protected readonly timeMultiplicator: number = 1000 * 60; // 1 minute in milliseconds
 
     protected static sceneName: string = "test_level.json";
     win: boolean = false;   
@@ -167,8 +169,10 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         this.player.takeDamage(enemy.getDamage());
     }
 
-    public visitCoin(_: Coin): void {
-
+    public visitCoin(coin: Coin): void {
+        const index = Math.floor(this.timer / this.timeMultiplicator);
+        const multiplicator = this.multiplicators[index] || 1; // Default to 1 if index is out of bounds
+        this.score += coin.getScore() * multiplicator;
     }
 
     public hideUI() {
