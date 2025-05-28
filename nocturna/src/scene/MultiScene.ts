@@ -1,4 +1,4 @@
-import { Engine, Vector3, FollowCamera, UniversalCamera, Scene, Camera, PhysicsBody, ExecuteCodeAction, ActionManager } from "@babylonjs/core";
+import { Engine, Vector3, FollowCamera, UniversalCamera, Scene, Camera, PhysicsBody, ExecuteCodeAction, ActionManager, AssetsManager } from "@babylonjs/core";
 
 import { BaseScene } from "./BaseScene";
 import { ParentNode } from "../ParentNode";
@@ -11,7 +11,6 @@ import { RemoteGameObject, RemotePlayer } from "../GameObjects/RemoteGameObject"
 import { Coin, CoinFactory, SuperCoinFactory } from "../GameObjects/Coin";
 import { Platform } from "../GameObjects/Platform";
 import { AbstractGameSceneState, ActionSelectionState, InGameState, LobbyState } from "../states/MultiSceneStates";
-import { AdvancedDynamicTexture, TextBlock } from "@babylonjs/gui";
 import { Action } from "../action";
 import { Player } from "../GameObjects/Player";
 import { CubeCollisionObserver } from "../Cube";
@@ -21,26 +20,39 @@ class CoinSpawner {
     private scene: Scene;
     private coinFactory: CoinFactory;
     private superCoinFactory: SuperCoinFactory;
+    private assetManager: AssetsManager;
 
     constructor(scene: Scene) {
         this.scene = scene;
         this.coinFactory = new CoinFactory();
         this.superCoinFactory = new SuperCoinFactory();
+        this.assetManager = new AssetsManager(scene);
+        this.assetManager.useDefaultLoadingScreen = false;
     }
 
-    public spawnCoin(position: Vector3): Coin {
+    public async spawnCoin(position: Vector3): Promise<Coin> {
         let coin: Coin;
         const config: GameObjectConfig = {
             position: position,
             translation: Vector3.Up(),
             rotation: Vector3.Zero(),
             scene: this.scene,
+            assetsManager: this.assetManager
         };
 
         if(Math.random() > 0.1) coin = this.coinFactory.create(config);
         else coin = this.superCoinFactory.create(config);
 
-        return coin;
+        let resolve;
+        const promise = new Promise<Coin>((r, _) => {
+            resolve = r;
+        });
+        this.assetManager.onFinish = () => {
+            resolve(coin);
+        };
+        this.assetManager.load();
+
+        return promise;
     }
 };
 
@@ -473,8 +485,10 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         this.gameObjects.forEach((object) => {
             if(object.getMesh().name === Platform.Type && this.isInSubcube(object.getMesh().position) && this.coinTimer >= this.coinInterval && Math.random() < 1/this.gameObjects.length) {
                 const position = object.getMesh().position.clone();
-                const coin = this.coinSpawner.spawnCoin(position);
-                this.addLocalObject(coin);
+                this.coinSpawner.spawnCoin(position).then((coin: Coin) => {
+                    console.log("adding coin: ", coin);
+                    this.addLocalObject(coin);
+                });
                 this.coinTimer = 0;
             }
         });
@@ -524,10 +538,8 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
 
         this.inputHandler.removeAction("pov");
 
-        console.log(this.gameObjects);
         this.gameObjects.forEach(obj => {
             const meshes = obj.getMeshes();
-            console.log(`Adding action to object: ${obj.getId()}`);
             meshes.forEach(mesh => {
                 mesh.isPickable = true;
                 mesh.actionManager = new ActionManager(this.scene);

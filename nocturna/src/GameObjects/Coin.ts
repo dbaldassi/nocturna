@@ -1,9 +1,10 @@
 import { Mesh, MeshBuilder, StandardMaterial, Color3, Scene, Vector3, Animation, NodeGeometryConnectionPointDirection, PhysicsAggregate, PhysicsShapeType, PBRMaterial } from "@babylonjs/core";
-import { CharacterInput, EditorObject, GameObject, GameObjectConfig, GameObjectFactory, GameObjectVisitor } from "../types";
+import { CharacterInput, EditorObject, GameObject, GameObjectConfig, GameObjectFactory, GameObjectVisitor, Utils } from "../types";
 import { ObjectEditorImpl } from "./EditorObject";
+import { App } from "../app";
 
 export class Coin implements GameObject {
-    private mesh: Mesh;
+    public mesh: Mesh[] = [];
     private score: number;
     private scene: Scene;
 
@@ -15,8 +16,12 @@ export class Coin implements GameObject {
     constructor(scene: Scene, mesh: Mesh, score: number = 10) {
         this.score = score;
         this.scene = scene;
-        this.mesh = mesh;
+        
         this.id = `${Coin.Type}_${Coin.nextId++}`;
+
+        if(mesh) {
+            this.mesh.push(mesh);
+        }
     }
 
     public getId(): string {
@@ -43,17 +48,17 @@ export class Coin implements GameObject {
         ];
 
         animation.setKeys(keyFrames);
-        this.mesh.animations.push(animation);
+        this.getMesh().animations.push(animation);
 
         scene.beginAnimation(this.mesh, 0, 60, true); // Boucle infinie
     }
 
     public getMesh(): Mesh {
-        return this.mesh;
+        return this.mesh[0];
     }
 
     public getMeshes(): Mesh[] {
-        return [this.mesh];
+        return this.mesh;
     }
 
     public getType(): string {
@@ -100,7 +105,7 @@ export class SuperCoin extends Coin {
 
 export class CoinFactory implements GameObjectFactory {
 
-    protected createImpl(config: GameObjectConfig, physics: boolean): Coin {
+    /*protected createImpl(config: GameObjectConfig, physics: boolean): Coin {
         const diameter = 15;
 
         const mesh = MeshBuilder.CreateSphere("coin", { diameter: diameter, segments: 16 }, config.scene);
@@ -127,11 +132,46 @@ export class CoinFactory implements GameObjectFactory {
         }
 
         return new Coin(config.scene, mesh, 10);
+    }*/
+    
+    protected createCoinObject(config: GameObjectConfig) {
+        return new Coin(config.scene, null, 10);
+    }
+
+    protected createCoin(config: GameObjectConfig, physics: boolean, path: string): Coin {
+        // const mesh = this.createMesh(config);
+        // const player = new Player(mesh, config.scene);
+        const coin = this.createCoinObject(config);
+        if(!config.size) {
+            config.size = new Vector3(15, 15, 5);
+        }
+    
+        Utils.createMeshTask(config, Coin.Type, path, (task) => {
+            const meshes = task.loadedMeshes;
+
+            if(config.translation) {
+               config.position.addInPlace(config.translation.scale(config.size.x / 2));
+            }
+
+            Utils.configureMesh(meshes, config);
+            meshes.forEach((m) => coin.mesh.push(m as Mesh));
+
+            if(physics) {
+                const aggregate = new PhysicsAggregate(meshes[0], PhysicsShapeType.SPHERE, { mass: 0, friction: 0, restitution: 0 }, config.scene);
+                aggregate.body.setCollisionCallbackEnabled(true);
+                coin.startAnimation();
+            }
+        });
+        return coin;
+    }
+
+    protected createImpl(config: GameObjectConfig, physics: boolean) {
+        const path = App.selectedGraphics + "/" + Coin.Type + ".glb";
+        return this.createCoin(config, physics, path);
     }
 
     public create(config: GameObjectConfig): Coin {
         const coin = this.createImpl(config, true);
-        coin.startAnimation();
         return coin;
     }
 
@@ -143,7 +183,7 @@ export class CoinFactory implements GameObjectFactory {
 
 export class SuperCoinFactory extends CoinFactory {
 
-    protected createImpl(config: GameObjectConfig, physics: boolean): SuperCoin {
+    /*protected createImpl(config: GameObjectConfig, physics: boolean): SuperCoin {
         const diameter = 15;
         const mesh = MeshBuilder.CreateSphere("superCoin", { diameter: diameter, segments: 16 }, config.scene);
         mesh.position = config.position;
@@ -168,6 +208,15 @@ export class SuperCoinFactory extends CoinFactory {
         }
 
         return new SuperCoin(config.scene, mesh, 100);
+    }*/
+
+    protected createCoinObject(config: GameObjectConfig) {
+        return new SuperCoin(config.scene, null, 100);
+    }
+
+    protected createImpl(config: GameObjectConfig, physics: boolean) : SuperCoin {
+        const path = App.selectedGraphics + "/" + SuperCoin.Type + ".glb";
+        return this.createCoin(config, physics, path);
     }
 
 }

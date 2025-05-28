@@ -123,12 +123,14 @@ export class InGameState extends AbstractGameSceneState {
                 parent: this.gameScene.getParent(),
                 assetsManager: this.assetsManager,
             };
+            const object = factory.create(config);
+            this.assetsManager.onFinish = () => {
+                this.gameScene.addNetworkObject(object, data.id, data.owner);
+            };
 
             this.assetsManager.load();
-            
-            const object = factory.create(config);
-            
-            if(object) this.gameScene.addNetworkObject(object, data.id, data.owner);
+
+            if(object && object.getMesh()) this.gameScene.addNetworkObject(object, data.id, data.owner);
         }
         else if(action === "removeObject") {
             this.gameScene.removeRemoteObject(data.id, data.owner);
