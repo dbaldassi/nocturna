@@ -64,27 +64,6 @@
             }
         },
         {
-            "type": "rocket",
-            "position": {
-                "_isDirty": false,
-                "_x": 100,
-                "_y": 200,
-                "_z": 0
-            },
-            "rotation": {
-                "_isDirty": false,
-                "_x": 0,
-                "_y": 0,
-                "_z": 0
-            },
-            "size": {
-                "_isDirty": true,
-                "_x": 10,
-                "_y": 10,
-                "_z": 10
-            }
-        },
-        {
             "type": "player",
             "position": {
                 "_isDirty": false,
