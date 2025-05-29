@@ -10,6 +10,7 @@
 
 ## Repository Structure
 
+```
 nocturna/ 
 ├── src/ # Main TypeScript source code (game logic, UI, multiplayer, etc.) 
 │ ├── GameObjects/ # All game entities (Player, Platform, Victory, etc.) 
@@ -24,7 +25,7 @@ nocturna/
 | ├── assets/ # Game assets (sounds, images, levels, music) 
 | ├── models/ # 3D meshes
 | ├── shader/ # Shader GLSL code
-
+```
 ---
  
 ## Code Documentation
