@@ -5,7 +5,7 @@ import { FixedRocket, FixedRocketFactory } from "../GameObjects/Rocket";
 import { SpikeTrapObject, SpikeTrapFactory } from "../GameObjects/SpikeTrap";
 import { VictoryCondition, VictoryConditionFactory } from "../GameObjects/Victory";
 import { InputHandler } from "../InputHandler";
-import { LevelSelectionObserver, LevelSelectionScene } from "../LevelSelection";
+import { LevelSelectionObserver, LevelSelectionScene } from "../HUD/LevelSelection";
 import { EditorScene } from "../scene/EditorScene";
 import { AbstractState, CharacterInput, GameObjectFactory } from "../types";
 
@@ -297,6 +297,6 @@ export class SelectionState implements AbstractState, LevelSelectionObserver {
         this.level = level;
     }
 
-    onDataTransmited(data: JSON): void {
+    onDataTransmited(_: JSON): void {
     }
 }
