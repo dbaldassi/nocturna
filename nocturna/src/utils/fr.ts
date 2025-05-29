@@ -1,6 +1,9 @@
 export const fr = {
     "ui.lang-switch": "EN",
     "ui.timer": "Temps : 0:00",
+    "setting.keybinds": "Touches",
+    "setting.language": "Langue",
+    "setting.presets": "Préréglages",
     "graphics.ultra-low": "Ultra Faible",
     "graphics.low": "Graphismes Faibles",
     "graphics.high": "Graphismes Élevés",
@@ -76,6 +79,16 @@ export const fr = {
     "keybinds.instructions": "Vous pouvez modifier toutes vos touches via l'écrou en haut à droite",
     "forward": "Avant",
     "backward": "Arrière",
+    "up": "Haut",
+    "down": "Bas",
+    "death_messages": [
+        "Vous avez été consumé par les ténèbres.",
+        "Le cauchemar vous a englouti.",
+        "Vous avez succombé à l'obscurité.",
+        "Vous avez été piégé dans le rêve éternel.",
+        "La nuit a réclamé votre âme.",
+        "Le rêve s'est transformé en cauchemar.",
+    ]
 };
 
 export const AZERTY = {

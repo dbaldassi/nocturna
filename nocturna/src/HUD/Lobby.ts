@@ -106,8 +106,10 @@ export class Lobby {
         createRoomButton.color = "white";
         createRoomButton.background = "green";
         createRoomButton.onPointerClickObservable.add(() => {
-            const playerId = playerNameInput.text;
-            this.observer.onRoomCreation(playerId);
+            const playerId = playerNameInput.text.trim();
+            if (playerId !== "") {
+                this.observer.onRoomCreation(playerId);
+            }
         });
         panel.addControl(createRoomButton);
     
@@ -129,8 +131,11 @@ export class Lobby {
         joinRoomButton.color = "white";
         joinRoomButton.background = "blue";
         joinRoomButton.onPointerClickObservable.add(async () => {
-            const roomId = roomIdInput.text;
-            const playerId = playerNameInput.text;
+            const roomId = roomIdInput.text.trim();
+            const playerId = playerNameInput.text.trim();
+            if (roomId === "" || playerId === "") {
+                return;
+            }
             this.observer.onRoomJoin(roomId, playerId);
         });
         panel.addControl(joinRoomButton);
@@ -294,8 +299,8 @@ export class Lobby {
             return;
         }
 
-        statusText.text = "Ready";
-        statusText.color = "green";
+        statusText.text = statusText.text === "Ready" ? "Not Ready" : "Ready";
+        statusText.color = statusText.color === "green" ? "red" : "green";
     }
         
     /**

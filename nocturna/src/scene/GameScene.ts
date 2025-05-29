@@ -382,6 +382,8 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         this.cube = null;
         this.win = false;
 
+        this.score = 0;
+
         this.scene.meshes.forEach(mesh => mesh.dispose());
         this.scene.materials.forEach(mat => mat.dispose());
         this.scene.textures.forEach(tex => tex.dispose());
