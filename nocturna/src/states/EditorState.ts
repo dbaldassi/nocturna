@@ -297,6 +297,6 @@ export class SelectionState implements AbstractState, LevelSelectionObserver {
         this.level = level;
     }
 
-    onDataTransmited(data: JSON): void {
+    onDataTransmited(_: JSON): void {
     }
 }
