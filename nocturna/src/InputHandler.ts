@@ -97,10 +97,20 @@ export class InputHandler {
                 const target = event.target as HTMLInputElement;
                 if (target.checked) {
                     this.setPreset(target.value);
+                    CookieManager.set("keybindings", "", -1);
                     CookieManager.set("keypreset", target.value); // Save the selected preset in cookies
                 }
             });
         });
+
+        const savedKeybinds = CookieManager.get("keybindings");
+        if (savedKeybinds) {
+            try {
+                this.keyBindings = JSON.parse(savedKeybinds);
+            } catch (e) {
+                console.warn("Failed to parse saved keybindings:", e);
+            }
+        }
     }
 
     public addAction(key: string, action: () => void) {
@@ -156,6 +166,7 @@ export class InputHandler {
     updateKeyBindings(action: string, newKeys: string[]) {
         if (this.keyBindings[action]) {
             this.keyBindings[action] = newKeys;
+            CookieManager.set("keybindings", JSON.stringify(this.keyBindings));
         } else {
             console.warn(`Action "${action}" does not exist in key bindings.`);
         }
