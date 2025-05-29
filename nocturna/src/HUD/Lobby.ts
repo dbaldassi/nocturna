@@ -1,33 +1,74 @@
 import { Scene } from "@babylonjs/core";
 import { AdvancedDynamicTexture, Button, Control, InputText, StackPanel, TextBlock } from "@babylonjs/gui";
 
+/**
+ * Lobby.ts defines the Lobby class and LobbyObserver interface for managing the multiplayer lobby UI.
+ * 
+ * Responsibilities:
+ * - Displays the start menu for multiplayer, allowing players to create or join rooms.
+ * - Shows the list of players in a room, with ready status indicators.
+ * - Handles player addition, removal, and ready state updates in the UI.
+ * - Provides error display and menu cleanup functionality.
+ * - Integrates with Babylon.js GUI for all UI elements.
+ * 
+ * Usage:
+ * - Instantiate Lobby with a Babylon.js Scene and a LobbyObserver.
+ * - Use `showStartMenu()` to display the lobby start menu.
+ * - Use `showPlayerList()` to display the player list for a room.
+ * - Use `addPlayer()`, `removePlayer()`, and `setPlayerReady()` to manage player UI.
+ * - Use `eraseMenu()` to remove the current menu.
+ * - Use `showError()` to display error messages and allow retry.
+ */
+
+/**
+ * LobbyObserver defines the interface for objects that want to be notified of lobby events.
+ */
 export interface LobbyObserver {
-    onRoomCreation(playerId: string) : void;
-    onRoomJoin(roomId: string, playerId) : void;
-    onReady() : void;
+    onRoomCreation(playerId: string): void;
+    onRoomJoin(roomId: string, playerId: string): void;
+    onReady(): void;
 }
 
+/**
+ * Lobby manages the multiplayer lobby user interface.
+ * 
+ * - Handles room creation and joining.
+ * - Displays player list and ready status.
+ * - Provides error handling and menu cleanup.
+ */
 export class Lobby {
     private scene: Scene;
     private observer: LobbyObserver;
     private guiTexture: AdvancedDynamicTexture;
 
+    /**
+     * Constructs a new Lobby.
+     * @param scene The Babylon.js scene.
+     * @param observer The LobbyObserver to notify of events.
+     */
     constructor(scene: Scene, observer: LobbyObserver) {
         this.observer = observer;
         this.scene = scene;
     }
 
+    /**
+     * Detects the client's operating system from the user agent string.
+     * @returns The OS name as a string.
+     */
     private getClientOS(): string {
-    const userAgent = navigator.userAgent;
+        const userAgent = navigator.userAgent;
 
-    if (userAgent.indexOf("Win") !== -1) return "Windows";
-    if (userAgent.indexOf("Mac") !== -1) return "MacOS";
-    if (userAgent.indexOf("X11") !== -1) return "UNIX";
-    if (userAgent.indexOf("Linux") !== -1) return "Linux";
+        if (userAgent.indexOf("Win") !== -1) return "Windows";
+        if (userAgent.indexOf("Mac") !== -1) return "MacOS";
+        if (userAgent.indexOf("X11") !== -1) return "UNIX";
+        if (userAgent.indexOf("Linux") !== -1) return "Linux";
 
-    return "Unknown";
-}
+        return "Unknown";
+    }
 
+    /**
+     * Displays the start menu for multiplayer, allowing the player to create or join a room.
+     */
     public showStartMenu(): void {
         // Créer une texture GUI pour afficher le menu
         const guiTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this.scene);
@@ -97,6 +138,12 @@ export class Lobby {
         this.guiTexture = guiTexture;
     }
 
+    /**
+     * Displays the player list for a given room, with ready status and copyable room ID.
+     * @param roomId The room ID.
+     * @param playerId The current player's ID.
+     * @param players The list of player IDs in the room.
+     */
     public showPlayerList(roomId: string, playerId: string, players: string[]): void {
         // Créer une texture GUI pour afficher la liste des joueurs
         const guiTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this.scene);
@@ -174,6 +221,10 @@ export class Lobby {
         mainPanel.addControl(readyButton);
     }
 
+    /**
+     * Adds a player to the player list UI.
+     * @param playerId The player's ID.
+     */
     public addPlayer(playerId: string): void {
         const playerPanel = this.guiTexture.getControlByName("playerListPanel") as StackPanel;
         if (!playerPanel) {
@@ -205,6 +256,10 @@ export class Lobby {
         playerContainer.addControl(statusText);
     }
 
+    /**
+     * Removes a player from the player list UI.
+     * @param playerId The player's ID.
+     */
     public removePlayer(playerId: string): void {
         const playerPanel = this.guiTexture.getControlByName("playerListPanel") as StackPanel;
         if (!playerPanel) {
@@ -222,6 +277,10 @@ export class Lobby {
         playerContainer.dispose();
     }
 
+    /**
+     * Sets a player's status to "Ready" in the UI.
+     * @param playerId The player's ID.
+     */
     public setPlayerReady(playerId: string): void {
         const playerText = this.guiTexture.getControlByName(`${playerId}Text`) as TextBlock;
         if (!playerText) {
@@ -239,6 +298,9 @@ export class Lobby {
         statusText.color = "green";
     }
         
+    /**
+     * Removes the current menu from the scene.
+     */
     public eraseMenu(): void {
         // Effacer le menu de la scène
         if (this.guiTexture) {
@@ -247,6 +309,10 @@ export class Lobby {
         }
     }
 
+    /**
+     * Displays an error message overlay with a close button that returns to the start menu.
+     * @param message The error message to display.
+     */
     public showError(message: string): void {
         // Créer une texture GUI pour afficher le message d'erreur
         const guiTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this.scene);
