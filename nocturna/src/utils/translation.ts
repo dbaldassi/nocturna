@@ -23,6 +23,11 @@ export class Translation {
     constructor() {
         const radios = document.querySelectorAll('input[name="language"]');
         radios.forEach((radio) => {
+            // Set the initial checked state based on the current language
+            const currentLanguage = CookieManager.get("lang") || "en";
+            if (radio instanceof HTMLInputElement) {
+                radio.checked = radio.value === currentLanguage;
+            }
             radio.addEventListener("click", (event) => {
                 console.log("Language change event triggered");
                 const target = event.target as HTMLInputElement;

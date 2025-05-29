@@ -76,6 +76,8 @@ export const fr = {
     "keybinds.instructions": "Vous pouvez modifier toutes vos touches via l'écrou en haut à droite",
     "forward": "Avant",
     "backward": "Arrière",
+    "up": "Haut",
+    "down": "Bas",
 };
 
 export const AZERTY = {
