@@ -413,6 +413,7 @@ class EndState extends AbstractGameSceneState {
 class SelectionState extends AbstractGameSceneState implements LevelSelectionObserver {
     private levelSelector: LevelSelectionScene;
     private level: string = null;
+    private file: string = "game_levels.json";
 
     constructor(gameScene: GameScene) {
         super(gameScene);
@@ -427,7 +428,7 @@ class SelectionState extends AbstractGameSceneState implements LevelSelectionObs
     }
 
     enter() {
-        this.levelSelector = new LevelSelectionScene(this.gameScene.getScene(), this);
+        this.levelSelector = new LevelSelectionScene(this.gameScene.getScene(), this, this.file);
     }
 
     exit() {

@@ -60,7 +60,7 @@ export const fr = {
     "tutorial.phase1.title2": "Déplacement",
     "tutorial.phase1.desc2": "Déplacez-vous à droite et à gauche.",
     "tutorial.phase1.title3": "Saut",
-    "tutorial.phase1.desc3": "Sautez avec la barre d'espace.",
+    "tutorial.phase1.desc3": "Sautez avec la barre d'espace. Double saut pour atteindre des plateformes plus hautes.",
     "tutorial.phase2.title1": "Carte",
     "tutorial.phase2.desc1": "Les plateformes peuvent pivoter dans 6 directions différentes sur chaque axe, avec 90° à gauche ou à droite pour chaque rotation.",
     "tutorial.phase3.title1": "Points de vie & pièges",

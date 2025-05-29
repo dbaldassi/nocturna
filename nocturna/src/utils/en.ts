@@ -60,7 +60,7 @@ export const en = {
     "tutorial.phase1.title2": "Movement",
     "tutorial.phase1.desc2": "Move left and right.",
     "tutorial.phase1.title3": "Jump",
-    "tutorial.phase1.desc3": "Jump using the spacebar.",
+    "tutorial.phase1.desc3": "Jump using the spacebar. Double jump to reach higher platforms.",
     "tutorial.phase2.title1": "Map",
     "tutorial.phase2.desc1": "The platforms can rotate in 6 different directions along each axis, with 90° left or right for each rotation.",
     "tutorial.phase3.title1": "Health Points & Traps",
