@@ -30,7 +30,7 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     protected readonly timeMultiplicator: number = 1000 * 60; // 1 minute in milliseconds
 
     protected static sceneName: string = "level2.json";
-    win: boolean = false;   
+    win: boolean = false;
 
     constructor(engine: Engine, inputHandler: InputHandler) {
         super(engine, inputHandler);
@@ -42,13 +42,13 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         const scene = new GameScene(engine, inputHandler);
 
         await scene.addPhysic();
-        
+
         // // Create the main cube
         // scene.cube = Cube.create(scene.scene);
         // // Create the parent node
         // scene.parent = new ParentNode(Vector3.Zero(), scene.scene);
         // scene.parent.setupKeyActions(scene.inputHandler);
-        
+
         // scene.enableDebug();
         // scene.state = new LoadingState(scene);
         // scene.loadLevel(this.sceneName);
@@ -56,9 +56,13 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         scene.state.enter();
         return scene;
     }
-    
+
     public createLevel(file: string) {
         this.loadLevel(file);
+    }
+
+    public createLevelFromData(data: JSON) {
+        this.levelLoader.loadLevelFromData(data);
     }
 
     protected loadLevel(file: string) {
@@ -190,16 +194,16 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
             m.dispose();
         });
     }
-    
+
     public hideUI() {
         this.hpBar.dispose();
     }
 
-    public checkWin() : boolean {
+    public checkWin(): boolean {
         return this.win;
     }
 
-    public checkLoose() : boolean {
+    public checkLoose(): boolean {
         return this.player && !this.player.isAlive();
     }
 
@@ -359,15 +363,15 @@ export class InGameState extends AbstractGameSceneState {
         this.gameScene.updateObjects(dt, input);
         this.gameScene.updateTimer(dt);
 
-        if(this.gameScene.checkWin()) {
-            return new EndState(this.gameScene, 
+        if (this.gameScene.checkWin()) {
+            return new EndState(this.gameScene,
                 createWinScreenHUD(this.gameScene,
                     this.gameScene.hasNextLevel() ? "continue" : "normal",
-                    this.gameScene.getScore(), 
+                    this.gameScene.getScore(),
                     this.gameScene.getTimer()));
         }
 
-        if(this.gameScene.checkLoose()) {
+        if (this.gameScene.checkLoose()) {
             return new EndState(this.gameScene, createLoseScreenHUD(this.gameScene, this.gameScene.getScore(), this.gameScene.getTimer()));
         }
 
@@ -392,10 +396,10 @@ class EndState extends AbstractGameSceneState {
 
     constructor(scene: GameScene, hud: IEndScreenHUD) {
         super(scene);
-        this.hud = hud;   
+        this.hud = hud;
     }
 
-    render(): void {}
+    render(): void { }
     enter(): void {
         this.gameScene.removePhysics()
     }
@@ -414,6 +418,7 @@ class SelectionState extends AbstractGameSceneState implements LevelSelectionObs
     private levelSelector: LevelSelectionScene;
     private level: string = null;
     private file: string = "game_levels.json";
+    private data: JSON = null;
 
     constructor(gameScene: GameScene) {
         super(gameScene);
@@ -428,20 +433,34 @@ class SelectionState extends AbstractGameSceneState implements LevelSelectionObs
     }
 
     enter() {
-        this.levelSelector = new LevelSelectionScene(this.gameScene.getScene(), this, this.file);
+        this.levelSelector = new LevelSelectionScene(this.gameScene.getScene(), this, this.file, true);
     }
 
     exit() {
         // this.gameScene.getScene().dispose();
         this.levelSelector.dispose();
-        this.gameScene.createLevel(this.level);
+        if (this.level) {
+            this.gameScene.createLevel(this.level);
+        }
+        if (this.data) {
+            this.gameScene.createLevelFromData(this.data);
+        }
     }
 
     update(_: number, __: CharacterInput): AbstractGameSceneState | null {
-        return this.level ? new LoadingState(this.gameScene) : null;
+        if (this.level) {
+            return new LoadingState(this.gameScene);
+        } else if (this.data) {
+            return new LoadingState(this.gameScene);
+        }
+        return null;
     }
 
     onLevelSelected(level: string): void {
         this.level = level;
+    }
+
+    onDataTransmited(data: JSON): void {
+        this.data = data;
     }
 }

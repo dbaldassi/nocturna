@@ -228,7 +228,7 @@ class RocketFactorySpawner {
         console.log("Adding rocket to platform");
 
         const config = {
-            position: this.platform.getMesh().position.clone().addInPlace(Vector3.Up().scale(200)), // Position the rocket above the platform
+            position: this.platform.getMesh().getAbsolutePosition().clone().addInPlace(Vector3.Up().scale(200)), // Position the rocket above the platform
             rotation: Vector3.Zero(),
             scene: this.platform.getScene(),
             assetsManager: this.assetsManager,

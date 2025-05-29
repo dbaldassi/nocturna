@@ -90,6 +90,11 @@ export class LevelLoader {
             });
     }
 
+    public loadLevelFromData(data: JSON): void {
+        // cast data to JSON
+        this.createLevel(data);
+    }
+
     private createVector3(data: any): Vector3 {
         return new Vector3(data._x, data._y, data._z);
     }

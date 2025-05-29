@@ -3,6 +3,7 @@ import { AdvancedDynamicTexture, Button, StackPanel, TextBlock, Control } from "
 
 export interface LevelSelectionObserver {
     onLevelSelected(levelFile: string): void;
+    onDataTransmited(data: JSON): void;
 };
 
 export class LevelSelectionScene {
@@ -10,19 +11,21 @@ export class LevelSelectionScene {
     private scene: Scene;
     private observer: LevelSelectionObserver;
     private fileName: string;
+    private hasDragAndDrop: boolean;
 
-    constructor(scene: Scene, observer: LevelSelectionObserver, fileName: string = "levels.json") {
+    constructor(scene: Scene, observer: LevelSelectionObserver, fileName: string = "levels.json", hasDragAndDrop: boolean = false) {
         console.log(scene);
         this.scene = scene;
         this.observer = observer;
         this.fileName = fileName;
+        this.hasDragAndDrop = hasDragAndDrop;
 
-         // Configurer la caméra
-         const camera = new FreeCamera("camera", new Vector3(0, 0, -10), this.scene);
-         camera.attachControl(true);
-         scene.activeCamera = camera;
+        // Configurer la caméra
+        const camera = new FreeCamera("camera", new Vector3(0, 0, -10), this.scene);
+        camera.attachControl(true);
+        scene.activeCamera = camera;
 
-         this.loadLevelList();
+        this.loadLevelList();
     }
 
     private async loadLevelList() {
@@ -58,6 +61,7 @@ export class LevelSelectionScene {
         title.height = "50px";
         panel.addControl(title);
 
+
         // Ajouter un bouton pour chaque niveau
         levels.forEach((level) => {
             const button = Button.CreateSimpleButton(level.name, level.name);
@@ -70,6 +74,46 @@ export class LevelSelectionScene {
             });
             panel.addControl(button);
         });
+
+        if (this.hasDragAndDrop) {
+            this.addDragAndDropArea(panel);
+        }
+    }
+
+    private addDragAndDropArea(panel: StackPanel) {
+        // Ajouter une zone de drop pour charger un fichier JSON
+        const dropInfo = new TextBlock();
+        dropInfo.text = "Or drag & drop a JSON file here";
+        dropInfo.color = "lightgray";
+        dropInfo.fontSize = 18;
+        dropInfo.height = "30px";
+        panel.addControl(dropInfo);
+        // Drag and drop logic
+        const canvas = this.scene.getEngine().getRenderingCanvas();
+        if (canvas) {
+            // Prevent default drag behaviors
+            canvas.addEventListener("dragover", (e) => {
+                e.preventDefault();
+                dropInfo.color = "yellow";
+            });
+            canvas.addEventListener("dragleave", (e) => {
+                e.preventDefault();
+                dropInfo.color = "lightgray";
+            });
+            canvas.addEventListener("drop", (e) => {
+                e.preventDefault();
+                dropInfo.color = "lightgray";
+                if (e.dataTransfer && e.dataTransfer.files.length > 0) {
+                    const file = e.dataTransfer.files[0];
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        const content = JSON.parse(reader.result as string) as JSON;
+                        this.observer.onDataTransmited(content);
+                    };
+                    reader.readAsText(file);
+                }
+            });
+        }
     }
 
     public dispose() {

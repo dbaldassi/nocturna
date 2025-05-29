@@ -255,6 +255,9 @@ class SelectionState implements AbstractState, LevelSelectionObserver {
     onLevelSelected(level: string): void {
         this.level = level;
     }
+
+    onDataTransmited(data: JSON): void {
+    }
 }
 
 export class EditorScene extends BaseScene implements LevelLoaderObserver, IHUDEditorListener {
