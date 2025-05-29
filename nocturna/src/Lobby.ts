@@ -273,3 +273,14 @@ export class Lobby {
         this.guiTexture = guiTexture;
     }
 }
+
+export class LevelSelector {
+    private scene: Scene;
+    private observer: LobbyObserver;
+    private guiTexture: AdvancedDynamicTexture;
+
+    constructor(scene: Scene, observer: LobbyObserver) {
+        this.observer = observer;
+        this.scene = scene;
+    }
+}   

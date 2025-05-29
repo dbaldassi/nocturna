@@ -54,7 +54,32 @@ export const fr = {
     "action_plus": "Action +",
     "save": "Sauvegarder",
     "delete": "Supprimer",
+<<<<<<< Updated upstream
     "clone": "Cloner"
+=======
+    "clone": "Cloner",
+    "tutorial.phase1.title1": "Objectif",
+    "tutorial.phase1.desc1": "Atteignez le cristal.",
+    "tutorial.phase1.title2": "Déplacement",
+    "tutorial.phase1.desc2": "Déplacez-vous à droite et à gauche.",
+    "tutorial.phase1.title3": "Saut",
+    "tutorial.phase1.desc3": "Sautez avec la barre d'espace. Double saut pour atteindre des plateformes plus hautes.",
+    "tutorial.phase2.title1": "Carte",
+    "tutorial.phase2.desc1": "Les plateformes peuvent pivoter dans 6 directions différentes sur chaque axe, avec 90° à gauche ou à droite pour chaque rotation.",
+    "tutorial.phase3.title1": "Points de vie & pièges",
+    "tutorial.phase3.desc1": "Vous avez 10 PV et les pièges au sol enlèvent des PV chaque seconde. Vous pouvez voir vos PV en haut de l'ecran.",
+    "tutorial.phase3.title2": "Vision & pièges",
+    "tutorial.phase3.desc2": "Il peut y avoir des pièges au sol, meilleure visibilité en changeant de point de vue (POV).",
+    "tutorial.phase4.title1": "Rockets",
+    "tutorial.phase4.desc1": "Des roquettes peuvent tomber du ciel et infliger 5 PV de dégâts instantanés en cas de collision.",
+    "tutorial.phase4.title2": "Activation",
+    "tutorial.phase4.desc2": "Les roquettes ne sont activées que lorsque vous touchez certaines plateformes. Restez vigilant, vous ne verrez pas la différence.",
+    "pause.subtitle": "Prenez un moment pour reprendre votre souffle",
+    "pause.title": "Jeu en pause",
+    "keybinds.instructions": "Vous pouvez modifier toutes vos touches via l'écrou en haut à droite",
+    "forward": "Avant",
+    "backward": "Arrière",
+>>>>>>> Stashed changes
 };
 
 export const AZERTY = {

@@ -9,16 +9,17 @@ export class LevelSelectionScene {
     private guiTexture: AdvancedDynamicTexture;
     private scene: Scene;
     private observer: LevelSelectionObserver;
+    private file: string;
 
-    constructor(scene: Scene, observer: LevelSelectionObserver) {
+    constructor(scene: Scene, observer: LevelSelectionObserver, file: string) {
         console.log(scene);
         this.scene = scene;
         this.observer = observer;
-
-         // Configurer la caméra
-         const camera = new FreeCamera("camera", new Vector3(0, 0, -10), this.scene);
-         camera.attachControl(true);
-         scene.activeCamera = camera;
+        this.file = file;
+        // Configurer la caméra
+        const camera = new FreeCamera("camera", new Vector3(0, 0, -10), this.scene);
+        camera.attachControl(true);
+        scene.activeCamera = camera;
 
          this.loadLevelList();
     }
@@ -26,7 +27,7 @@ export class LevelSelectionScene {
     private async loadLevelList() {
         try {
             // Effectuer un fetch pour récupérer les niveaux disponibles
-            const response = await fetch("/assets/levels/levels.json"); // Chemin vers le fichier JSON contenant les niveaux
+            const response = await fetch("/assets/levels/" + this.file); // Chemin vers le fichier JSON contenant les niveaux
             console.log("Response:", response);
             const levels = await response.json();
 
@@ -68,5 +69,7 @@ export class LevelSelectionScene {
             });
             panel.addControl(button);
         });
+
+        console.log("Level selection UI created with levels:", levels);
     }
 }

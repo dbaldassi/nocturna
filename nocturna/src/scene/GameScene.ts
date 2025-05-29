@@ -8,7 +8,15 @@ import { Player } from "../GameObjects/Player";
 import { GameObject, GameObjectFactory, GameObjectVisitor, GameObjectConfig, AbstractState, CharacterInput, EndConditionObserver, Enemy } from "../types";
 import { LevelLoaderObserver, LevelLoader, AbstractFactory } from "../LevelLoader";
 import { VictoryCondition } from "../GameObjects/Victory";
+<<<<<<< Updated upstream
 import { LooseCondition } from "../Loose";
+=======
+import { Coin } from "../GameObjects/Coin";
+import { HpBar } from "../HpBar";
+import { NocturnaAudio } from "../NocturnaAudio";
+import { createLoseScreenHUD, createWinScreenHUD, IEndScreenHUD, IEndScreenHUDListener } from "../HUD/EndScreenHUD";
+import { LevelSelectionObserver, LevelSelectionScene } from "../LevelSelection";
+>>>>>>> Stashed changes
 
 const CUBE_SIZE = 3000;
 
@@ -24,7 +32,16 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     protected activeCameraIndex: number = 0;
     protected loseCondition: LooseCondition; // Replace with the actual type if available
     protected state: AbstractGameSceneState;
+<<<<<<< Updated upstream
     protected static sceneName: string = "scene.json";
+=======
+    protected hpBar: HpBar;
+    protected multiplicators: number[] = [20, 10, 5];
+    protected readonly timeMultiplicator: number = 1000 * 60; // 1 minute in milliseconds
+
+    public static sceneName: string = "level1.json";
+    win: boolean = false;
+>>>>>>> Stashed changes
 
     constructor(engine: Engine, inputHandler: InputHandler) {
         super(engine, inputHandler);
@@ -34,6 +51,7 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
 
     static async createScene(engine: Engine, inputHandler: InputHandler): Promise<BaseScene> {
         const scene = new GameScene(engine, inputHandler);
+<<<<<<< Updated upstream
 
         await scene.addPhysic();
 
@@ -47,7 +65,16 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         scene.state = new LoadingState(scene);
         scene.loadLevel(this.sceneName);
         VictoryCondition.mode = "normal";
+=======
+        scene.state = new SelectionState(scene);
+        scene.state.enter();
+>>>>>>> Stashed changes
         return scene;
+    }
+
+    public async createLevel(level: string): Promise<void> {
+        await this.addPhysic();
+        this.loadLevel(level);
     }
 
     protected loadLevel(file: string) {
@@ -133,12 +160,40 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         this.player.visitEnemy(enemy);
     }
 
+<<<<<<< Updated upstream
     public checkLoose() {
         if (this.loseCondition.checkLoose(this.timer)) {
             console.log("Loose condition met");
             const state = this.state as InGameState;
             state.setCondition(this.loseCondition);
         }
+=======
+    public visitCoin(coin: Coin): void {
+        const index = Math.floor(this.timer / this.timeMultiplicator);
+        const multiplicator = this.multiplicators[index] || 1; // Default to 1 if index is out of bounds
+        this.score += coin.getScore() * multiplicator;
+
+        // remove the coin from the gameObjects array
+        this.gameObjects = this.gameObjects.filter(o => o !== coin);
+        coin.getMeshes().forEach(m => {
+            if (m.physicsBody) {
+                m.physicsBody.dispose();
+            }
+            m.dispose();
+        });
+    }
+
+    public hideUI() {
+        this.hpBar.dispose();
+    }
+
+    public checkWin(): boolean {
+        return this.win;
+    }
+
+    public checkLoose(): boolean {
+        return this.player && !this.player.isAlive();
+>>>>>>> Stashed changes
     }
 
     public updateObjects(dt: number, input: CharacterInput) {
@@ -163,6 +218,7 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         const input = this.inputHandler.getInput();
         // this.currentLevel.update(dt, input);
         const newState = this.state.update(dt, input);
+        console.log(`Current state: ${this.state.constructor.name}`, `New state: ${newState ? newState.constructor.name : 'null'}`);
         if (newState) {
             this.state.exit();
             this.state = newState;
@@ -274,6 +330,21 @@ class InGameState extends AbstractGameSceneState {
         this.gameScene.checkLoose();
         this.gameScene.updateTimer(dt);
 
+<<<<<<< Updated upstream
+=======
+        if (this.gameScene.checkWin()) {
+            return new EndState(this.gameScene,
+                createWinScreenHUD(this.gameScene,
+                    this.gameScene.hasNextLevel() ? "continue" : "normal",
+                    this.gameScene.getScore(),
+                    this.gameScene.getTimer()));
+        }
+
+        if (this.gameScene.checkLoose()) {
+            return new EndState(this.gameScene, createLoseScreenHUD(this.gameScene, this.gameScene.getScore(), this.gameScene.getTimer()));
+        }
+
+>>>>>>> Stashed changes
         return null;
     }
 
@@ -295,6 +366,7 @@ class EndState extends AbstractGameSceneState {
 
     constructor(scene: GameScene, object: VictoryCondition | LooseCondition) {
         super(scene);
+<<<<<<< Updated upstream
 
         this.endObject = object;
     }
@@ -302,6 +374,12 @@ class EndState extends AbstractGameSceneState {
     render(): void {
         // this.gameScene.getScene().render();
     }
+=======
+        this.hud = hud;
+    }
+
+    render(): void { }
+>>>>>>> Stashed changes
     enter(): void {
         console.log(`Entering state: ${this.constructor.name}`);
         this.gameScene.removePhysics();
@@ -318,5 +396,39 @@ class EndState extends AbstractGameSceneState {
         this.endObject.update(dt, input);
 
         return null;
+    }
+}
+
+class SelectionState extends AbstractGameSceneState implements LevelSelectionObserver {
+    private level: string = null;
+    private levelSelector: LevelSelectionScene | null = null;
+    private file: string;
+
+    constructor(gameScene: GameScene, file: string = "levels.json") {
+        super(gameScene);
+        this.file = file;
+    }
+
+    public render(): void {
+    }
+
+    public name(): string {
+        return "Selection state";
+    }
+
+    enter() {
+        this.levelSelector = new LevelSelectionScene(this.gameScene.getScene(), this, this.file);
+    }
+    exit() {
+        this.gameScene.getScene().dispose();
+        this.gameScene.createLevel(this.level);
+    }
+
+    update(_: number, __: CharacterInput): AbstractGameSceneState | null {
+        return this.level ? new LoadingState(this.gameScene) : null;
+    }
+
+    onLevelSelected(level: string): void {
+        this.level = level;
     }
 }

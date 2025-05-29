@@ -10,8 +10,15 @@ import { VictoryCondition } from "../GameObjects/Victory";
 import { GameScene, LoadingState } from "./GameScene";
 
 export class TutorialScene extends GameScene {
+<<<<<<< Updated upstream
     protected static override sceneName: string = "tutorial.json";
     protected static sceneOrder: string[] = ["jump.json", "platforms.json", "spike_trap.json", "rocket.json"];
+=======
+    public static override sceneName: string = "tutorial.json";
+    protected static readonly sceneOrder: string[] = ["jump.json", "platforms.json", "spike_trap.json", "rocket.json"];
+    private static readonly explainationsByScene: number[] = [3, 1, 2, 2];
+    private static nextStep: boolean = false;
+>>>>>>> Stashed changes
     protected static sceneIndex: number = 0;
 
     static async createScene(engine: Engine, inputHandler: InputHandler, tutorialScene: TutorialScene = null): Promise<BaseScene> {

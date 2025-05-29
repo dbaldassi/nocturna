@@ -12,8 +12,14 @@ import { LevelLoader, LevelLoaderObserver } from "../LevelLoader";
 import { LevelSelectionScene, LevelSelectionObserver } from "../LevelSelection";
 import { FixedRocket, FixedRocketFactory } from "../GameObjects/Rocket";
 import { SpikeTrapFactory, SpikeTrapObject } from "../GameObjects/SpikeTrap";
+<<<<<<< Updated upstream
 
 const CUBE_SIZE = 3000;
+=======
+import { Coin, CoinFactory } from "../GameObjects/Coin";
+import { createHUDEditor, IHUDEditor, IHUDEditorListener } from "../HUD/EditorHUD";
+import { AbstractGameSceneState } from "../states/MultiSceneStates";
+>>>>>>> Stashed changes
 
 abstract class EditorState implements AbstractState {
     protected scene: EditorScene;
@@ -233,9 +239,11 @@ class SelectionState implements AbstractState, LevelSelectionObserver {
     private scene: EditorScene;
     private levelSelector: LevelSelectionScene;
     private level :string = null;
+    private file: string;
 
-    constructor(scene: EditorScene) {
+    constructor(scene: EditorScene, file: string = "levels.json") {
         this.scene = scene;
+        this.file = file;
     }
 
     public name(): string {
@@ -243,7 +251,7 @@ class SelectionState implements AbstractState, LevelSelectionObserver {
     }
 
     enter() {
-        this.levelSelector = new LevelSelectionScene(this.scene.getScene(), this);
+        this.levelSelector = new LevelSelectionScene(this.scene.getScene(), this, this.file);
 
     }
     exit() {
