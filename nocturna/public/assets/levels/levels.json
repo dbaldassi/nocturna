@@ -2,5 +2,7 @@
     { "name": "Blank", "file": "blank.json" },
     { "name": "Tutorial", "file": "tutorial.json" },
     { "name": "Test Scene", "file": "scene.json" },
-    { "name": "Multi", "file": "multi.json" }
+    { "name": "Multi", "file": "multi.json" },
+    { "name": "Level1", "file" : "level1.json" },
+    { "name": "Level2", "file" : "level2.json" }
 ]

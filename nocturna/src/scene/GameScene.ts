@@ -28,7 +28,7 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     protected multiplicators: number[] = [20, 10, 5];
     protected readonly timeMultiplicator: number = 1000 * 60; // 1 minute in milliseconds
 
-    protected static sceneName: string = "test_level.json";
+    protected static sceneName: string = "level2.json";
     win: boolean = false;   
 
     constructor(engine: Engine, inputHandler: InputHandler) {
@@ -173,8 +173,17 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         const index = Math.floor(this.timer / this.timeMultiplicator);
         const multiplicator = this.multiplicators[index] || 1; // Default to 1 if index is out of bounds
         this.score += coin.getScore() * multiplicator;
-    }
 
+        // remove the coin from the gameObjects array
+        this.gameObjects = this.gameObjects.filter(o => o !== coin);
+        coin.getMeshes().forEach(m => {
+            if (m.physicsBody) {
+                m.physicsBody.dispose();
+            }
+            m.dispose();
+        });
+    }
+    
     public hideUI() {
         this.hpBar.dispose();
     }
