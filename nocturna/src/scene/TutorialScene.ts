@@ -3,7 +3,7 @@ import { BaseScene } from "./BaseScene";
 import { InputHandler } from "../InputHandler";
 import { GameObject } from "../types";
 import { LoadingState, InGameState } from "../states/GameStates";
-import { HpBar } from "../HpBar";
+import { HpBar } from "../HUD/HpBar";
 import { Translation } from "../utils/translation";
 import { NocturnaAudio } from "../NocturnaAudio";
 import { GameScene } from "./GameScene";

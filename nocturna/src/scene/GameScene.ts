@@ -9,7 +9,7 @@ import { GameObject, GameObjectFactory, GameObjectVisitor, GameObjectConfig, Cha
 import { LevelLoaderObserver, LevelLoader } from "../LevelLoader";
 import { VictoryCondition } from "../GameObjects/Victory";
 import { Coin } from "../GameObjects/Coin";
-import { HpBar } from "../HpBar";
+import { HpBar } from "../HUD/HpBar";
 import { NocturnaAudio } from "../NocturnaAudio";
 import { IEndScreenHUDListener } from "../HUD/EndScreenHUD";
 import { AbstractGameSceneState, InGameState, LoadingState, SelectionState } from "../states/GameStates";

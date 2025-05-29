@@ -11,7 +11,7 @@ import { CharacterInput, GameObject, GameObjectConfig, GameObjectFactory, Utils 
 import { LevelLoader, LevelLoaderObserver } from "../LevelLoader";
 import { Cube } from "../Cube";
 import { RemotePlayer } from "../GameObjects/RemoteGameObject";
-import { Lobby, LobbyObserver } from "../Lobby";
+import { Lobby, LobbyObserver } from "../HUD/Lobby";
 import { ParentNode } from "../ParentNode";
 import { createMultiLoseScreenHUD, createMultiWinScreenHUD, IEndScreenHUD, IEndScreenHUDListener } from "../HUD/EndScreenHUD";
 import { NocturnaAudio } from "../NocturnaAudio";
