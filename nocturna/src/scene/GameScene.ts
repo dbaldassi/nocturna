@@ -29,7 +29,9 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     protected multiplicators: number[] = [20, 10, 5];
     protected readonly timeMultiplicator: number = 1000 * 60; // 1 minute in milliseconds
 
-    protected static sceneName: string = "level2.json";
+    private data: JSON = null;
+
+    protected sceneName: string = "level2.json";
     win: boolean = false;
 
     constructor(engine: Engine, inputHandler: InputHandler) {
@@ -62,11 +64,13 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     }
 
     public createLevelFromData(data: JSON) {
+        this.data = data;
         this.levelLoader.loadLevelFromData(data);
     }
 
     protected loadLevel(file: string) {
         // this.currentLevel = new Level(this.scene, this.parent, this.cube, CUBE_SIZE);
+        this.sceneName = file;
         this.levelLoader.loadLevel(file);
     }
 
@@ -280,7 +284,11 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
 
         await this.addPhysic();
         // this.scene.enablePhysics(new Vector3(0, -1000, 0), this.hk);
-        this.loadLevel(GameScene.sceneName);
+        if (this.data) {
+            this.levelLoader.loadLevelFromData(this.data);
+        } else {
+            this.loadLevel(this.sceneName);
+        }
     }
 
     public removePhysics() {
