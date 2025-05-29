@@ -70,7 +70,7 @@ export class NocturnaAudio {
      * Disposes the previous background music if it exists.
      * @param musicUrl The URL of the music file to play.
      */
-    public async setBackgroundMusic(musicUrl: string): Promise<void> {
+    public async setBackgroundMusic(musicUrl: string, volume? : number): Promise<void> {
         if(this.background) {
             this.background.stop();
             this.background.dispose();
@@ -79,7 +79,7 @@ export class NocturnaAudio {
         this.background = await CreateStreamingSoundAsync("background", musicUrl, { loop: true, autoplay: true });
         if (this.background) {
             if(this.backgroundMuted) this.background.volume = 0; // Mute if previously muted
-            else this.background.volume = 0.5; // Set default volume
+            else this.background.volume = volume ?? 1.0; // Set default volume
             this.background.loop = true;
             this.background.play();
         }

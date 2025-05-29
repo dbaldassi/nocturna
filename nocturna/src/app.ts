@@ -80,7 +80,7 @@ export class App {
                const volume = parseFloat(audioSlider.value);
                audio.setVolume(volume);
             }
-            audio.setBackgroundMusic("assets/music/lobby.mp3");
+            audio.setBackgroundMusic("assets/music/lobby.mp3", 0.1);
         });
     }
 
