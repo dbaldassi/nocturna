@@ -186,7 +186,7 @@ export class SelectionState extends AbstractGameSceneState implements LevelSelec
      * Called when entering the selection state. Initializes the level selector UI.
      */
     enter() {
-        this.levelSelector = new LevelSelectionScene(this.gameScene.getScene(), this, this.file, true);
+        this.levelSelector = new LevelSelectionScene(this.gameScene.getScene(), this, this.file);
     }
 
     /**

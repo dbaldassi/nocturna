@@ -11,14 +11,12 @@ export class LevelSelectionScene {
     private scene: Scene;
     private observer: LevelSelectionObserver;
     private fileName: string;
-    private hasDragAndDrop: boolean;
 
-    constructor(scene: Scene, observer: LevelSelectionObserver, fileName: string = "levels.json", hasDragAndDrop: boolean = false) {
+    constructor(scene: Scene, observer: LevelSelectionObserver, fileName: string = "levels.json") {
         console.log(scene);
         this.scene = scene;
         this.observer = observer;
         this.fileName = fileName;
-        this.hasDragAndDrop = hasDragAndDrop;
 
         // Configurer la caméra
         const camera = new FreeCamera("camera", new Vector3(0, 0, -10), this.scene);
@@ -75,9 +73,7 @@ export class LevelSelectionScene {
             panel.addControl(button);
         });
 
-        if (this.hasDragAndDrop) {
-            this.addDragAndDropArea(panel);
-        }
+        this.addDragAndDropArea(panel);
     }
 
     private addDragAndDropArea(panel: StackPanel) {
