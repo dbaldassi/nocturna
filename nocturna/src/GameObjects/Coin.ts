@@ -117,37 +117,15 @@ export class SuperCoin extends Coin {
     }
 }
 
+/**
+ * Factory for creating Coin objects.
+ * This factory handles the creation of Coin objects with or without physics,
+ * and manages the loading of their meshes and sounds.
+ * @implements {GameObjectFactory}
+ */
+
 export class CoinFactory implements GameObjectFactory {
 
-    /*protected createImpl(config: GameObjectConfig, physics: boolean): Coin {
-        const diameter = 15;
-
-        const mesh = MeshBuilder.CreateSphere("coin", { diameter: diameter, segments: 16 }, config.scene);
-        // mesh.scaling.y = 0.2; // Rendre la sphère plate
-        mesh.position = config.position;
-        if(config.translation) {
-            mesh.position.addInPlace(config.translation.scale(diameter));
-        }
-
-        const material = new PBRMaterial("coinPBRMaterial", config.scene);;
-        material.albedoColor = Color3.Yellow();
-        material.emissiveColor = Color3.Yellow(); // Jaune
-        material.metallic = 1; // Rend la pièce métallique
-        material.roughness = 0.2;
-        mesh.material = material;
-
-        if(physics) {
-            new PhysicsAggregate(mesh, PhysicsShapeType.SPHERE, {
-                mass: 0,
-                friction: 0,
-                restitution: 0,
-            });
-            mesh.physicsBody.setCollisionCallbackEnabled(true);
-        }
-
-        return new Coin(config.scene, mesh, 10);
-    }*/
-    
     protected createCoinObject(config: GameObjectConfig) {
         return new Coin(config.scene, null, 10);
     }
@@ -189,11 +167,23 @@ export class CoinFactory implements GameObjectFactory {
         return this.createCoin(config, physics, path);
     }
 
+    /**
+     * Creates a Coin object for the game, with a physic body
+     * @param config The configuration for the Coin object.
+     * @returns The created Coin object.
+     */
+
     public create(config: GameObjectConfig): Coin {
         const coin = this.createImpl(config, true);
         return coin;
     }
 
+    /**
+     * Creates a Coin object for the editor, without a physic body
+     * @param config The configuration for the Coin object.
+     * @returns The created Coin object for the editor.
+     */
+    
     public createForEditor(config: GameObjectConfig): EditorObject {
         const coin = this.createImpl(config, false);
         return new ObjectEditorImpl(coin);

@@ -155,7 +155,7 @@ export class VictoryConditionFactory implements GameObjectFactory {
             const ctx = dynTex.getContext();
             ctx.fillStyle = `rgb(${Math.floor(meshColor.r * 255)},${Math.floor(meshColor.g * 255)},${Math.floor(meshColor.b * 255)})`;
             ctx.beginPath();
-            ctx.arc(8, 8, 8, 0, 2 * Math.PI); // cercle plein
+            ctx.arc(8, 8, 8, 0, 2 * Math.PI); 
             ctx.fill();
             ctx.strokeStyle = "#fff";
             ctx.lineWidth = 1;
@@ -166,7 +166,7 @@ export class VictoryConditionFactory implements GameObjectFactory {
 
             const sparkParticles = new ParticleSystem("sparks", 100, config.scene);
             sparkParticles.particleTexture = dynTex;
-            sparkParticles.emitter = meshes[0]; // la plateforme
+            sparkParticles.emitter = meshes[0]; 
             sparkParticles.minEmitBox = new Vector3(-0.2, 0, -0.2);
             sparkParticles.maxEmitBox = new Vector3(0.5, 0, 0.5);
             sparkParticles.color1 = new Color4(1, 1, 0.5, 1);
@@ -183,8 +183,8 @@ export class VictoryConditionFactory implements GameObjectFactory {
 
             const pbr = new PBRMaterial("victoryPBR", config.scene);
             pbr.albedoColor = meshes[1].material?.diffuseColor ?? new Color3(0, 0.2, 1); // couleur de base
-            pbr.metallic = 0.8; // Ajuste pour plus ou moins de réflexion
-            pbr.roughness = 0.1; // Plus bas = plus lisse/reflet net
+            pbr.metallic = 0.8; 
+            pbr.roughness = 0.1; 
 
             pbr.reflectionTexture = new CubeTexture("https://playground.babylonjs.com/textures/environment.env", config.scene);
             pbr.reflectivityColor = new Color3(0.2, 0.8, 1); // teinte de la réflexion

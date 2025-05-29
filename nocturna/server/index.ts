@@ -11,6 +11,7 @@ const PORT = 5173;
 const rest = Express();
 rest.use(CORS());
 rest.use(Express.static("www"));
+rest.use("/docs", Express.static("www/docs"));
 
 const handlers = {
 	"multi"	        : new MultiProtocol(),
