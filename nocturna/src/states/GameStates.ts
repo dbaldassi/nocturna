@@ -1,5 +1,5 @@
 import { createWinScreenHUD, createLoseScreenHUD, IEndScreenHUD } from "../HUD/EndScreenHUD";
-import { LevelSelectionObserver, LevelSelectionScene } from "../LevelSelection";
+import { LevelSelectionObserver, LevelSelectionScene } from "../HUD/LevelSelection";
 import { GameScene } from "../scene/GameScene";
 import { CharacterInput } from "../types";
 

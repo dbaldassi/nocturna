@@ -1,24 +1,59 @@
 import { Scene, Vector3, FreeCamera } from "@babylonjs/core";
 import { AdvancedDynamicTexture, Button, StackPanel, TextBlock, Control } from "@babylonjs/gui";
 
+/**
+ * LevelSelection.ts defines the LevelSelectionScene class and its observer interface for displaying
+ * and managing the level selection UI in Nocturna.
+ * 
+ * Responsibilities:
+ * - Loads the list of available levels from a JSON file.
+ * - Displays a GUI for selecting a level, with a button for each available level.
+ * - Allows users to drag and drop a custom JSON file to load a level.
+ * - Verifies the validity of the loaded JSON level data.
+ * - Notifies an observer when a level is selected or custom data is loaded.
+ * - Handles error display for invalid files or loading issues.
+ * 
+ * Usage:
+ * - Instantiate LevelSelectionScene with a Babylon.js Scene and a LevelSelectionObserver.
+ * - The observer must implement `onLevelSelected(levelFile)` and `onDataTransmited(data)`.
+ * - The UI is automatically created and disposed as needed.
+ * - Use drag-and-drop or select a level from the list to trigger observer callbacks.
+ */
+
+/**
+ * LevelSelectionObserver defines the interface for objects that want to be notified
+ * when a level is selected or custom data is loaded.
+ */
 export interface LevelSelectionObserver {
     onLevelSelected(levelFile: string): void;
     onDataTransmited(data: JSON): void;
 };
 
+/**
+ * LevelSelectionScene manages the level selection user interface.
+ * - Loads level data from a JSON file.
+ * - Displays a list of levels as buttons.
+ * - Supports drag-and-drop of custom JSON files.
+ * - Notifies the observer of user actions.
+ */
 export class LevelSelectionScene {
     private guiTexture: AdvancedDynamicTexture;
     private scene: Scene;
     private observer: LevelSelectionObserver;
     private fileName: string;
 
+    /**
+     * Constructs a new LevelSelectionScene.
+     * @param scene The Babylon.js scene.
+     * @param observer The observer to notify of user actions.
+     * @param fileName The JSON file listing available levels (default: "levels.json").
+     */
     constructor(scene: Scene, observer: LevelSelectionObserver, fileName: string = "levels.json") {
-        console.log(scene);
         this.scene = scene;
         this.observer = observer;
         this.fileName = fileName;
 
-        // Configurer la caméra
+        // Set up the camera for the selection scene
         const camera = new FreeCamera("camera", new Vector3(0, 0, -10), this.scene);
         camera.attachControl(true);
         scene.activeCamera = camera;
@@ -26,32 +61,34 @@ export class LevelSelectionScene {
         this.loadLevelList();
     }
 
+    /**
+     * Loads the list of available levels from the JSON file.
+     * On success, creates the level selection UI.
+     */
     private async loadLevelList() {
         try {
-            // Effectuer un fetch pour récupérer les niveaux disponibles
-            const response = await fetch("/assets/levels/" + this.fileName); // Chemin vers le fichier JSON contenant les niveaux
-            console.log("Response:", response);
+            const response = await fetch("/assets/levels/" + this.fileName);
             const levels = await response.json();
-
-            // Créer une interface utilisateur pour afficher les niveaux
             this.createLevelSelectionUI(levels);
         } catch (error) {
-            console.error("Failed to load level list:", error);
+            this.displayError("Failed to load level list: " + error);
         }
     }
 
+    /**
+     * Creates the GUI for level selection, with a button for each level.
+     * @param levels The list of levels (array of { name, file }).
+     */
     private createLevelSelectionUI(levels: { name: string; file: string }[]) {
-        // Créer une texture GUI pour afficher les boutons
         this.guiTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI", true, this.scene);
 
-        // Créer un panneau vertical pour organiser les boutons
         const panel = new StackPanel();
         panel.width = "50%";
         panel.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
         panel.verticalAlignment = Control.VERTICAL_ALIGNMENT_CENTER;
         this.guiTexture.addControl(panel);
 
-        // Ajouter un titre
+        // Title
         const title = new TextBlock();
         title.text = "Select a Level";
         title.color = "white";
@@ -59,8 +96,7 @@ export class LevelSelectionScene {
         title.height = "50px";
         panel.addControl(title);
 
-
-        // Ajouter un bouton pour chaque niveau
+        // Level buttons
         levels.forEach((level) => {
             const button = Button.CreateSimpleButton(level.name, level.name);
             button.width = "100%";
@@ -68,7 +104,7 @@ export class LevelSelectionScene {
             button.color = "white";
             button.background = "gray";
             button.onPointerClickObservable.add(() => {
-                this.observer.onLevelSelected(level.file); // Notify the observer with the selected level file
+                this.observer.onLevelSelected(level.file);
             });
             panel.addControl(button);
         });
@@ -76,18 +112,20 @@ export class LevelSelectionScene {
         this.addDragAndDropArea(panel);
     }
 
+    /**
+     * Adds a drag-and-drop area to the UI for loading custom JSON files.
+     * @param panel The StackPanel to add the area to.
+     */
     private addDragAndDropArea(panel: StackPanel) {
-        // Ajouter une zone de drop pour charger un fichier JSON
         const dropInfo = new TextBlock();
         dropInfo.text = "Or drag & drop a JSON file here";
         dropInfo.color = "lightgray";
         dropInfo.fontSize = 18;
         dropInfo.height = "30px";
         panel.addControl(dropInfo);
-        // Drag and drop logic
+
         const canvas = this.scene.getEngine().getRenderingCanvas();
         if (canvas) {
-            // Prevent default drag behaviors
             canvas.addEventListener("dragover", (e) => {
                 e.preventDefault();
                 dropInfo.color = "yellow";
@@ -109,7 +147,6 @@ export class LevelSelectionScene {
                         } else {
                             this.displayError("Invalid level data format.");
                         }
-
                     };
                     reader.readAsText(file);
                 }
@@ -117,11 +154,13 @@ export class LevelSelectionScene {
         }
     }
 
+    /**
+     * Disposes the GUI resources used by the level selection scene.
+     */
     public dispose() {
         if (this.guiTexture) {
             this.guiTexture.dispose();
         }
-        // this.scene.dispose();
     }
 
     /**
@@ -130,7 +169,6 @@ export class LevelSelectionScene {
      * @returns True if the data is valid, false otherwise.
      */
     private verifyJson(data: JSON): boolean {
-        // Allowed object types
         const allowedNames = [
             "fixed_platform",
             "parented_platform",
@@ -144,7 +182,6 @@ export class LevelSelectionScene {
             "super_coin"
         ];
 
-        // Check if data is an object and has required root properties
         if (
             typeof data !== "object" ||
             data === null ||
@@ -158,7 +195,6 @@ export class LevelSelectionScene {
 
         const objects = (data as any).objects;
         for (const obj of objects) {
-            // Check required properties
             if (
                 typeof obj !== "object" ||
                 !("position" in obj) ||
@@ -168,7 +204,6 @@ export class LevelSelectionScene {
             ) {
                 return false;
             }
-            // Check type is allowed
             if (!allowedNames.includes(obj.type)) {
                 return false;
             }
@@ -177,7 +212,7 @@ export class LevelSelectionScene {
     }
 
     /**
-     * Displays an error message in the console and optionally on the UI.
+     * Displays an error message in the console and on the UI.
      * @param message The error message to display.
      */
     private displayError(message: string): void {
@@ -186,7 +221,7 @@ export class LevelSelectionScene {
         errorText.text = message;
         errorText.color = "red";
         errorText.fontSize = 28;
-        errorText.top = "-200px"; // Move the error message higher
+        errorText.top = "-200px";
         this.guiTexture.addControl(errorText);
         setTimeout(() => {
             this.guiTexture.removeControl(errorText);
