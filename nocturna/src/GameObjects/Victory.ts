@@ -131,6 +131,8 @@ export class VictoryConditionFactory implements GameObjectFactory {
             const meshes = task.loadedMeshes;
 
             meshes[0].name = VictoryCondition.Type;
+            config.position = Utils.calculatePositionRelativeToParent(config.parent, config.position);
+            config.rotation = Utils.calculateRotationRelativeToParent(config.parent, config.rotation);
             Utils.configureMesh(meshes, config);
 
             config.parent.addChild(meshes[0]);
