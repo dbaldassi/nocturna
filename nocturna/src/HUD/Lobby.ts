@@ -299,8 +299,8 @@ export class Lobby {
             return;
         }
 
-        statusText.text = "Ready";
-        statusText.color = "green";
+        statusText.text = statusText.text === "Ready" ? "Not Ready" : "Ready";
+        statusText.color = statusText.color === "green" ? "red" : "green";
     }
         
     /**

@@ -488,7 +488,7 @@ export class LobbyState extends AbstractGameSceneState implements LobbyObserver 
 
     public onReady() : void {
         this.localPlayer.num = this.findAvailableNum();
-        this.localPlayer.ready = true;
+        this.localPlayer.ready = !this.localPlayer.ready;
         this.networkManager.sendUpdate("ready", { num : this.localPlayer.num });
         console.log("Ready", this.remoteParticipant);
     }
