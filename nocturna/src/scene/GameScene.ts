@@ -58,7 +58,6 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     }
     
     public createLevel(file: string) {
-        this.scene = new Scene(this.engine);
         this.loadLevel(file);
     }
 
@@ -433,6 +432,7 @@ class SelectionState extends AbstractGameSceneState implements LevelSelectionObs
 
     exit() {
         // this.gameScene.getScene().dispose();
+        this.levelSelector.dispose();
         this.gameScene.createLevel(this.level);
     }
 

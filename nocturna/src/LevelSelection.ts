@@ -69,4 +69,11 @@ export class LevelSelectionScene {
             panel.addControl(button);
         });
     }
+
+    public dispose() {
+        if (this.guiTexture) {
+            this.guiTexture.dispose();
+        }
+        // this.scene.dispose();
+    }
 }
