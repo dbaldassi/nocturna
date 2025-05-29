@@ -16,12 +16,25 @@ import { Player } from "../GameObjects/Player";
 import { CubeCollisionObserver } from "../Cube";
 import { createHUDMulti, IHUDMulti } from "../HUD/MultiHUD";
 
+/**
+ * CoinSpawner is a helper class responsible for spawning coins and super coins in the scene.
+ * 
+ * - Uses CoinFactory and SuperCoinFactory to create coin objects.
+ * - Manages asset loading for coins using Babylon.js AssetsManager.
+ * - Disables the default loading screen.
+ * - Randomly decides whether to spawn a regular coin or a super coin (10% chance for super coin).
+ * - Ensures that assets are fully loaded before resolving the spawned coin.
+ */
 class CoinSpawner {
     private scene: Scene;
     private coinFactory: CoinFactory;
     private superCoinFactory: SuperCoinFactory;
     private assetManager: AssetsManager;
 
+    /**
+     * Constructs a new CoinSpawner.
+     * @param scene - The Babylon.js scene where coins will be spawned.
+     */
     constructor(scene: Scene) {
         this.scene = scene;
         this.coinFactory = new CoinFactory();
@@ -30,16 +43,22 @@ class CoinSpawner {
         this.assetManager.useDefaultLoadingScreen = false;
     }
 
+    /**
+     * Spawns a coin (regular or super) at the given position.
+     * @param position - The position where the coin should be spawned.
+     * @returns A promise that resolves to the spawned Coin object once assets are loaded.
+     */
     public async spawnCoin(position: Vector3): Promise<Coin> {
         let coin: Coin;
         const config: GameObjectConfig = {
             position: position,
-            translation: Vector3.Up(),
+            translation: Vector3.Up(), // Above the platform
             rotation: Vector3.Zero(),
             scene: this.scene,
             assetsManager: this.assetManager
         };
 
+        // 90% chance to spawn a regular coin, 10% chance for a super coin
         if(Math.random() > 0.1) coin = this.coinFactory.create(config);
         else coin = this.superCoinFactory.create(config);
 
@@ -56,37 +75,79 @@ class CoinSpawner {
     }
 };
 
+/**
+ * MultiScene handles the multiplayer game logic, player management, UI, cameras, 
+ * object synchronization, and network communication for Nocturna's multiplayer mode.
+ * 
+ * - Manages local and remote players and objects.
+ * - Handles inventory, powers, and HUD updates.
+ * - Synchronizes object creation, updates, and destruction over the network.
+ * - Manages camera switching (wide/follow/spectator).
+ * - Handles collisions, score, and victory conditions.
+ * - Integrates with Babylon.js for rendering, physics, and UI.
+ */
 export class MultiScene extends BaseScene implements GameObjectVisitor, CubeCollisionObserver {
+    /** Maximum number of players in a multiplayer game. */
     public static readonly MaxPlayer: number = 4;
 
-    private readonly coinInterval: number = 5000; // 1 second
+    /** Time interval between coin spawns (ms). */
+    private readonly coinInterval: number = 5000;
+    /** Maximum number of powers in the player's inventory. */
     private readonly inventorySize: number = 3;
+    /** Score required to earn a powerup. */
     private readonly powerupScore: number = 100;
 
+    /** All game objects in the scene. */
     private gameObjects: GameObject[] = [];
+    /** All remote (networked) objects. */
     private remoteObjects: IRemoteGameObject[] = [];
+    /** All local (authoritative) objects. */
     private localObjects: GameObject[] = [];
+    /** Current state of the game scene (lobby, in-game, etc.). */
     private state : AbstractGameSceneState;
+    /** Timestamp for network synchronization. */
     private timestamp: number = 0;
+    /** Local player score. */
     private score: number = 0;
+    /** Handles coin spawning logic. */
     private coinSpawner: CoinSpawner;
+    /** Local player ID. */
     private playerId: string;
+    /** Timer for coin spawning. */
     private coinTimer: number = 0;
+    /** List of active cameras (wide, follow, etc.). */
     private cameras: Camera[];
+    /** Index of the subcube assigned to this player. */
     private subcube: number;
+    /** Parent node for rotating objects. */
     private parent: ParentNode = null;
+    /** HUD score text element. */
     private scoreText: any;
+    /** Player's inventory of powers. */
     private inventory: Action.ActionBase[] = [];
+    /** Multiplayer HUD interface. */
     private hud: IHUDMulti;
+    /** Map of loaded sound effects. */
     private sounds: Map<string, StaticSound> = new Map();
 
+    /** Index of the currently active camera. */
     public activeCameraIndex: number = 0;
+    /** List of remote players. */
     private remotePlayers: RemotePlayer[] = [];
 
+    /**
+     * Constructs a new MultiScene.
+     * @param engine - The Babylon.js engine.
+     * @param inputHandler - The input handler for this scene.
+     */
     constructor(engine: Engine, inputHandler: InputHandler) {
         super(engine, inputHandler);
     }
 
+    /**
+     * Plays a sound by name if loaded.
+     * @param name - The sound name.
+     */
     playSound(name: string): void {
         const sound = this.sounds.get(name);
         if (sound) {
@@ -100,6 +161,9 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
     // === INITIALISATION/UI ===
     // =========================
 
+    /**
+     * Static factory to create and initialize a new MultiScene.
+     */
     static async createScene(engine: Engine, inputHandler: InputHandler): Promise<BaseScene> {
         const scene = new MultiScene(engine, inputHandler);
         const camera = new UniversalCamera("camera1", Vector3.Zero(), scene.scene);
@@ -109,6 +173,9 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         return scene;
     }
 
+    /**
+     * Initializes the game scene, inventory, input actions, and physics.
+     */
     public async createGameScene() {
         this.scene = new Scene(this.engine);
         // this.enableDebug();
@@ -126,6 +193,9 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         await this.addPhysic();
     }
 
+    /**
+     * Sets up collision callbacks for all game objects.
+     */
     public setupCollisions() {
         this.gameObjects.forEach((object) => {
             if(object.getMesh().physicsBody) {
@@ -139,6 +209,9 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         });
     }
 
+    /**
+     * Initializes the multiplayer HUD and loads sounds.
+     */
     public setupUI() {
         const player = this.localObjects[0] as Player;
         this.hud = createHUDMulti(this.scene, this, player.getMaxHp(), this.powerupScore);
@@ -151,6 +224,9 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         });
     }
 
+    /**
+     * Disposes the HUD and cleans up UI.
+     */
     public clearUI() {
         this.hud.dispose();
         this.hud = null;
@@ -160,6 +236,9 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
     // === CAMERA            ===
     // =========================
 
+    /**
+     * Sets up the main and follow cameras for gameplay.
+     */
     public setupCamera() {
         this.cameras = [
             new UniversalCamera("wide", Vector3.Zero(), this.scene),
@@ -173,6 +252,9 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         this.inputHandler.addAction("pov", () => this.switchCamera());
     }
 
+    /**
+     * Sets up cameras for spectator mode after player death.
+     */
     public setupDeadCamera() {
         this.cameras.forEach(camera => camera.dispose());
         this.cameras = [new UniversalCamera("wide", Vector3.Zero(), this.scene)];
@@ -190,11 +272,17 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         this.scene.activeCamera = this.cameras[this.activeCameraIndex];
     }
 
+    /**
+     * Switches to the next available camera (wide/follow).
+     */
     public switchCamera() {
         this.activeCameraIndex = (this.activeCameraIndex + 1) % this.cameras.length;
         this.scene.activeCamera = this.cameras[this.activeCameraIndex];
     }
 
+    /**
+     * Switches to the next available camera in spectator mode.
+     */
     public switchDeadCamera() {
         let checked = 0;
         let found = false;
@@ -242,14 +330,17 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
     // === GETTERS/SETTERS   ===
     // =========================
 
+    /** Returns the Babylon.js scene. */
     public getScene() : Scene {
         return this.scene;
     }
 
+    /** Returns the parent node for rotating objects. */
     public getParent(): ParentNode {
         return this.parent;
     }
 
+    /** Returns the number of remote players still alive. */
     public getLeftRemotePlayer(): number {
         return this.remotePlayers.filter(player => player.isAlive()).length;
     }
@@ -258,16 +349,14 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
     // === SHOW / UPDATE UI  ===
     // =========================
 
+    /** Updates the score display. */
     public showScore() {
         if (this.scoreText) {
             this.scoreText.text = `Score : ${this.score}`;
         }
     }
 
-    public showActions() {
-        
-    }
-
+    /** Updates the HUD with current score and HP. */
     public updateUI() {
         this.hud.updateScore(this.score);
         this.hud.updateHp((this.localObjects[0] as Player).getHp());
@@ -277,6 +366,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
     // === LOCAL OBJECTS     ===
     // =========================
 
+    /** Adds a local object and sets up collision handling. */
     private doAddLocalObject(object: GameObject): void {
         this.localObjects.push(object);
         const body = object.getMesh().physicsBody;
@@ -299,6 +389,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         }
     }
 
+    /** Adds a local object and notifies the network. */
     private addLocalObject(object: GameObject): void {
         this.doAddLocalObject(object);
 
@@ -311,6 +402,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         });
     }
 
+    /** Removes a local object and notifies the network. */
     private removeLocalObject(object: GameObject): void {
         this.disposeObject(object, this.localObjects);
         const networkManager = NetworkManager.getInstance();
@@ -320,6 +412,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         });
     }
 
+    /** Updates a local object and sends its state over the network. */
     private updateLocalObject(object: GameObject, dt: number, input: CharacterInput): void {
         object.update(dt, input);
         const networkManager = NetworkManager.getInstance();
@@ -331,6 +424,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         });
     }
 
+    /** Adds the local player to the scene. */
     public addPlayer(player: Player, id: string, subcube: number): void {
         player.setId(id);
         this.localObjects.push(player);
@@ -338,6 +432,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         this.playerId = id;
     }
 
+    /** Removes the local player from the scene. */
     public removePlayer(): void {
         const player = this.localObjects[0] as Player;
         this.inventory.fill(null);
@@ -349,14 +444,17 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
     // === REMOTE OBJECTS    ===
     // =========================
 
+    /** Adds a remote object to the scene. */
     public addRemoteObject(object: IRemoteGameObject): void {
         this.remoteObjects.push(object);
     }
 
+    /** Adds a remote player to the scene. */
     public addRemotePlayer(player: RemotePlayer): void {
         this.remotePlayers.push(player);
     }
 
+    /** Updates a remote player's state. */
     public updateRemotePlayer(id: string, report: any): void {
         const remotePlayer = this.remotePlayers.find(p => p.getId() === id);
 
@@ -380,6 +478,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         }
     }
 
+    /** Handles contact/collision for a remote object. */
     public onRemoteObjectContact(objectId: string, ownerId: string): void {
         const object = this.remoteObjects.find(o => o.getId() === objectId && o.getOwnerId() === ownerId);
         if(object && object.onContact()) {
@@ -387,11 +486,13 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         }
     }
 
+    /** Removes a remote object from the scene. */
     public removeRemoteObject(id: string, owner: string): void {
         const object = this.remoteObjects.find(o => id === o.getId() && owner === o.getOwnerId());
         this.disposeObject(object, this.remoteObjects);
     }
 
+    /** Removes a remote player and their objects from the scene. */
     public removeRemotePlayer(id: string): void {
         const player = this.remotePlayers.find(p => p.getId() === id);
         console.log(player, this.remotePlayers);
@@ -404,6 +505,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         this.hud.removeRemotePlayer(id);
     }
 
+    /** Disposes an object and removes it from its container. */
     public disposeObject(object: GameObject, container: Array<GameObject>) {
         if(!object) return;
 
@@ -422,6 +524,9 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
     // === NETWORK OBJECTS   ===
     // =========================
 
+    /**
+     * Adds a networked object, assigning local or remote authority based on ownerId.
+     */
     public addNetworkObject(object: GameObject, id: string, ownerId: string): void {
         if(ownerId === this.playerId) {
             this.doAddLocalObject(object);
@@ -436,14 +541,17 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
     // === GAME LOGIC        ===
     // =========================
 
+    /** Rotates the parent node (cube) along the given axis. */
     public rotate(axis: "x" | "y" | "z"): void {
         this.parent.rotate(axis);
     }
 
+    /** Called when a new object is created in the scene. */
     public onObjectCreated(object: GameObject): void {
         this.gameObjects.push(object);
     }
 
+    /** Handles victory condition logic. */
     public visitVictory(_: VictoryCondition): void {
         const state = this.state as InGameState;
         
@@ -454,6 +562,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         });
     }
 
+    /** Handles coin collection logic. */
     public visitCoin(coin: Coin): void {
         this.score += coin.getScore();
         this.removeLocalObject(coin);
@@ -464,11 +573,13 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         }
     };
 
+    /** Handles enemy collision logic. */
     public visitEnemy(enemy: Enemy): void {
         const player = this.localObjects[0] as Player;
         player.takeDamage(enemy.getDamage());
     }
 
+    /** Adds a new action/power to the player's inventory. */
     public addAction() {
         const type = Math.floor(Math.random() * Action.Type.LENGTH);
         const action = Action.ActionBase.create(type, this);
@@ -484,6 +595,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         }
     }
 
+    /** Updates the local player and sends a report to the network. */
     public updatePlayer() : boolean {
         const player = this.localObjects[0] as Player;
         const networkManager = NetworkManager.getInstance();
@@ -496,6 +608,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         return player.isAlive();
     }
 
+    /** Spawns coins on platforms at intervals. */
     public spawnObject(dt: number): void {
         this.gameObjects.forEach((object) => {
             if(object.getMesh().name === Platform.Type && this.isInSubcube(object.getMesh().position) && this.coinTimer >= this.coinInterval && Math.random() < 1/this.gameObjects.length) {
@@ -509,6 +622,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         this.coinTimer += dt;
     }
 
+    /** Updates all objects in the scene. */
     public updateObjects(dt: number, input: CharacterInput) {
         this.gameObjects.forEach((object) => object.update(dt, input));
         this.localObjects.forEach((object) => this.updateLocalObject(object, dt, input));
@@ -517,6 +631,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         this.timestamp += dt;
     }
 
+    /** Main update loop for the scene state. */
     public update(dt: number) {
         const input = this.inputHandler.getInput();
         const newState = this.state.update(dt, input);
@@ -527,12 +642,14 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         }
     }
 
+    /** Updates the position of a remote object. */
     public updateRemoteObject(objectId: string, participantId: string, position: Vector3, timestamp: number) {
         let remoteObject = this.remoteObjects.find(object => object.getId() === objectId && object.getOwnerId() === participantId) ||
             this.remotePlayers.find(player => player.getId() === objectId && player.getOwnerId() === participantId);
         if(remoteObject) remoteObject.updatePosition(position, timestamp);
     }
 
+    /** Updates the camera position during object selection. */
     public updateSelectCamera(dt: number, input: CharacterInput): void {
         // move the camera based on input
         const camera = this.scene.activeCamera as UniversalCamera;
@@ -540,10 +657,15 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         camera.position.y += (input.up ? 1 : (input.down ? -1 : 0)) * dt;
     }
 
+    /** Renders the current scene state. */
     public render(): void {
         this.state.render();
     }
 
+    /**
+     * Allows the player to select a platform or object for dropping an enemy/power.
+     * @param callback - Callback to execute when selection is made.
+     */
     public selectObjectDrop(callback: Action.SelectObjectCallback): void {
         const camera = new UniversalCamera("selectCamera", Vector3.Zero(), this.scene);
         this.scene.activeCamera = camera;
@@ -572,6 +694,9 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         this.state = new ActionSelectionState(this);
     }
 
+    /**
+     * Cleans up after object drop selection is complete.
+     */
     public doneSelectingObjectDrop(): void {
         console.log("Done selecting object drop");
 
@@ -596,10 +721,12 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
     // === UTILS / MISC      ===
     // =========================
 
+    /** Sets the parent node for rotating objects. */
     public addParent(parent: ParentNode): void {
         this.parent = parent;
     }
 
+    /** Checks if a position is within the player's subcube. */
     public isInSubcube(position: Vector3) {
         switch(this.subcube) {
             case 0:  return position.x < 0 && position.y > 0;
@@ -610,6 +737,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         }
     }
 
+    /** Returns the subcube index for a given position. */
     public getSubcube(position: Vector3): number {
         if(position.x < 0 && position.y > 0) return 0;
         if(position.x > 0 && position.y > 0) return 1;
@@ -618,6 +746,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         return -1;
     }
 
+    /** Handles collision with the bottom of the cube (player death). */
     public onBottomCollision(collider: PhysicsBody) {
         const player = this.localObjects[0] as Player;
         if(player.getMesh().physicsBody === collider) {
@@ -625,6 +754,7 @@ export class MultiScene extends BaseScene implements GameObjectVisitor, CubeColl
         }
     }
 
+    /** Kills the local player. */
     public killPlayer() {
         const player = this.localObjects[0] as Player;
         if(player instanceof Player) {

@@ -2,11 +2,11 @@ import { Engine, Scene } from "@babylonjs/core";
 import { BaseScene } from "./BaseScene";
 import { InputHandler } from "../InputHandler";
 import { GameObject } from "../types";
-import { VictoryCondition } from "../GameObjects/Victory";
-import { GameScene, LoadingState, InGameState } from "./GameScene";
+import { LoadingState, InGameState } from "../states/GameStates";
 import { HpBar } from "../HpBar";
 import { Translation } from "../utils/translation";
 import { NocturnaAudio } from "../NocturnaAudio";
+import { GameScene } from "./GameScene";
 
 export class TutorialScene extends GameScene {
     protected static override sceneName: string = "tutorial.json";
