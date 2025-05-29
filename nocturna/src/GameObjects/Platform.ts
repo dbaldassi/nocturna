@@ -1,4 +1,4 @@
-import { Scene, Vector3, PhysicsAggregate, PhysicsShapeType, Mesh, AssetsManager } from "@babylonjs/core";
+import { Scene, Vector3, PhysicsAggregate, PhysicsShapeType, Mesh, AssetsManager, GlowLayer, Color3 } from "@babylonjs/core";
 import { ParentNodeObserver } from "../ParentNode";
 import { CharacterInput, EditorObject, GameObject, GameObjectConfig, GameObjectFactory, GameObjectObserver, Utils } from "../types";
 import { ObjectEditorImpl } from "./EditorObject";
@@ -127,6 +127,13 @@ export class ParentedPlatformFactory implements GameObjectFactory {
                 config.rotation = Utils.calculateRotationRelativeToParent(config.parent, config.rotation);
                 Utils.configureMesh(meshes, config);
                 
+                if (!config.scene.getGlowLayerByName("platformGlow")) {
+                    const glowLayer = new GlowLayer("platformGlow", config.scene);
+                    glowLayer.intensity = 0.1;
+                }            
+                
+                meshes[1].material.emissiveColor = new Color3(0.2, 0.6, 1); 
+
                 if(physics) {
                     this.setupPhysics(meshes[0], config);
                     config.parent.addObserver(platform);

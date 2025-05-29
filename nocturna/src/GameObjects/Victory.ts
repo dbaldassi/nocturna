@@ -1,4 +1,4 @@
-import { Animation, Mesh, PhysicsAggregate, PhysicsShapeType, Scene, StaticSound, Vector3 } from '@babylonjs/core';
+import { Animation, Color3, Color4, CubeTexture, DynamicTexture, Mesh, ParticleSystem, PBRMaterial, PhysicsAggregate, PhysicsShapeType, Scene, StaticSound, Texture, Vector3 } from '@babylonjs/core';
 import { GameObject, CharacterInput, Utils, GameObjectObserver } from '../types';
 import { GameObjectConfig, GameObjectFactory, EditorObject, GameObjectVisitor } from '../types';
 import { ParentNodeObserver } from '../ParentNode';
@@ -148,6 +148,48 @@ export class VictoryConditionFactory implements GameObjectFactory {
                 victory.victoryAggregate = p;
                 victory.startAnimation();
             }
+
+            const meshColor = meshes[1].material?.diffuseColor ?? new Color3(0,0.2,1); // couleur du mesh ou blanc
+
+            const dynTex = new DynamicTexture("sparkDynTex", {width: 16, height: 16}, config.scene, false);
+            const ctx = dynTex.getContext();
+            ctx.fillStyle = `rgb(${Math.floor(meshColor.r * 255)},${Math.floor(meshColor.g * 255)},${Math.floor(meshColor.b * 255)})`;
+            ctx.beginPath();
+            ctx.arc(8, 8, 8, 0, 2 * Math.PI); // cercle plein
+            ctx.fill();
+            ctx.strokeStyle = "#fff";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(8, 8, 8, 0, 2 * Math.PI);
+            ctx.stroke();
+            dynTex.update();
+
+            const sparkParticles = new ParticleSystem("sparks", 100, config.scene);
+            sparkParticles.particleTexture = dynTex;
+            sparkParticles.emitter = meshes[0]; // la plateforme
+            sparkParticles.minEmitBox = new Vector3(-0.2, 0, -0.2);
+            sparkParticles.maxEmitBox = new Vector3(0.5, 0, 0.5);
+            sparkParticles.color1 = new Color4(1, 1, 0.5, 1);
+            sparkParticles.color2 = new Color4(1, 0.8, 0.2, 1);
+            sparkParticles.minSize = 0.5;
+            sparkParticles.maxSize = 1;
+            sparkParticles.minLifeTime = 1;
+            sparkParticles.maxLifeTime = 2;
+            sparkParticles.emitRate = 15;
+            sparkParticles.direction1 = new Vector3(-1, 1, -1);
+            sparkParticles.direction2 = new Vector3(1, 1, 1);
+            sparkParticles.gravity = new Vector3(0, -9.81, 0);
+            sparkParticles.start();
+
+            const pbr = new PBRMaterial("victoryPBR", config.scene);
+            pbr.albedoColor = meshes[1].material?.diffuseColor ?? new Color3(0, 0.2, 1); // couleur de base
+            pbr.metallic = 0.8; // Ajuste pour plus ou moins de réflexion
+            pbr.roughness = 0.1; // Plus bas = plus lisse/reflet net
+
+            pbr.reflectionTexture = new CubeTexture("https://playground.babylonjs.com/textures/environment.env", config.scene);
+            pbr.reflectivityColor = new Color3(0.2, 0.8, 1); // teinte de la réflexion
+
+            meshes[1].material = pbr;
         });
 
         Utils.loadSound(config.assetsManager, "victory", "assets/sounds/crystal.ogg", (sound) => {
