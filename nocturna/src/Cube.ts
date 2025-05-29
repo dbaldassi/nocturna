@@ -3,10 +3,17 @@ import { Face } from "./Face";
 import { createEvilPortalMaterial, createLavaMaterial } from "./Shaders/NocturnaShaders";
 import { CollisionGroup } from "./types";
 
-export interface CubeCollisionObserver {
-    onBottomCollision: (collider: PhysicsBody) => void;
-}
-
+/**
+ * Cube represents the main cubic structure in Nocturna, serving as the central environment for gameplay.
+ * 
+ * Responsibilities:
+ * - Creates and manages the six faces of the cube, each as a Face object.
+ * - Handles physics setup for each face, including collision detection (especially for the bottom/lava face).
+ * - Supports observer pattern for collision events (CubeCollisionObserver).
+ * - Provides serialization for saving/loading cube state.
+ * - Supports multiplayer setup by adding separators and portal effects for multi-mode.
+ * - Manages cleanup and disposal of all cube resources.
+ */
 export class Cube {
     private scene: Scene;
     private size: number;
@@ -17,19 +24,38 @@ export class Cube {
 
     public static readonly Type: string = "Cube";
 
+    /**
+     * Constructs a new Cube.
+     * @param scene - The Babylon.js scene.
+     * @param size - The size of the cube.
+     */
     constructor(scene: Scene, size: number) {
         this.scene = scene;
         this.size = size;
     }
 
+    /**
+     * Sets the collision observer for the cube.
+     * @param observer - The observer to notify on bottom face collisions.
+     */
     public setCollisionObserver(observer: CubeCollisionObserver): void {
         this.collisionObserver = observer;
     }
 
+    /**
+     * Returns the size of the cube.
+     */
     public getSize(): number {
         return this.size;
     }
 
+    /**
+     * Static factory to create and initialize a Cube in the scene.
+     * @param scene - The Babylon.js scene.
+     * @param position - The position of the cube.
+     * @param size - The size of the cube.
+     * @returns The created Cube instance.
+     */
     public static create(scene: Scene, position: Vector3 = Vector3.Zero(), size: number): Cube {
         const cube = new Cube(scene, size);
 
@@ -43,6 +69,10 @@ export class Cube {
         return cube;
     }
 
+    /**
+     * Creates the six faces of the cube, sets up their colors, physics, and special materials.
+     * The bottom face uses a lava shader and notifies the collision observer on contact.
+     */
     private createPlanes() {
         const colors = [
             new Color3(1, 0, 0), // Red
@@ -79,7 +109,7 @@ export class Cube {
         for (let i = 0; i < 6; i++) {
             const face = new Face(this.scene, this.size, this.mesh, positions[i], names[i], colors[i], rotations[i]);
             this.faces.push(face);
-            // add physics to the face if the physics engine is enabled
+            // Add physics to the face if the physics engine is enabled
             if (this.scene.getPhysicsEngine()) {
                 const aggregate = new PhysicsAggregate(face.getMesh(), PhysicsShapeType.BOX, { mass: 0 });
 
@@ -108,6 +138,9 @@ export class Cube {
         }
     }
 
+    /**
+     * Disposes all resources associated with the cube, including faces, meshes, materials, and observers.
+     */
     public dispose() {
         this.removePhysics();
 
@@ -137,6 +170,9 @@ export class Cube {
         this.collisionObserver = null;
     }
 
+    /**
+     * Removes physics bodies from all cube faces.
+     */
     public removePhysics() {
         this.faces.forEach(face => {
             if (face.getMesh().physicsBody) {
@@ -146,8 +182,12 @@ export class Cube {
         });
     }
 
+    /**
+     * Sets up the cube for multiplayer mode by adding separator platforms and portal effects.
+     * Adds physics and materials to the separators.
+     */
     public setupMulti() {
-        // Trouver la face "Front"
+        // Find the "Front" face (actually named "Back" in this context)
         const frontFace = this.faces.find(face => face.getMesh().name === "Back");
         if (!frontFace) {
             console.error("Front face not found!");
@@ -156,41 +196,41 @@ export class Cube {
 
         const mesh = frontFace.getMesh();
 
-        // Position de la face "Front"
+        // Position of the "Front" face
         const frontPosition = mesh.position;
 
         const depth = 100;
         const sep = 10;
-        // Créer la plateforme horizontale
+        // Create the horizontal separator platform
         const horizontalPlatform = MeshBuilder.CreateBox("horizontalSeparator", {
             width: this.size * 2,
             depth: depth + depth / 2,
             height: sep,
         }, this.scene);
 
-        // Positionner la plateforme horizontale à mi-hauteur de la face "Front"
+        // Position the horizontal platform at mid-height of the face
         horizontalPlatform.position = new Vector3(
             frontPosition.x,
-            frontPosition.y, // Mi-hauteur
-            frontPosition.z // Légèrement en avant de la face
+            frontPosition.y,
+            frontPosition.z
         );
 
-        // Créer la plateforme verticale
+        // Create the vertical separator platform
         const verticalPlatform = MeshBuilder.CreateBox("verticalSeparator", {
             width: sep,
             depth: depth,
             height: this.size * 2,
         }, this.scene);
 
-        // Positionner la plateforme verticale à mi-largeur de la face "Front"
+        // Position the vertical platform at mid-width of the face
         verticalPlatform.position = new Vector3(
-            frontPosition.x, // Mi-largeur
-            frontPosition.y, // Même hauteur que la face
-            frontPosition.z - depth / 2 // Légèrement en avant de la face
+            frontPosition.x,
+            frontPosition.y,
+            frontPosition.z - depth / 2
         );
 
         // Add physics to the platforms if engine is enabled
-       if (this.scene.getPhysicsEngine()) {
+        if (this.scene.getPhysicsEngine()) {
             console.log("Adding physics to separators");
             const aggregate = new PhysicsAggregate(horizontalPlatform, PhysicsShapeType.BOX, { mass: 0 });
             new PhysicsAggregate(verticalPlatform, PhysicsShapeType.BOX, { mass: 0 });
@@ -214,19 +254,29 @@ export class Cube {
             portalMat.setFloat("time", performance.now() / 1000);
         });
 
-        // Ajouter les plateformes comme enfants de la face "Front"
+        // Optionally, these platforms could be parented to the face mesh
         // horizontalPlatform.parent = mesh;
         // verticalPlatform.parent = mesh;
     }
 
+    /**
+     * Returns the main mesh of the cube.
+     */
     public getMesh(): any {
         return this.mesh;
     }
 
+    /**
+     * Returns all faces of the cube.
+     */
     public getFaces(): Face[] {
         return this.faces;
     }
 
+    /**
+     * Serializes the cube's position and size for saving or exporting.
+     * @returns An object containing the cube's position and size.
+     */
     public serialize(): any {
         const data = {
             position: this.mesh.position,
@@ -234,4 +284,12 @@ export class Cube {
         };
         return data;
     }
+}
+
+/**
+ * CubeCollisionObserver is an interface for objects that want to be notified
+ * when a collision occurs with the bottom face of the cube (e.g., for player death).
+ */
+export interface CubeCollisionObserver {
+    onBottomCollision: (collider: PhysicsBody) => void;
 }

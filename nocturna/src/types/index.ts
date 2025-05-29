@@ -3,6 +3,9 @@ import { VictoryCondition } from "../GameObjects/Victory";
 import { ParentNode } from "../ParentNode";
 import { Coin } from "../GameObjects/Coin";
 
+/**
+ * CharacterInput represents the current input state for character movement and actions.
+ */
 export interface CharacterInput {
     left: boolean;
     right: boolean;
@@ -13,11 +16,18 @@ export interface CharacterInput {
     backward: boolean;
 }
 
+/**
+ * CollisionGroup defines bitmasks for collision filtering.
+ */
 export enum CollisionGroup {
     FACES = 0x0002,
     ROCKET = 0x0004,
 }
 
+/**
+ * GameObject is the base interface for all interactive objects in the game.
+ * Provides methods for type, mesh access, visitor pattern, updates, and event handling.
+ */
 export interface GameObject {
     getType(): string;
     getMesh(): Mesh;
@@ -28,24 +38,36 @@ export interface GameObject {
     onContact(): boolean;
     onPause(): void;
     onResume(): void;
-    onContact(): boolean;
     addObserver(observer: GameObjectObserver): void;
 }
 
+/**
+ * GameObjectObserver is notified when a new GameObject is spawned.
+ */
 export interface GameObjectObserver {
     onSpawnObject(gameObject: GameObject): void;
 }
 
+/**
+ * Enemy extends GameObject with a method to get its damage value.
+ */
 export interface Enemy extends GameObject {
     getDamage(): number;
 }
 
+/**
+ * GameObjectVisitor implements the visitor pattern for game objects.
+ * Provides visit methods for each object type.
+ */
 export interface GameObjectVisitor {
     visitCoin(coin: Coin): void;
     visitEnemy(enemy: Enemy): void;
     visitVictory(portal: VictoryCondition): void;
 }
 
+/**
+ * GameObjectConfig defines the configuration for creating a GameObject.
+ */
 export interface GameObjectConfig {
     size?: Vector3;
     position: Vector3;
@@ -56,15 +78,21 @@ export interface GameObjectConfig {
     assetsManager?: AssetsManager;
 }
 
+/**
+ * GameObjectFactory is the interface for factories that create game objects.
+ */
 export interface GameObjectFactory {
     /**
-     * Méthode abstraite pour créer une plateforme.
-     * Les sous-classes concrètes implémenteront cette méthode.
+     * Abstract method to create a game object.
+     * Concrete subclasses must implement this method.
      */
     create(GameObjectConfig): GameObject;
     createForEditor(GameObjectConfig): EditorObject;
 }
 
+/**
+ * AbstractState defines the interface for state machine states.
+ */
 export interface AbstractState {
     enter(): void;
     exit(): void;
@@ -72,6 +100,9 @@ export interface AbstractState {
     update(dt: number, input : CharacterInput): AbstractState | null;
 }
 
+/**
+ * EditorObject is the interface for objects that can be manipulated in the level editor.
+ */
 export interface EditorObject {
     move(movement: Vector3): void;
     updatePosition(dt: number, input: CharacterInput): void;
@@ -85,27 +116,42 @@ export interface EditorObject {
     serialize(): any;
 }
 
+/**
+ * IRemoteGameObject extends GameObject for networked multiplayer, adding owner and position sync.
+ */
 export interface IRemoteGameObject extends GameObject {
     getOwnerId(): string;
     updatePosition(position: Vector3, timestamp: number): void;
 }
 
+/**
+ * Utils provides static utility functions for mesh, vector, and asset operations.
+ */
 export class Utils {
+    /**
+     * Returns the size of a mesh's bounding box.
+     */
     static getMeshBoxSize(mesh: Mesh): Vector3 {
         const boundingInfo = mesh.getBoundingInfo();
         const boundingBox = boundingInfo.boundingBox;
         return boundingBox.maximum.subtract(boundingBox.minimum);
     }
     
+    /**
+     * Returns the center and radius of a mesh's bounding sphere.
+     */
     static getMeshSphereSize(mesh: Mesh): { center: Vector3; radius: number } {
         const boundingInfo = mesh.getBoundingInfo();
         const boundingSphere = boundingInfo.boundingSphere;
         return {
-            center: boundingSphere.centerWorld.clone(), // Centre de la bounding sphere
-            radius: boundingSphere.radiusWorld          // Rayon de la bounding sphere
+            center: boundingSphere.centerWorld.clone(),
+            radius: boundingSphere.radiusWorld
         };
     }
 
+    /**
+     * Calculates the total bounding box for an array of meshes.
+     */
     static getTotalBoundingBox(meshes: Mesh[]): { minimum: Vector3; maximum: Vector3 } {
         if (meshes.length === 0) {
             throw new Error("No meshes provided to calculate bounding box.");
@@ -123,13 +169,16 @@ export class Utils {
         return { minimum: totalMin, maximum: totalMax };
     }
 
+    /**
+     * Calculates the total bounding sphere for an array of meshes.
+     */
     static getTotalBoundingSphere(meshes: Mesh[]): { center: Vector3; radius: number } {
         if (meshes.length === 0) {
             throw new Error("No meshes provided to calculate bounding sphere.");
         }
 
         const { minimum, maximum } = this.getTotalBoundingBox(meshes);
-        const center = minimum.add(maximum).scale(0.5); // Centre de la bounding box
+        const center = minimum.add(maximum).scale(0.5);
         let maxRadius = 0;
 
         meshes.forEach((mesh) => {
@@ -142,6 +191,13 @@ export class Utils {
         return { center, radius: maxRadius };
     }
 
+    /**
+     * Creates a mesh loading task for the assets manager.
+     * @param config The game object configuration.
+     * @param name The mesh name.
+     * @param file The mesh file.
+     * @param callback Callback when the mesh is loaded.
+     */
     static createMeshTask(config: GameObjectConfig, name: string, file: string, callback: (task: any) => void): MeshAssetTask {
         const task = config.assetsManager.addMeshTask(name, "", "models/", file);
         task.onSuccess = (task) => {
@@ -155,6 +211,14 @@ export class Utils {
         return task;
     }
 
+    /**
+     * Loads a sound file using the assets manager.
+     * @param assetsManager The assets manager.
+     * @param name The sound name.
+     * @param file The sound file path.
+     * @param callback Callback when the sound is loaded.
+     * @param spatial Whether the sound is spatialized.
+     */
     static loadSound(assetsManager: AssetsManager, name: string, file: string, callback: (sound: StaticSound) => void, spatial?: boolean): void {
         const soundTask = assetsManager.addBinaryFileTask(name, file);
         soundTask.onSuccess = async (task) => {
@@ -168,6 +232,11 @@ export class Utils {
         };
     }
 
+    /**
+     * Configures the mesh's position, rotation, scale, and bounding info based on the config.
+     * @param meshes The array of meshes to configure.
+     * @param config The configuration object.
+     */
     static configureMesh(meshes: Mesh[], config: GameObjectConfig): void {
         const mesh = meshes[0];
         mesh.position = config.position;
@@ -178,8 +247,14 @@ export class Utils {
         mesh.refreshBoundingInfo();
     }
 
+    /**
+     * Calculates the position of a child relative to its parent node's rotation.
+     * @param parent The parent node.
+     * @param position The local position.
+     * @returns The transformed global position.
+     */
     static calculatePositionRelativeToParent(parent: ParentNode, position: Vector3): Vector3 {
-        // Créer une matrice de rotation à partir de la rotation du parent
+        // Create a rotation matrix from the parent's rotation
         const parentRotation = parent.getRotation();
         const parentRotationMatrix = Matrix.RotationYawPitchRoll(
             parentRotation.y,
@@ -187,34 +262,45 @@ export class Utils {
             parentRotation.z
         );
     
-        // Inverser la matrice de rotation du parent
+        // Invert the parent's rotation matrix
         const inverseParentRotationMatrix = Matrix.Invert(parentRotationMatrix);
     
-        // Appliquer la rotation inversée à la position locale
+        // Apply the inverse rotation to the local position
         const transformedPosition = Vector3.TransformCoordinates(position, inverseParentRotationMatrix);
     
-        // Ajouter la position du parent pour obtenir la position globale
+        // Add the parent's position to get the global position
         return transformedPosition;
     }
 
+    /**
+     * Calculates the rotation of a child relative to its parent node's rotation.
+     * @param parent The parent node.
+     * @param rotation The child's rotation.
+     * @returns The relative rotation as Euler angles.
+     */
     static calculateRotationRelativeToParent(parent: ParentNode, rotation: Vector3): Vector3 {
-        // Matrice de rotation du parent
+        // Parent rotation matrix
         const parentRot = parent.getRotation();
         const parentMatrix = Matrix.RotationYawPitchRoll(parentRot.y, parentRot.x, parentRot.z);
 
-        // Matrice de rotation de l'enfant
+        // Child rotation matrix
         const childMatrix = Matrix.RotationYawPitchRoll(rotation.y, rotation.x, rotation.z);
 
-        // Rotation relative = inverse(parent) * child
+        // Relative rotation = inverse(parent) * child
         const relativeMatrix = parentMatrix.invert().multiply(childMatrix);
 
-        // Extraire les angles Euler de la matrice résultante
+        // Extract Euler angles from the resulting matrix
         const quat = Quaternion.FromRotationMatrix(relativeMatrix);
         const relativeRotation = quat.toEulerAngles();
 
         return relativeRotation;
     }
 
+    /**
+     * Creates a Vector3 from a plain object with _x, _y, _z properties.
+     * @param data The data object.
+     * @returns The created Vector3 or undefined if data is invalid.
+     */
     static createVec3FromData(data: any): Vector3 {
         if(data === undefined || data === null) {
             return undefined;

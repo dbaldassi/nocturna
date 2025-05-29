@@ -4,262 +4,26 @@ import { BaseScene } from "./BaseScene";import { ParentNode } from "../ParentNod
 import { Cube } from "../Cube";
 import { CharacterInput, AbstractState, EditorObject, GameObjectFactory, Utils } from "../types";
 import { InputHandler } from "../InputHandler";
-import { FixedPlatform, FixedPlatformFactory, ParentedPlatform, ParentedPlatformFactory } from "../GameObjects/Platform";
-import { Player, PlayerFactory } from "../GameObjects/Player";
-import { VictoryCondition, VictoryConditionFactory } from "../GameObjects/Victory";
+import { Player } from "../GameObjects/Player";
 import { LevelLoader, LevelLoaderObserver } from "../LevelLoader";
-import { LevelSelectionScene, LevelSelectionObserver } from "../LevelSelection";
-import { FixedRocket, FixedRocketFactory } from "../GameObjects/Rocket";
-import { SpikeTrapFactory, SpikeTrapObject } from "../GameObjects/SpikeTrap";
-import { Coin, CoinFactory } from "../GameObjects/Coin";
 import { createHUDEditor, IHUDEditor, IHUDEditorListener } from "../HUD/EditorHUD";
+import { EditorState, AdditionState, MoveState, RotationState, ResizeState, SelectionState } from "../states/EditorState";
 
-abstract class EditorState implements AbstractState {
-    protected scene: EditorScene;
-    protected inputHandler: InputHandler;
-    private goNextState: boolean = false;
-    private goPreviousState: boolean = false;
-
-    private static stateList: EditorState[] = [];
-    private static currentStateIndex: number = 0;
-
-    constructor(scene: EditorScene, inputHandler: InputHandler) {
-        this.scene = scene;
-        this.inputHandler = inputHandler;
-    }
-
-    public static addState(...states: EditorState[]) : void {
-        this.stateList.push(...states);
-    }
-
-    public static clearState() : void {
-        this.stateList = []
-        this.currentStateIndex = 0;
-    }
-
-    private static nextIndex() : number {
-        return (EditorState.currentStateIndex + 1) % EditorState.stateList.length;
-    }
-
-    private static previousIndex() : number {
-        return (EditorState.currentStateIndex - 1 + EditorState.stateList.length) % EditorState.stateList.length;
-    }
-
-    protected getModeChangeText() : string {
-        const next = EditorState.nextIndex();
-        const previous = EditorState.previousIndex();
-
-        return `+: ${EditorState.stateList[next].name()} -: ${EditorState.stateList[previous].name()}`;
-    }
-
-    public abstract name(): string;
-    public abstract clone(): EditorState;
-
-    enter() {
-        this.inputHandler.addAction("action_plus", () => {
-            if(!this.goPreviousState) {
-                EditorState.currentStateIndex = EditorState.nextIndex();
-                this.goNextState = true;
-            }
-        });
-        this.inputHandler.addAction("action_minus", () => {
-            if(!this.goNextState) {
-                EditorState.currentStateIndex = EditorState.previousIndex();
-                this.goPreviousState = true;
-            }
-        });
-        this.inputHandler.addAction("action_multi", () => {
-            this.scene.setMultiMode();
-        });
-    }
-
-    exit() {
-        this.inputHandler.removeAction("action_plus");
-        this.inputHandler.removeAction("action_minus");
-        this.inputHandler.removeAction("action_multi");
-    }
-
-    update(_: number, __: CharacterInput): AbstractState | null {
-        if (this.goNextState || this.goPreviousState) 
-            return EditorState.stateList[EditorState.currentStateIndex].clone();
-
-        return null;
-    }
-}
-
-class AdditionState extends EditorState {
-    private factories : Map<string, GameObjectFactory>; 
-
-    constructor(scene: EditorScene, inputHandler: InputHandler) {
-        super(scene, inputHandler);
-        this.factories = new Map<string, GameObjectFactory>();
-        this.factories.set(ParentedPlatform.Type, new ParentedPlatformFactory());
-        this.factories.set(FixedPlatform.Type, new FixedPlatformFactory());
-        this.factories.set(VictoryCondition.Type, new VictoryConditionFactory());
-        this.factories.set(Player.Type, new PlayerFactory());
-        this.factories.set(FixedRocket.Type, new FixedRocketFactory());
-        this.factories.set(SpikeTrapObject.Type, new SpikeTrapFactory());
-        this.factories.set(Coin.Type, new CoinFactory());
-    }
-
-    public name(): string {
-        return "Addition";
-    }
-
-    public clone(): EditorState {
-        return new AdditionState(this.scene, this.inputHandler);
-    }
-
-    enter() {
-        super.enter();
-
-        this.inputHandler.addAction("action_1", () => this.scene.addObject(this.factories.get(FixedPlatform.Type)));
-        this.inputHandler.addAction("action_2", () => this.scene.addObject(this.factories.get(ParentedPlatform.Type)));
-        this.inputHandler.addAction("action_3", () => this.scene.addObject(this.factories.get(SpikeTrapObject.Type)));
-        this.inputHandler.addAction("action_4", () => this.scene.addObject(this.factories.get(Coin.Type)));
-        this.inputHandler.addAction("action_5", () => this.scene.addObject(this.factories.get(Player.Type)));
-        this.inputHandler.addAction("action_6", () => this.scene.addObject(this.factories.get(VictoryCondition.Type)));
-        this.inputHandler.addAction("clone", () => this.scene.clone(this.factories));
-        this.inputHandler.addAction("delete", () => this.scene.deleteSelection());
-    }
-
-    exit() {
-        super.exit();
-        this.inputHandler.removeAction("action_1");
-        this.inputHandler.removeAction("action_2");
-        this.inputHandler.removeAction("action_3");
-        this.inputHandler.removeAction("action_4");
-        this.inputHandler.removeAction("delete");
-    }
-
-    update(dt: number, input: CharacterInput): AbstractState | null {
-        this.scene.moveCamera(dt, input);
-        return super.update(dt, input);
-    }
-}
-
-class MoveState extends EditorState {
-    constructor(scene: EditorScene, inputHandler: InputHandler) {
-        super(scene, inputHandler);
-    }
-
-    public name(): string {
-        return "Move";
-    }
-
-    public clone(): EditorState {
-        return new MoveState(this.scene, this.inputHandler);
-    }
-
-    enter() {
-        super.enter();
-    }
-    exit() {
-        super.exit();
-    }
-
-    update(dt: number, input: CharacterInput): AbstractState | null {
-        this.scene.moveSelection(dt,input);
-        return super.update(dt, input);
-    }
-}
-
-class RotationState extends EditorState {
-    constructor(scene: EditorScene, inputHandler: InputHandler) {
-        super(scene, inputHandler);
-    }
-    
-    enter() {
-        super.enter();
-    }
-    exit() {
-        super.exit();
-    }
-    update(dt: number, input: CharacterInput): AbstractState | null {
-        this.scene.rotateSelection(dt,input);
-        return super.update(dt, input);
-    }
-    public clone(): EditorState {
-        return new RotationState(this.scene, this.inputHandler);
-    }
-
-    public name(): string {
-        return "Rotation";
-    }
-}
-
-class ResizeState extends EditorState {
-    constructor(scene: EditorScene, inputHandler: InputHandler) {
-        super(scene, inputHandler);
-    }
-    enter() {
-        super.enter();
-    }
-    exit() {
-        super.exit();
-    }
-    update(dt: number, input: CharacterInput): AbstractState | null {
-        this.scene.resizeSelection(dt,input);
-        return super.update(dt, input);
-    }
-
-    public name(): string {
-        return "Resize";
-    }
-
-    public clone(): EditorState {
-        return new ResizeState(this.scene, this.inputHandler);
-    }
-}
-
-class InitState implements AbstractState {
-    
-    public name(): string {
-        return "Init state";
-    }
-
-    enter() {}
-    exit() {}
-
-    update(_: number, __: CharacterInput): AbstractState | null {
-        return null;
-    }
-}
-
-class SelectionState implements AbstractState, LevelSelectionObserver {
-    private scene: EditorScene;
-    private levelSelector: LevelSelectionScene;
-    private level :string = null;
-
-    constructor(scene: EditorScene) {
-        this.scene = scene;
-    }
-
-    public name(): string {
-        return "Selection state";
-    }
-
-    enter() {
-        this.levelSelector = new LevelSelectionScene(this.scene.getScene(), this);
-
-    }
-    exit() {
-        this.scene.getScene().dispose();
-        this.scene.createLevel(this.level);
-    }
-
-    update(_: number, __: CharacterInput): AbstractState | null {
-        return this.level ? new InitState() : null;
-    }
-
-    onLevelSelected(level: string): void {
-        this.level = level;
-    }
-
-    onDataTransmited(data: JSON): void {
-    }
-}
-
+/**
+ * EditorScene provides the in-game level editor for Nocturna.
+ * 
+ * Allows users to create, modify, and test custom levels in a 3D environment.
+ * Handles adding, selecting, moving, rotating, resizing, cloning, and deleting objects.
+ * Uses Babylon.js for rendering, picking, camera control, and asset management.
+ * Integrates a HUD for editor controls and mode display.
+ * Manages editor states (Addition, Move, Rotation, Resize, Selection) via a state machine.
+ * Plays sound feedback for editor actions (select, drop, delete, save, etc.).
+ * Supports serialization/export of the current level to a JSON file.
+ * 
+ * Implements:
+ * - LevelLoaderObserver: callbacks when the level/cube/parent/player are loaded.
+ * - IHUDEditorListener: callbacks for HUD actions (mode, cancel, remove, clone).
+ */
 export class EditorScene extends BaseScene implements LevelLoaderObserver, IHUDEditorListener {
 
     private parentNode: ParentNode;
@@ -273,16 +37,22 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver, IHUDE
     private hud : IHUDEditor | null = null;
     private sounds: Map<string, StaticSound> = new Map<string, StaticSound>();
 
+    /**
+     * Initializes the editor, states, loads sounds, and prepares the HUD.
+     */
     constructor(engine: Engine, inputHandler: InputHandler) {
         super(engine, inputHandler);
 
         EditorState.clearState();
+
+        // States order
         EditorState.addState(new AdditionState(this, this.inputHandler),
             new MoveState(this, this.inputHandler),
             new RotationState(this, this.inputHandler),
             new ResizeState(this, this.inputHandler)
         );
 
+        // Load sounds
         const audio = [
             { name: "drop", path: "assets/sounds/drop_003.ogg" },
             { name: "select", path: "assets/sounds/select_007.ogg" },
@@ -301,6 +71,10 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver, IHUDE
         });
     }
 
+    /**
+     * Plays a sound for editor actions.
+     * @param name Name of the sound to play.
+     */
     playSound(name: string): void {
         const sound = this.sounds.get(name);
         if (sound) {
@@ -310,6 +84,9 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver, IHUDE
         }
     }
 
+    /**
+     * Static factory to create and initialize a new EditorScene.
+     */
     static async createScene(engine: Engine, inputHandler: InputHandler): Promise<BaseScene> {
         const scene = new EditorScene(engine, inputHandler);
         
@@ -319,6 +96,10 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver, IHUDE
         return scene;
     }
 
+    /**
+     * Loads a level from a file or JSON string.
+     * @param level The level to load.
+     */
     public createLevel(level: string): void {
         this.scene = new Scene(this.engine);
         this.levelLoader = new LevelLoader(this.scene, this, { create: (factory: GameObjectFactory, config: any) => factory.createForEditor(config) });
@@ -339,33 +120,54 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver, IHUDE
         this.levelLoader.loadLevel(level);
     }
 
-    public setMultiMode() {
+    /**
+     * Enables multi-mode setup for the editor (prepares the cube for multiplayer).
+     */
+    public setMultiMode(): void {
         this.cube.setupMulti();
     }
 
+    /**
+     * Callback when the cube is loaded.
+     */
     public onCube(cube: Cube): void {
         this.cube = cube;
     }
     public onPlayer(_: Player): void {}
+    /**
+     * Callback when the parent node is loaded.
+     */
     public onParent(parent: ParentNode): void {
         this.parentNode = parent;
         this.parentNode.setupKeyActions(this.inputHandler);
     }
+    /**
+     * Callback when the level is fully loaded.
+     */
     public onLevelLoaded(): void {
         this.currentState = new AdditionState(this, this.inputHandler);
         this.currentState.enter();
 
         this.hud = createHUDEditor(this.getScene(), this);
     }
+    /**
+     * Callback when an object is created in the editor.
+     */
     public onObjectCreated(object: EditorObject): void {
         this.editorObjects.push(object);
     }
 
+    /**
+     * Finds the EditorObject corresponding to a Babylon mesh.
+     */
     private getEditorObjectByMesh(mesh: Mesh): EditorObject | null {
         // Parcourir tous les objets EditorObject pour trouver celui qui correspond au mesh
         return this.editorObjects.find((obj) => obj.getMeshes().includes(mesh)) || null;
     }
 
+    /**
+     * Selects an EditorObject in the editor.
+     */
     private selectEditorObject(object: EditorObject) {
         // Désélectionner l'objet actuel
         if (this.currentSelection) {
@@ -379,6 +181,9 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver, IHUDE
         console.log(Utils.getTotalBoundingBox(object.getMeshes()));
     }
 
+    /**
+     * Deselects the current selection.
+     */
     private deselectCurrentSelection() {
         if (this.currentSelection) {
             this.currentSelection.setSelected(false);
@@ -387,6 +192,9 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver, IHUDE
         }
     }
 
+    /**
+     * Sets up the mouse click listener for object selection.
+     */
     public setupClickListener() {
         this.scene.onPointerDown = (_, pickResult) => {
             console.log("Pointer down event:");
@@ -405,15 +213,17 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver, IHUDE
         };
     }
 
+    /**
+     * Adds a new object at the position pointed by the mouse.
+     */
     public addObject(factory: GameObjectFactory, size?: Vector3, rotation?: Vector3) {
-        // Effectuer un raycast à partir de la position de la souris
+        // Do a raycast to find the position where the mouse is pointing
         const pickResult = this.scene.pick(this.scene.pointerX, this.scene.pointerY);
     
         if (pickResult?.hit && pickResult.pickedPoint) {
-            // Récupérer la position où la souris pointe
+            // Get the position of the picked point
             const position = pickResult.pickedPoint;
     
-            // Configurer les paramètres de la plateforme
             const config = {
                 position: position,
                 rotation: rotation ?? Vector3.Zero(),
@@ -423,7 +233,6 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver, IHUDE
                 assetsManager: this.assetsManager
             };
 
-            // Créer la plateforme avec la factory
             const object = factory.createForEditor(config);
             this.editorObjects.push(object);
 
@@ -437,8 +246,7 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver, IHUDE
                     const totalbox = Utils.getTotalBoundingBox(object.getMeshes());
                     const box = totalbox.maximum.subtract(totalbox.minimum);
                     console.log("rotation : ", object.getMesh().rotation);
-                    object.move(new Vector3(0, 0, -box.z / 2)); // Ajuster la position pour que l'objet soit au-dessus du sol
-                    // object.getMesh().position.z -= box.z / 2; 
+                    object.move(new Vector3(0, 0, -box.z / 2)); // Translate so the object is not in the wall
                     this.selectEditorObject(object);
                 });
             }
@@ -448,6 +256,9 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver, IHUDE
         }
     }
 
+    /**
+     * Moves the camera based on keyboard input.
+     */
     public moveCamera(dt:number, input: CharacterInput) {
         const moveSpeed = this.camera.speed * dt;
         this.camera.position.x += (input.right ? 1 : (input.left ? -1 : 0)) * moveSpeed;
@@ -455,24 +266,36 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver, IHUDE
         this.camera.position.z += (input.forward ? 1 : (input.backward ? -1 : 0)) * moveSpeed;
     }
 
+    /**
+     * Moves the selected object.
+     */
     public moveSelection(dt: number, input: CharacterInput) {
         if (this.currentSelection) {
             this.currentSelection.updatePosition(dt, input);
         }
     }
 
+    /**
+     * Resizes the selected object.
+     */
     public resizeSelection(dt: number, input: CharacterInput) {
         if (this.currentSelection) {
             this.currentSelection.updateScale(dt, input);
         }
     }
 
+    /**
+     * Rotates the selected object.
+     */
     public rotateSelection(dt: number, input: CharacterInput) {
         if (this.currentSelection) {
             this.currentSelection.updateRotation(dt, input);
         }
     }
 
+    /**
+     * Deletes the selected object from the scene.
+     */
     public deleteSelection() {
         console.log("Deleting selection");
 
@@ -487,6 +310,9 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver, IHUDE
         }
     }
 
+    /**
+     * Main update loop for the editor.
+     */
     public update(dt: number) {
         const input = this.inputHandler.getInput();
 
@@ -500,6 +326,9 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver, IHUDE
         }
     }
 
+    /**
+     * Serializes the current scene and triggers a JSON download.
+     */
     public serializeScene(): void {
         const serializedObjects = this.editorObjects.map((obj) => obj.serialize());
         const jsonScene = { objects : serializedObjects }; // Convertir en JSON formaté
@@ -527,10 +356,16 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver, IHUDE
         console.log("Scene serialized and download triggered.");
     }
 
+    /**
+     * Returns the current Babylon.js scene.
+     */
     getScene(): Scene {
         return this.scene;
     }
 
+    /**
+     * Clones the selected object.
+     */
     public clone(factories: Map<string, GameObjectFactory>) {
         if (this.currentSelection) {
             const type = this.currentSelection.getType();
@@ -543,6 +378,7 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver, IHUDE
         }
     }
 
+    // HUD methods (mode navigation, cancel, remove, clone)
     onNextMode(): void {
         
     }
