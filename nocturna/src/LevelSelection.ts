@@ -108,7 +108,12 @@ export class LevelSelectionScene {
                     const reader = new FileReader();
                     reader.onload = () => {
                         const content = JSON.parse(reader.result as string) as JSON;
-                        this.observer.onDataTransmited(content);
+                        if (this.verifyJson(content)) {
+                            this.observer.onDataTransmited(content);
+                        } else {
+                            this.displayError("Invalid level data format.");
+                        }
+
                     };
                     reader.readAsText(file);
                 }
@@ -121,5 +126,72 @@ export class LevelSelectionScene {
             this.guiTexture.dispose();
         }
         // this.scene.dispose();
+    }
+
+    /**
+     * Verifies if the provided JSON data is valid for a level.
+     * @param data The JSON data to verify.
+     * @returns True if the data is valid, false otherwise.
+     */
+    private verifyJson(data: JSON): boolean {
+        // Allowed object types
+        const allowedNames = [
+            "fixed_platform",
+            "parented_platform",
+            "fixed_rocket_activation_platform",
+            "parented_rocket_activation_platform",
+            "player",
+            "victory_condition",
+            "rocket",
+            "spike_trap",
+        ];
+
+        // Check if data is an object and has required root properties
+        if (
+            typeof data !== "object" ||
+            data === null ||
+            !("objects" in data) ||
+            !Array.isArray((data as any).objects) ||
+            !("Cube" in data) ||
+            !("parent_node" in data)
+        ) {
+            return false;
+        }
+
+        const objects = (data as any).objects;
+        for (const obj of objects) {
+            // Check required properties
+            if (
+                typeof obj !== "object" ||
+                !("position" in obj) ||
+                !("rotation" in obj) ||
+                !("size" in obj) ||
+                !("type" in obj)
+            ) {
+                return false;
+            }
+            // Check type is allowed
+            if (!allowedNames.includes(obj.type)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Displays an error message in the console and optionally on the UI.
+     * @param message The error message to display.
+     */
+    private displayError(message: string): void {
+        console.error(message);
+        const errorText = new TextBlock();
+        errorText.text = message;
+        errorText.color = "red";
+        errorText.fontSize = 28;
+        errorText.top = "-200px"; // Move the error message higher
+        this.guiTexture.addControl(errorText);
+        setTimeout(() => {
+            this.guiTexture.removeControl(errorText);
+        }, 2000);
     }
 }
