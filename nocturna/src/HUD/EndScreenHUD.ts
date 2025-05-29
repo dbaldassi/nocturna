@@ -213,7 +213,7 @@ class WinScreenHUD extends BaseEndScreenHUD {
     protected display(): void {
         super.display("win-screen");
         this.initialiseButtons();
-        this.animateScore("final-score");
+        this.animateScore("final-timer");
     }
 
     /**
@@ -264,7 +264,7 @@ class loseScreenHUD extends BaseEndScreenHUD {
         super.display("game-over-screen");
         this.setRandomMessage("death-message");
         this.initialiseButtons();
-        this.animateScore("final-loose-score");
+        this.animateScore("loose-timer");
     }
 
     /**
