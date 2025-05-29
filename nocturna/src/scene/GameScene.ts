@@ -12,6 +12,7 @@ import { Coin } from "../GameObjects/Coin";
 import { HpBar } from "../HpBar";
 import { NocturnaAudio } from "../NocturnaAudio";
 import { createLoseScreenHUD, createWinScreenHUD, IEndScreenHUD, IEndScreenHUDListener } from "../HUD/EndScreenHUD";
+import { LevelSelectionObserver, LevelSelectionScene } from "../LevelSelection";
 
 export class GameScene extends BaseScene implements LevelLoaderObserver, GameObjectVisitor, IEndScreenHUDListener, CubeCollisionObserver, GameObjectObserver {
     protected cube: Cube;
@@ -41,17 +42,24 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         const scene = new GameScene(engine, inputHandler);
 
         await scene.addPhysic();
-
+        
         // // Create the main cube
         // scene.cube = Cube.create(scene.scene);
         // // Create the parent node
         // scene.parent = new ParentNode(Vector3.Zero(), scene.scene);
         // scene.parent.setupKeyActions(scene.inputHandler);
-
+        
         // scene.enableDebug();
-        scene.state = new LoadingState(scene);
-        scene.loadLevel(this.sceneName);
+        // scene.state = new LoadingState(scene);
+        // scene.loadLevel(this.sceneName);
+        scene.state = new SelectionState(scene);
+        scene.state.enter();
         return scene;
+    }
+    
+    public createLevel(file: string) {
+        this.scene = new Scene(this.engine);
+        this.loadLevel(file);
     }
 
     protected loadLevel(file: string) {
@@ -400,5 +408,39 @@ class EndState extends AbstractGameSceneState {
     update(dt: number, input: CharacterInput): AbstractGameSceneState | null {
         this.hud.update(dt, input);
         return null;
+    }
+}
+
+class SelectionState extends AbstractGameSceneState implements LevelSelectionObserver {
+    private levelSelector: LevelSelectionScene;
+    private level: string = null;
+
+    constructor(gameScene: GameScene) {
+        super(gameScene);
+    }
+
+    public render(): void {
+        this.gameScene.getScene().render();
+    }
+
+    public name(): string {
+        return "Selection state";
+    }
+
+    enter() {
+        this.levelSelector = new LevelSelectionScene(this.gameScene.getScene(), this);
+    }
+
+    exit() {
+        // this.gameScene.getScene().dispose();
+        this.gameScene.createLevel(this.level);
+    }
+
+    update(_: number, __: CharacterInput): AbstractGameSceneState | null {
+        return this.level ? new LoadingState(this.gameScene) : null;
+    }
+
+    onLevelSelected(level: string): void {
+        this.level = level;
     }
 }
