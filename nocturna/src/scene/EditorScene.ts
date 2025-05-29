@@ -1,4 +1,4 @@
-import { Engine, Vector3, FreeCamera, Mesh, Scene, AssetsManager } from "@babylonjs/core";
+import { Engine, Vector3, FreeCamera, Mesh, Scene, AssetsManager, StaticSound, CreateSoundAsync } from "@babylonjs/core";
 
 import { BaseScene } from "./BaseScene";import { ParentNode } from "../ParentNode";
 import { Cube } from "../Cube";
@@ -268,6 +268,7 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver, IHUDE
     private levelLoader: LevelLoader;
     private assetsManager: AssetsManager;
     private hud : IHUDEditor | null = null;
+    private sounds: Map<string, StaticSound> = new Map<string, StaticSound>();
 
     constructor(engine: Engine, inputHandler: InputHandler) {
         super(engine, inputHandler);
@@ -278,6 +279,32 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver, IHUDE
             new RotationState(this, this.inputHandler),
             new ResizeState(this, this.inputHandler)
         );
+
+        const audio = [
+            { name: "drop", path: "assets/sounds/drop_003.ogg" },
+            { name: "select", path: "assets/sounds/select_007.ogg" },
+            { name: "unselect", path: "assets/sounds/error_007.ogg" },
+            { name: "delete", path: "assets/sounds/scratch_005.ogg" },
+            { name: "clone", path: "assets/sounds/drop_003.ogg" },
+            { name: "mode", path: "assets/sounds/bong_001.ogg" },
+//             { name: "move", path: "assets/sounds/move.ogg" },
+            { name: "save", path: "assets/sounds/confirmation_003.ogg" },
+        ];
+        
+        audio.forEach(({ name, path }) => {
+            CreateSoundAsync(name, path).then(sound => {
+                this.sounds.set(name, sound);
+            });
+        });
+    }
+
+    playSound(name: string): void {
+        const sound = this.sounds.get(name);
+        if (sound) {
+            sound.play();
+        } else {
+            console.warn(`Sound "${name}" not found.`);
+        }
     }
 
     static async createScene(engine: Engine, inputHandler: InputHandler): Promise<BaseScene> {
@@ -353,6 +380,7 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver, IHUDE
         if (this.currentSelection) {
             this.currentSelection.setSelected(false);
             this.currentSelection = null;
+            this.playSound("unselect");
         }
     }
 
@@ -365,6 +393,7 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver, IHUDE
                 const selectedObject = this.getEditorObjectByMesh(pickResult.pickedMesh as Mesh);
                 if (selectedObject) {
                     this.selectEditorObject(selectedObject);
+                    this.playSound("select");
                 } else {
                     // Si aucun objet n'est sélectionné, désélectionner l'objet actuel
                     this.deselectCurrentSelection();
@@ -398,6 +427,8 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver, IHUDE
             this.assetsManager.load();
             this.assetsManager.onFinish = () => {
                 this.scene.executeWhenReady(() => {
+                    this.playSound("drop");
+
                     object.getMeshes().forEach(m => m.refreshBoundingInfo());
                     
                     const totalbox = Utils.getTotalBoundingBox(object.getMeshes());
@@ -444,6 +475,7 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver, IHUDE
 
         if (this.currentSelection) {
             if (this.editorObjects.includes(this.currentSelection)) {
+                this.playSound("delete");
                 // Supprimer l'objet de la scène
                 this.editorObjects = this.editorObjects.filter((obj) => obj !== this.currentSelection);
                 this.currentSelection.getMesh().dispose();
@@ -461,6 +493,7 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver, IHUDE
             this.currentState = nextState;
             this.currentState.enter();
             this.hud?.setMode(this.currentState.name());
+            this.playSound("mode");
         }
     }
 
@@ -469,6 +502,8 @@ export class EditorScene extends BaseScene implements LevelLoaderObserver, IHUDE
         const jsonScene = { objects : serializedObjects }; // Convertir en JSON formaté
         jsonScene[Cube.Type] = this.cube.serialize();
         jsonScene[ParentNode.Type] = this.parentNode.serialize();
+
+        this.playSound("save");
     
         // Créer un Blob contenant le JSON
         const blob = new Blob([JSON.stringify(jsonScene)], { type: "application/json" });
