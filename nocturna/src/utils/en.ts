@@ -1,6 +1,9 @@
 export const en = {
     "ui.lang-switch": "FR",
     "ui.timer": "Time: 0:00",
+    "setting.keybinds": "Keybinds",
+    "setting.language": "Language",
+    "setting.presets": "Presets",
     "graphics.ultra-low": "Ultra Low",
     "graphics.low": "Low Graphics",
     "graphics.high": "High Graphics",
@@ -76,6 +79,14 @@ export const en = {
     "keybinds.instructions": "You can change all your keybinds using the wheel at the top right",
     "forward": "Forward",
     "backward": "Backward",
+    "death_messages": [
+        "You have been consumed by the darkness.",
+        "You fell into the abyss.",
+        "The nightmare has overwhelmed you.",
+        "You were lost in the dream.",
+        "The void has swallowed you.",
+        "You were shattered by the dream's chaos.",
+    ]
 };
 
 export const QWERTY = {

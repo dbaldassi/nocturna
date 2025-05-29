@@ -20,6 +20,13 @@ export class Translation {
         return Translation.instance.getTranslation(key);
     }
 
+    public static getTranslationAny(key: string): any {
+        if (!Translation.instance) {
+            Translation.initialize();
+        }
+        return Translation.instance.getTranslationAny(key);
+    }
+
     constructor() {
         const radios = document.querySelectorAll('input[name="language"]');
         radios.forEach((radio) => {
@@ -48,6 +55,10 @@ export class Translation {
     }
 
     public getTranslation(key: string): string {
+        return this.language[key] || key;
+    }
+
+    public getTranslationAny(key: string): any {
         return this.language[key] || key;
     }
 
