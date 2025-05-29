@@ -19,6 +19,12 @@
       "size": { "_isDirty": true, "_x": 50, "_y": 50, "_z": 50 }
     },
     {
+      "type": "coin",
+      "position": { "_isDirty": false, "_x": 75, "_y": 25, "_z": 0 },
+      "rotation": { "_isDirty": false, "_x": 0, "_y": 0, "_z": 0 },
+      "size": { "_isDirty": true, "_x": 15, "_y": 15, "_z": 15 }
+    },
+    {
       "type": "parented_rocket_activation_platform",
       "position": { "_isDirty": false, "_x": 150, "_y": 0, "_z": 0 },
       "rotation": { "_isDirty": false, "_x": -3.1415926536, "_y": 0, "_z": 0 },
@@ -43,6 +49,12 @@
       "size": { "_isDirty": true, "_x": 50, "_y": 50, "_z": 50 }
     },
     {
+      "type": "coin",
+      "position": { "_isDirty": false, "_x": 300, "_y": 50, "_z": 0 },
+      "rotation": { "_isDirty": false, "_x": 0, "_y": 0, "_z": 0 },
+      "size": { "_isDirty": true, "_x": 15, "_y": 15, "_z": 15 }
+    },
+    {
       "type": "fixed_platform",
       "position": { "_isDirty": false, "_x": 375, "_y": 35, "_z": 0 },
       "rotation": { "_isDirty": false, "_x": 0, "_y": 0, "_z": 0 },
@@ -61,16 +73,34 @@
       "size": { "_isDirty": true, "_x": 50, "_y": 50, "_z": 50 }
     },
     {
+      "type": "coin",
+      "position": { "_isDirty": false, "_x": 425, "_y": 65, "_z": 0 },
+      "rotation": { "_isDirty": false, "_x": 0, "_y": 0, "_z": 0 },
+      "size": { "_isDirty": true, "_x": 15, "_y": 15, "_z": 15 }
+    },
+    {
       "type": "parented_platform",
       "position": { "_isDirty": false, "_x": 0, "_y": -75, "_z": -375 },
       "rotation": { "_isDirty": false, "_x": 3.1415926536, "_y": 0, "_z": 0 },
       "size": { "_isDirty": true, "_x": 50, "_y": 50, "_z": 50 }
     },
     {
+      "type": "coin",
+      "position": { "_isDirty": false, "_x": 375, "_y": 95, "_z": 0 },
+      "rotation": { "_isDirty": false, "_x": 0, "_y": 0, "_z": 0 },
+      "size": { "_isDirty": true, "_x": 15, "_y": 15, "_z": 15 }
+    },
+    {
       "type": "parented_platform",
       "position": { "_isDirty": false, "_x": 0, "_y": -95, "_z": -315 },
       "rotation": { "_isDirty": false, "_x": 3.1415926536, "_y": 0, "_z": 0 },
       "size": { "_isDirty": true, "_x": 50, "_y": 50, "_z": 50 }
+    },
+    {
+      "type": "coin",
+      "position": { "_isDirty": false, "_x": 250, "_y": 115, "_z": 0 },
+      "rotation": { "_isDirty": false, "_x": 0, "_y": 0, "_z": 0 },
+      "size": { "_isDirty": true, "_x": 15, "_y": 15, "_z": 15 }
     },
     {
       "type": "fixed_platform",
@@ -85,10 +115,22 @@
       "size": { "_isDirty": true, "_x": 50, "_y": 50, "_z": 50 }
     },
     {
+      "type": "coin",
+      "position": { "_isDirty": false, "_x": 215, "_y": 150, "_z": 0 },
+      "rotation": { "_isDirty": false, "_x": 0, "_y": 0, "_z": 0 },
+      "size": { "_isDirty": true, "_x": 15, "_y": 15, "_z": 15 }
+    },
+    {
       "type": "fixed_platform",
       "position": { "_isDirty": false, "_x": 250, "_y": 150, "_z": 0 },
       "rotation": { "_isDirty": false, "_x": 0, "_y": 0, "_z": 0 },
       "size": { "_isDirty": true, "_x": 50, "_y": 50, "_z": 50 }
+    },
+    {
+      "type": "coin",
+      "position": { "_isDirty": false, "_x": 250, "_y": 170, "_z": 0 },
+      "rotation": { "_isDirty": false, "_x": 0, "_y": 0, "_z": 0 },
+      "size": { "_isDirty": true, "_x": 15, "_y": 15, "_z": 15 }
     },
     {
       "type": "parented_platform",
@@ -113,6 +155,12 @@
       "position": { "_isDirty": false, "_x": 100, "_y": 140, "_z": 0 },
       "rotation": { "_isDirty": false, "_x": 0, "_y": 0, "_z": 0 },
       "size": { "_isDirty": true, "_x": 50, "_y": 50, "_z": 50 }
+    },
+    {
+      "type": "coin",
+      "position": { "_isDirty": false, "_x": 100, "_y": 160, "_z": 0 },
+      "rotation": { "_isDirty": false, "_x": 0, "_y": 0, "_z": 0 },
+      "size": { "_isDirty": true, "_x": 15, "_y": 15, "_z": 15 }
     },
     {
       "type": "spike_trap",

@@ -140,6 +140,8 @@ export class LevelSelectionScene {
             "victory_condition",
             "rocket",
             "spike_trap",
+            "coin",
+            "super_coin"
         ];
 
         // Check if data is an object and has required root properties
