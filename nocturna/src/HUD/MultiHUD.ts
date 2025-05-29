@@ -1,32 +1,68 @@
+/**
+ * MultiHUD.ts defines the interfaces and classes for displaying the multiplayer HUD in Nocturna.
+ * 
+ * Responsibilities:
+ * - Displays the local player's status (HP and score) and available actions.
+ * - Displays the status (HP and score) of remote players in the same session.
+ * - Updates the HUD in real time as player stats or actions change.
+ * - Provides methods to add, update, and remove remote players from the HUD.
+ * - Integrates with Babylon.js GUI for all UI elements.
+ * - Supports dynamic inventory/action bar and animated status bars.
+ * 
+ * Usage:
+ * - Use `createHUDMulti(scene, listener, maxHp, maxScore)` to instantiate the HUD.
+ * - Use `addAction` and `removeAction` to manage available actions.
+ * - Use `updateScore` and `updateHp` to update the local player's stats.
+ * - Use `addRemotePlayer`, `updateRemotePlayer`, and `removeRemotePlayer` to manage remote players.
+ * - Call `dispose()` to clean up resources when the HUD is no longer needed.
+ */
+
 import { Scene } from "@babylonjs/core";
 import { AdvancedDynamicTexture, Control, Rectangle, StackPanel, TextBlock, Image } from "@babylonjs/gui";
 import { InputHandler } from "../InputHandler";
 import { Action } from "../action";
 
-
 export interface IHUDMulti {
-    
-    addAction(index: number, action: Action.Type);
+    addAction(index: number, action: Action.Type): void;
     removeAction(index: number): void;
-
     updateScore(score: number): void;
     updateHp(hp: number): void;
-
     addRemotePlayer(id: string): void;
     updateRemotePlayer(id: string, hp: number, score: number): void;
     removeRemotePlayer(id: string): void;
-
     dispose(): void;
 }
 
+/**
+ * IHUDMultiListener defines callbacks for multiplayer HUD actions.
+ * (Extend this interface to handle action selection or other events.)
+ */
 export interface IHUDMultiListener {
-    //  onActionSelected(index: number): void;
+    // onActionSelected(index: number): void;
 }
 
+/**
+ * Factory function to create a multiplayer HUD instance.
+ * @param scene The Babylon.js scene.
+ * @param listener The HUD event listener.
+ * @param maxHp The maximum HP for the player.
+ * @param maxScore The maximum score for the player.
+ * @returns An IHUDMulti implementation.
+ */
 export function createHUDMulti(scene: Scene, listener: IHUDMultiListener, maxHp: number, maxScore: number): IHUDMulti {
     return new MultiHUD(scene, listener, maxHp, maxScore);
 }
 
+/**
+ * MultiHUD implements the IHUDMulti interface and manages the multiplayer HUD UI.
+ * 
+ * - Displays the local player's HP and score as animated bars.
+ * - Shows available actions in an inventory bar with icons and key bindings.
+ * - Displays remote players' HP and score in separate status panels.
+ * - Updates the HUD in real time as player stats or actions change.
+ * - Handles dynamic addition/removal of remote players.
+ * - Cleans up all GUI resources on disposal.
+ */
 class MultiHUD implements IHUDMulti {
     private scene: Scene;
     private gui: AdvancedDynamicTexture;
@@ -40,14 +76,21 @@ class MultiHUD implements IHUDMulti {
     private scoreAssetsPath:  { left: string, center: string, right: string }; 
     private emptyAssetsPath:  { left: string, center: string, right: string }; 
     private remoteContainers: Map<string, { container: Rectangle, score: number, hp: number } > = new Map(); 
-    private remoteStatusPanels: StackPanel; // Pour les barres de status des joueurs distants
-    private mainHudContainer: StackPanel | null = null; // Conteneur principal du HUD
+    private remoteStatusPanels: StackPanel;
+    private mainHudContainer: StackPanel | null = null;
 
     private currentScore: number = 0;
     private currentHp: number = 0;
 
-    private readonly numberOfActions = 3; // Nombre d'actions maximum
+    private readonly numberOfActions = 3;
 
+    /**
+     * Constructs a new MultiHUD.
+     * @param scene The Babylon.js scene.
+     * @param listener The HUD event listener.
+     * @param maxHp The maximum HP for the player.
+     * @param maxScore The maximum score for the player.
+     */
     constructor(scene: Scene, listener: IHUDMultiListener, maxHp: number, maxScore: number) {
         this.scene = scene;
         this.gui = AdvancedDynamicTexture.CreateFullscreenUI("MultiHUD", true, this.scene);
@@ -55,12 +98,14 @@ class MultiHUD implements IHUDMulti {
         this.maxHp = maxHp;
         this.maxScore = maxScore;
 
+        // Set up icon paths for each action type
         this.actionsIconPaths.set(Action.Type.ROTATE_X, "/assets/hud/multi/rotate_x.png");
         this.actionsIconPaths.set(Action.Type.ROTATE_Y, "/assets/hud/multi/rotate_y.png");
         this.actionsIconPaths.set(Action.Type.ROTATE_Z, "/assets/hud/multi/rotate_z.png");
         this.actionsIconPaths.set(Action.Type.SPIKE, "/assets/hud/editor/spikes.png");
         this.actionsIconPaths.set(Action.Type.ROCKET, "/assets/hud/multi/rocket.png");
 
+        // Asset paths for status bars
         this.hpAssetsPath = {
             left: "/assets/hud/multi/hp_left.png",
             center: "/assets/hud/multi/hp_center.png",
@@ -80,20 +125,22 @@ class MultiHUD implements IHUDMulti {
         this.init();
     }
 
+    /**
+     * Initializes the HUD layout and GUI controls.
+     */
     public init(): void {
         this.playerStatus = this.createStatusContainer();
         const inventory = this.createInventoryBar();
 
-        // Conteneur principal vertical (tout le HUD)
+        // Main vertical container for the entire HUD
         this.mainHudContainer = new StackPanel();
         this.mainHudContainer.isVertical = true;
         this.mainHudContainer.width = 1.0;
-        this.mainHudContainer.height = "160px"; // taille du canvas
-        // this.mainHudContainer.top = "-30px"; // Décalage pour le positionnement
+        this.mainHudContainer.height = "160px";
         this.mainHudContainer.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
         this.mainHudContainer.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
 
-        // Remote status panels (vertical, au-dessus du joueur local)
+        // Remote status panels (vertical, above the local player)
         this.remoteStatusPanels = new StackPanel();
         this.remoteStatusPanels.isVertical = true;
         this.remoteStatusPanels.width = "100%";
@@ -101,7 +148,7 @@ class MultiHUD implements IHUDMulti {
         this.remoteStatusPanels.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
         this.remoteStatusPanels.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
 
-        // Barre du joueur local + inventaire (horizontal, en bas)
+        // Local player bar + inventory (horizontal, at the bottom)
         const playerBarContainer = new StackPanel("PlayerBarContainer");
         playerBarContainer.isVertical = false;
         playerBarContainer.width = "100%";
@@ -112,13 +159,18 @@ class MultiHUD implements IHUDMulti {
         playerBarContainer.addControl(this.playerStatus);
         playerBarContainer.addControl(inventory);
 
-        // Ajoute d'abord les remote panels (en haut), puis la barre du joueur local (en bas)
+        // Add remote panels (top), then local player bar (bottom)
         this.mainHudContainer.addControl(this.remoteStatusPanels);
         this.mainHudContainer.addControl(playerBarContainer);
 
         this.gui.addControl(this.mainHudContainer);
     }
 
+    /**
+     * Adds an action icon to the inventory bar at the specified index.
+     * @param index The action slot index.
+     * @param action The action type.
+     */
     public addAction(index: number, action: Action.Type) {
         const actionContainer = this.actions[index];
         const iconPath = this.actionsIconPaths.get(action);
@@ -132,6 +184,10 @@ class MultiHUD implements IHUDMulti {
         actionContainer.addControl(icon);
     }
 
+    /**
+     * Removes the action icon from the inventory bar at the specified index.
+     * @param index The action slot index.
+     */
     public removeAction(index: number): void {
         const actionContainer = this.actions[index];
         const iconControl = actionContainer.children.find(child => child.name === "icon");
@@ -140,12 +196,20 @@ class MultiHUD implements IHUDMulti {
         }
     }
 
+    /**
+     * Updates the local player's score bar.
+     * @param score The new score value.
+     */
     public updateScore(score: number): void {
         if(this.currentScore === score || !this.playerStatus || !this.playerStatus.children) return;
         this.updateStatus(this.playerStatus, "Score", score, this.maxScore, this.scoreAssetsPath);
         this.currentScore = score;
     }
 
+    /**
+     * Updates the local player's HP bar.
+     * @param hp The new HP value.
+     */
     public updateHp(hp: number): void {
         if(this.currentHp === hp || !this.playerStatus || !this.playerStatus.children) return;
         this.updateStatus(this.playerStatus, "HP", hp, this.maxHp, this.hpAssetsPath);
@@ -179,10 +243,16 @@ class MultiHUD implements IHUDMulti {
         this.remoteContainers.set(id, {container: remoteContainer, score:0, hp:0});
         this.remoteStatusPanels.addControl(remoteContainer);
 
-        this.remoteStatusPanels.height = `${this.remoteContainers.size * 160}px`; // Ajuste la hauteur en fonction du nombre de joueurs distants
-        this.mainHudContainer.height = `${160 + this.remoteContainers.size * 160}px`; // Ajuste la hauteur du conteneur principal
+        this.remoteStatusPanels.height = `${this.remoteContainers.size * 160}px`;
+        this.mainHudContainer.height = `${160 + this.remoteContainers.size * 160}px`;
     }
 
+    /**
+     * Updates a remote player's HP and score in the HUD.
+     * @param id The remote player's ID.
+     * @param hp The new HP value.
+     * @param score The new score value.
+     */
     public updateRemotePlayer(id: string, hp: number, score: number): void {
         const remoteContainer = this.remoteContainers.get(id);
         if (!remoteContainer) {
@@ -192,18 +262,21 @@ class MultiHUD implements IHUDMulti {
 
         if(remoteContainer.hp !== hp) {
             this.updateStatus(remoteContainer.container, "HP", hp, this.maxHp, this.hpAssetsPath);
-            remoteContainer.hp = hp; // Met à jour la valeur de HP
-
+            remoteContainer.hp = hp;
             if (hp <= 0) {
                 remoteContainer.container.alpha = 0.3;
             }
         }
         if(remoteContainer.score !== score) {
             this.updateStatus(remoteContainer.container, "Score", score, this.maxScore, this.scoreAssetsPath);
-            remoteContainer.score = score; // Met à jour la valeur de Score
+            remoteContainer.score = score;
         }
     }
 
+    /**
+     * Removes a remote player's status panel from the HUD.
+     * @param id The remote player's ID.
+     */
     public removeRemotePlayer(id: string): void {
         const remoteContainer = this.remoteContainers.get(id);
         if (!remoteContainer) {

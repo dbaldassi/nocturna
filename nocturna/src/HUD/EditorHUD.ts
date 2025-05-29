@@ -1,14 +1,35 @@
+/**
+ * EditorHUD provides the in-game graphical user interface for the level editor.
+ * 
+ * Responsibilities:
+ * - Displays context-sensitive HUD bars for each editor mode (Addition, Move, Rotation, Resize).
+ * - Shows icons, tooltips, and key bindings for available actions in each mode.
+ * - Handles user interactions with HUD elements (e.g., clone, delete, mode switching).
+ * - Integrates with the InputHandler to display current key bindings.
+ * - Notifies a listener (IHUDEditorListener) when HUD actions are triggered.
+ * - Supports dynamic switching between modes and proper cleanup.
+ * 
+ * Usage:
+ * - Use `createHUDEditor(scene, listener)` to instantiate.
+ * - Call `setMode(mode)` to display the HUD for the current editor mode.
+ * - Call `dispose()` to clean up resources when the HUD is no longer needed.
+ */
+
 import { Scene } from "@babylonjs/core";
 import { AdvancedDynamicTexture, Control, Rectangle, StackPanel, TextBlock, Image } from "@babylonjs/gui";
 import { InputHandler } from "../InputHandler";
 
-
+/**
+ * IHUDEditor defines the interface for the editor HUD.
+ */
 export interface IHUDEditor {
-    
     setMode(mode: string): void;
     dispose(): void;
 }
 
+/**
+ * IHUDEditorListener defines callbacks for HUD actions (mode switching, selection, etc.).
+ */
 export interface IHUDEditorListener {
     onNextMode(): void;
     onPreviousMode(): void;
@@ -17,16 +38,34 @@ export interface IHUDEditorListener {
     onCloneSelection(): void;
 }
 
+/**
+ * Factory function to create an EditorHUD instance.
+ * @param scene The Babylon.js scene.
+ * @param listener The HUD event listener.
+ * @returns An IHUDEditor implementation.
+ */
 export function createHUDEditor(scene: Scene, listener: IHUDEditorListener): IHUDEditor {
     return new EditorHUD(scene, listener);
 }
 
+/**
+ * EditorHUD implements the IHUDEditor interface and manages the editor HUD UI.
+ * 
+ * - Creates and manages mode bars for each editor mode.
+ * - Displays icons, tooltips, and key bindings for each action.
+ * - Handles user interaction and notifies the listener of HUD events.
+ */
 class EditorHUD implements IHUDEditor {
     private scene: Scene;
     private gui: AdvancedDynamicTexture;
     private modeBars: Map<string, Rectangle> = new Map();
     private listener: IHUDEditorListener | null = null;
 
+    /**
+     * Constructs a new EditorHUD.
+     * @param scene The Babylon.js scene.
+     * @param listener The HUD event listener.
+     */
     constructor(scene: Scene, listener: IHUDEditorListener) {
         this.scene = scene;
         this.gui = AdvancedDynamicTexture.CreateFullscreenUI("EditorHUD", true, this.scene);
@@ -108,7 +147,10 @@ class EditorHUD implements IHUDEditor {
         this.setMode("Addition");
     }
 
-    private addIconToBar(bar: StackPanel, actionSize:number, iconPath: string, key?: string) {
+    /**
+     * Adds an action icon (with optional key and click handler) to a HUD bar.
+     */
+    private addIconToBar(bar: StackPanel, actionSize: number, iconPath: string, key?: string) {
         // Conteneur individuel pour chaque action
         const actionContainer = new Rectangle();
         actionContainer.width = `${actionSize}px`;
@@ -148,6 +190,9 @@ class EditorHUD implements IHUDEditor {
         return actionContainer;
     }
 
+    /**
+     * Estimates the width of a text string for layout purposes.
+     */
     private estimateTextWidth(text: string, fontSize: number = 20, fontFamily: string = "Arial"): number {
         // Utilise un canvas temporaire pour mesurer le texte
         const canvas = document.createElement("canvas");
@@ -156,7 +201,9 @@ class EditorHUD implements IHUDEditor {
         return ctx.measureText(text).width;
     }
 
-
+    /**
+     * Creates a HUD bar for a specific editor mode, with a title, description, and action icons.
+     */
     private createModeBar(mode: string, description: string, actions: { icon: string, tooltip: string, key?: string, onclick?: () => void }[]) {
         const totalActions = actions.length; 
 
@@ -257,6 +304,10 @@ class EditorHUD implements IHUDEditor {
         this.modeBars.set(mode, mainContainer);
     }
 
+    /**
+     * Sets the current editor mode, displaying only the relevant HUD bar.
+     * @param mode The mode to display ("Addition", "Move", "Rotation", "Resize").
+     */
     public setMode(mode: string): void {
         // Affiche uniquement la barre du mode courant
         this.modeBars.forEach((bar, key) => {
@@ -265,6 +316,9 @@ class EditorHUD implements IHUDEditor {
         });
     }
 
+    /**
+     * Disposes the HUD and all associated GUI resources.
+     */
     public dispose(): void {
         if (this.gui) {
             this.gui.dispose();
