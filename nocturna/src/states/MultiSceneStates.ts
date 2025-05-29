@@ -22,6 +22,14 @@ type Participant = {
     num: number;
 }
 
+/**
+ * AbstractGameSceneState is the abstract base class for all multiplayer scene states.
+ * 
+ * - Provides a common interface for state transitions, rendering, and network events.
+ * - Stores a reference to the associated MultiScene.
+ * - Implements NetworkObserver for multiplayer communication.
+ * - Subclasses implement specific logic for each state (lobby, loading, in-game, etc.).
+ */
 export abstract class AbstractGameSceneState implements NetworkObserver {
     protected gameScene: MultiScene;
 
@@ -31,12 +39,13 @@ export abstract class AbstractGameSceneState implements NetworkObserver {
 
     public enter(): void {}
     public exit(): void {}
-    public render() : void {}
+    public render(): void {}
 
-    public update(_: number, __: CharacterInput): AbstractGameSceneState|null {
+    public update(_: number, __: CharacterInput): AbstractGameSceneState | null {
         return null;
     }
 
+    // NetworkObserver methods (default: no-op)
     public onRoomCreated(_: string): void {}
     public onRoomCreationFailed(_: string): void {}
     public onRoomJoined(_: string, __: string, ___: string[]): void {}
@@ -49,6 +58,13 @@ export abstract class AbstractGameSceneState implements NetworkObserver {
     }
 }
 
+/**
+ * InGameState handles the main multiplayer gameplay loop.
+ * 
+ * - Updates all game objects, spawns objects, and updates the UI.
+ * - Checks for player death or victory conditions.
+ * - Handles network messages for object updates, creation, removal, and player reports.
+ */
 export class InGameState extends AbstractGameSceneState {
     private factories : Map<string, GameObjectFactory>;
     private assetsManager: AssetsManager;
@@ -150,6 +166,12 @@ export class InGameState extends AbstractGameSceneState {
     }
 }
 
+/**
+ * ActionSelectionState handles the action selection phase for multiplayer.
+ * 
+ * - Allows players to select actions or objects before resuming gameplay.
+ * - Updates the camera and objects with a "fake" input (no movement).
+ */
 export class ActionSelectionState extends InGameState {
     private fakeInput: CharacterInput = {
         left: false,
@@ -172,6 +194,12 @@ export class ActionSelectionState extends InGameState {
     }
 }
 
+/**
+ * DeadState handles the state when the local player is dead.
+ * 
+ * - Sets up the dead camera.
+ * - Waits for the end of the game (win/lose) based on remaining players.
+ */
 export class DeadState extends InGameState {
 
     constructor(gameScene: MultiScene) {
@@ -195,6 +223,13 @@ export class DeadState extends InGameState {
     }
 };
 
+/**
+ * LoadingState represents the loading phase of the multiplayer scene.
+ * 
+ * - Loads the level and assigns players to subcubes.
+ * - Waits for all players to be ready before starting the game.
+ * - Implements LevelLoaderObserver for level loading callbacks.
+ */
 export class LoadingState extends AbstractGameSceneState implements LevelLoaderObserver {
     private levelLoader: LevelLoader;
     private ready : boolean = false;
@@ -300,6 +335,12 @@ export class LoadingState extends AbstractGameSceneState implements LevelLoaderO
     }
 }
 
+/**
+ * WinningState handles the end-of-game win screen in multiplayer.
+ * 
+ * - Displays the multiplayer win HUD.
+ * - Handles HUD disposal and user actions (continue, retry, quit).
+ */
 export class WinningState extends AbstractGameSceneState implements IEndScreenHUDListener {
     private hud: IEndScreenHUD;
     
@@ -326,6 +367,12 @@ export class WinningState extends AbstractGameSceneState implements IEndScreenHU
     public onQuit(): void { window.location.reload(); }
 }
 
+/**
+ * LosingState handles the end-of-game lose screen in multiplayer.
+ * 
+ * - Displays the multiplayer lose HUD.
+ * - Handles HUD disposal and user actions (continue, retry, quit).
+ */
 export class LosingState extends AbstractGameSceneState implements IEndScreenHUDListener {
     private hud: IEndScreenHUD;
 
@@ -349,6 +396,13 @@ export class LosingState extends AbstractGameSceneState implements IEndScreenHUD
     public onQuit(): void { window.location.reload(); }
 }
 
+/**
+ * LobbyState manages the multiplayer lobby before the game starts.
+ * 
+ * - Handles room creation/joining, player list management, and readiness.
+ * - Waits for all players to be ready before transitioning to LoadingState.
+ * - Implements LobbyObserver for lobby UI and network events.
+ */
 export class LobbyState extends AbstractGameSceneState implements LobbyObserver {
     private networkManager: NetworkManager;
     private lobby: Lobby;

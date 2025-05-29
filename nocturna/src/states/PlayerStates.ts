@@ -1,6 +1,7 @@
 // ========================= STATES =========================
 // This section contains the implementation of the player's states,
-// including JumpingState, MovingState, and IdleState. Each state
+// including JumpingState, MovingState, IdleState, FallingState, KnockbackState,
+// PlayerDamageableState, and PlayerInvicibleState. Each state
 // manages specific behaviors and transitions based on player input
 // and interactions with the environment.
 // ==========================================================
@@ -9,6 +10,11 @@ import { Color3, Color4, Animation, ParticleSystem, Texture, Vector3 } from "@ba
 import { Player } from "../GameObjects/Player";
 import { AbstractState, CharacterInput } from "../types";
 
+/**
+ * JumpingState handles the player's behavior while jumping or double-jumping.
+ * - Allows for a double jump if the input is pressed again mid-air.
+ * - Transitions to MovingState or IdleState when the player lands.
+ */
 class JumpingState implements AbstractState {
     public static readonly Type: string = "jumping";
     private player: Player;
@@ -33,6 +39,7 @@ class JumpingState implements AbstractState {
         this.player.move(dt, input);
 
         if(!this.doubleJumped && !this.canDoubleJump) {
+            // Player must first release the jump button to allow double jump
             this.canDoubleJump = !input.jump;
         }
 
@@ -45,6 +52,8 @@ class JumpingState implements AbstractState {
         const isGrounded = this.player.isGrounded();
         const velocity = this.player.getMesh().physicsBody.getLinearVelocity().y;
 
+        // check if velocity is less than 0, meaning the player is falling
+        // This avoid detecting as grounded too soon (when starting the jump)
         if (isGrounded && velocity <= 0) {
             if (input.left || input.right) return new MovingState(this.player);
             else return new IdleState(this.player);
@@ -54,6 +63,10 @@ class JumpingState implements AbstractState {
     }
 }
 
+/**
+ * FallingState handles the player's behavior while falling (not jumping).
+ * - Transitions to MovingState or IdleState when the player lands.
+ */
 class FallingState implements AbstractState {
     public static readonly Type: string = "falling";
     private player: Player;
@@ -85,6 +98,11 @@ class FallingState implements AbstractState {
     }
 }
 
+/**
+ * MovingState handles the player's behavior while moving on the ground.
+ * - Plays movement sounds at intervals.
+ * - Transitions to JumpingState if jump is pressed, IdleState if no movement, or FallingState if not grounded.
+ */
 class MovingState implements AbstractState {
     public static readonly Type: string = "moving";
     private player: Player;
@@ -131,6 +149,11 @@ class MovingState implements AbstractState {
     }
 }
 
+/**
+ * IdleState handles the player's behavior when standing still on the ground.
+ * - Stops horizontal movement.
+ * - Transitions to JumpingState, MovingState, or FallingState based on input and grounded state.
+ */
 export class IdleState implements AbstractState {
     public static readonly Type: string = "idle";
     private player: Player;
@@ -168,6 +191,11 @@ export class IdleState implements AbstractState {
     }
 }
 
+/**
+ * KnockbackState handles the player's behavior when knocked back (e.g., after taking damage).
+ * - Disables player control for a short duration.
+ * - Transitions to IdleState or MovingState after the knockback timer expires.
+ */
 export class KnockbackState implements AbstractState {
     private player: Player;
     private timer: number;
@@ -201,10 +229,17 @@ export class KnockbackState implements AbstractState {
     }
 }
 
+/**
+ * PlayerDamageState is an interface for player states that can handle taking damage.
+ */
 export interface PlayerDamageState extends AbstractState {
     takeDamage(damage: number): void;
 }
 
+/**
+ * PlayerDamageableState allows the player to take damage.
+ * - Calls the player's damage logic and transitions to PlayerInvicibleState after being hit.
+ */
 export class PlayerDamageableState implements PlayerDamageState {
     private player: Player;
     private damaged: boolean = false;
@@ -235,6 +270,12 @@ export class PlayerDamageableState implements PlayerDamageState {
     }
 }
 
+/**
+ * PlayerInvicibleState makes the player temporarily invincible after taking damage.
+ * - Flickers the player's mesh for a set duration.
+ * - Ignores further damage during this state.
+ * - Transitions back to PlayerDamageableState after the invincibility period.
+ */
 export class PlayerInvicibleState implements PlayerDamageState {
     private player: Player;
     private readonly invincibleDuration: number = 1000; // Duration of invincibility in milliseconds

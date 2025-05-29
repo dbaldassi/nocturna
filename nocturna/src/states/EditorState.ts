@@ -9,6 +9,15 @@ import { LevelSelectionObserver, LevelSelectionScene } from "../LevelSelection";
 import { EditorScene } from "../scene/EditorScene";
 import { AbstractState, CharacterInput, GameObjectFactory } from "../types";
 
+/**
+ * EditorState is the abstract base class for all editor mode states in the level editor.
+ * 
+ * - Manages state transitions (next/previous mode).
+ * - Handles registration and switching of editor states.
+ * - Provides a template for state-specific logic (Addition, Move, Rotation, Resize).
+ * 
+ * Subclasses must implement `name()` and `clone()`.
+ */
 export abstract class EditorState implements AbstractState {
     protected scene: EditorScene;
     protected inputHandler: InputHandler;
@@ -82,6 +91,13 @@ export abstract class EditorState implements AbstractState {
     }
 }
 
+/**
+ * AdditionState allows the user to add new objects to the level.
+ * 
+ * - Maps input actions to object creation (platforms, coins, traps, player, etc.).
+ * - Handles cloning and deletion of selected objects.
+ * - Inherits state transition logic from EditorState.
+ */
 export class AdditionState extends EditorState {
     private factories : Map<string, GameObjectFactory>; 
 
@@ -133,6 +149,12 @@ export class AdditionState extends EditorState {
     }
 }
 
+/**
+ * MoveState allows the user to move the selected object in the editor.
+ * 
+ * - Handles input for moving the current selection.
+ * - Inherits state transition logic from EditorState.
+ */
 export class MoveState extends EditorState {
     constructor(scene: EditorScene, inputHandler: InputHandler) {
         super(scene, inputHandler);
@@ -159,6 +181,12 @@ export class MoveState extends EditorState {
     }
 }
 
+/**
+ * RotationState allows the user to rotate the selected object in the editor.
+ * 
+ * - Handles input for rotating the current selection.
+ * - Inherits state transition logic from EditorState.
+ */
 export class RotationState extends EditorState {
     constructor(scene: EditorScene, inputHandler: InputHandler) {
         super(scene, inputHandler);
@@ -183,6 +211,12 @@ export class RotationState extends EditorState {
     }
 }
 
+/**
+ * ResizeState allows the user to resize the selected object in the editor.
+ * 
+ * - Handles input for resizing the current selection.
+ * - Inherits state transition logic from EditorState.
+ */
 export class ResizeState extends EditorState {
     constructor(scene: EditorScene, inputHandler: InputHandler) {
         super(scene, inputHandler);
@@ -207,6 +241,11 @@ export class ResizeState extends EditorState {
     }
 }
 
+/**
+ * InitState is a placeholder state used for initialization.
+ * 
+ * - Does not perform any actions or transitions.
+ */
 export class InitState implements AbstractState {
     
     public name(): string {
@@ -221,6 +260,13 @@ export class InitState implements AbstractState {
     }
 }
 
+/**
+ * SelectionState manages the level selection screen in the editor.
+ * 
+ * - Displays the level selection UI.
+ * - Handles user selection of a level to edit.
+ * - Transitions to InitState once a level is selected.
+ */
 export class SelectionState implements AbstractState, LevelSelectionObserver {
     private scene: EditorScene;
     private levelSelector: LevelSelectionScene;
