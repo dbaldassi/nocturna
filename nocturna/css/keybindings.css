@@ -1,6 +1,4 @@
-
-.settings-button {
-    position: fixed;
+ .settings-button {
     top: 1rem;
     right: 1rem;
     background: rgba(255, 255, 255, 0.1);
@@ -15,7 +13,7 @@
     color: white;
     transition: all 0.3s ease;
     z-index: 1000;
-}
+} 
 
 .settings-button:hover {
     background: rgba(255, 255, 255, 0.2);
@@ -197,4 +195,28 @@
 
 .keybind-key:hover {
     background: rgba(255, 255, 255, 0.2);
+}
+
+.language-selector, .keybinds-preset {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    color: #a8a8a8;
+    font-size: 1rem;
+}
+
+.language-selector label, .keybinds-preset label {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.language-selector input[type="radio"], .keybinds-preset input[type="radio"] {
+    accent-color: #3b82f6;
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
 }

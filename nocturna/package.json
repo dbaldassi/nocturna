@@ -1,12 +1,13 @@
 {
   "name": "Nocturna",
   "private": true,
-  "version": "0.0.1",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "tsc && vite build --base=./",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "docs": "typedoc --entryPointStrategy expand --out docs src"
   },
   "devDependencies": {
     "typescript": "~5.6.2",
@@ -16,6 +17,7 @@
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "http": "^0.0.1-security",
+    "typedoc": "^0.28.5",
     "ws": "^8.18.2"
   }
 }

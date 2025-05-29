@@ -7,6 +7,12 @@ import { InputHandler } from "../InputHandler";
 import { TutorialScene } from "./TutorialScene";
 import { MultiScene } from "./MultiScene";
 
+/**
+ * SceneFactory is responsible for creating and initializing scenes in Nocturna.
+ * 
+ * Provides a static interface to instantiate different types of scenes (singleplayer, editor, tutorial, multiplayer)
+ * based on a string identifier. Each scene is created asynchronously and returns a BaseScene instance.
+ */
 export class SceneFactory {
     private static scenes: { [key: string]: (engine: Engine, inputHandler: InputHandler) => Promise<BaseScene> } = {
         singleplayer: (engine: Engine, inputHandler: InputHandler) => GameScene.createScene(engine, inputHandler),
@@ -16,10 +22,12 @@ export class SceneFactory {
     };
 
     /**
-     * Crée une scène en fonction de son nom.
-     * @param name Nom de la scène à créer.
-     * @param engine L'instance de l'engine Babylon.js.s
-     * @returns Une instance de la scène demandée.
+     * Creates a scene based on its name.
+     * @param name The name of the scene to create ("singleplayer", "editor", "tutorial", "multiplayer").
+     * @param engine The Babylon.js engine instance.
+     * @param inputHandler The input handler for the scene.
+     * @returns A promise resolving to the requested scene instance.
+     * @throws If the scene name is not found in the factory.
      */
     public static async createScene(name: string, engine: Engine, inputHandler: InputHandler): Promise<BaseScene> {
         const sceneCreator = this.scenes[name];

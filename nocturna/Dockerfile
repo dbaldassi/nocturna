@@ -10,6 +10,7 @@ WORKDIR /home/node/nocturna
 COPY --chown=node:node server/ .
 # Ajoute le contenu distant
 COPY --chown=node:node dist/ www/
+ADD --chown=node:node docs www/docs
 
 # Installer les dépendances
 RUN npm install ws http express cors

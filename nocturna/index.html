@@ -16,24 +16,75 @@
 </head>
 
 <body>
-    <button id="settings-button" class="settings-button">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path
-                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-            </path>
-        </svg>
-    </button>
+    <div id="top-controls" style="position:fixed;top:20px;right:20px;z-index:1000;display:flex;flex-direction:row;align-items:center;gap:16px;">
+        <button id="settings-button" class="settings-button">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path
+                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                </path>
+            </svg>
+        </button>
+        <div id="audio-control" style="cursor:pointer;">
+            <img id="audio-icon" src="/assets/hud/audioOn.png" style="width:32px;height:32px;vertical-align:middle;">
+            <input id="audio-slider" type="range" min="0" max="1" step="0.01" value="1" style="width:100px;display:none;vertical-align:middle;">
+        </div>
+        <div id="music-control" style="cursor:pointer;">
+            <img id="music-icon" src="/assets/hud/musicOn.png" style="width:32px;height:32px;vertical-align:middle;">
+        </div>
+    </div>
     <script src="./src/app.ts" type="module"></script>
     <div id="fps">0</div>
-    <div id="game-timer" class="hidden">Time: 0:00</div>
+    <div id="hp-bar-container" class="hidden">
+        <div id="hp-bar" class="hidden"></div>
+    </div>
+    <div id="keybinds-modal" class="keybinds-modal hidden">
+        <div class="keybinds-content">
+            <div class="keybinds-header">
+                <h2>Keybinds</h2>
+                <button class="close-button">&times;</button>
+            </div>
+            <div class="language-selector">
+                <span>Language:</span>
+                <label>
+                    <input type="radio" name="language" value="en" id="lang-en" checked>
+                    English
+                </label>
+                <label>
+                    <input type="radio" name="language" value="fr" id="lang-fr">
+                    Français
+                </label>
+            </div>
+            <div class="keybinds-preset">
+                <span>Preset:</span>
+                <label>
+                    <input type="radio" name="keybind-preset" value="qwerty" checked>
+                    QWERTY
+                </label>
+                <label>
+                    <input type="radio" name="keybind-preset" value="azerty">
+                    AZERTY
+                </label>
+            </div>
+            <div class="keybindings-list">
+                <!-- Keybind items will be rendered here, you may want to render them dynamically -->
+            </div>
+        </div>
+    </div>
+    <div id="game-timer" class="hidden" data-translate="ui.timer"></div>
     <div id="game-mode-selection">
+        <div id="graphics-selector"
+            style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 20px;">
+            <button class="graphics-btn" data-graphics="potato" data-translate="graphics.ultra-low">Ultra Low</button>
+            <button class="graphics-btn active" data-graphics="low" data-translate="graphics.low">Low Graphics</button>
+            <button class="graphics-btn" data-graphics="high" data-translate="graphics.high">High Graphics</button>
+        </div>
         <div class="background"></div>
         <div class="container">
             <header>
-                <h1>Choose Your Path</h1>
-                <p>Enter the fractured dream — each path holds a different truth.</p>
+                <h1 data-translate="main.title">Choose Your Path</h1>
+                <p data-translate="main.subtitle">Enter the fractured dream — each path holds a different truth.</p>
             </header>
 
             <div class="game-modes">
@@ -45,8 +96,9 @@
                             <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
                         </svg>
                     </div>
-                    <h2>Tutorial</h2>
-                    <p>Awaken slowly — learn to navigate the shifting cube before the real dream begins.</p>
+                    <h2 data-translate="mode.tutorial.title">Tutorial</h2>
+                    <p data-translate="mode.tutorial.desc">Awaken slowly — learn to navigate the shifting cube before
+                        the real dream begins.</p>
                 </div>
 
                 <div class="mode-card" data-mode="singleplayer">
@@ -59,8 +111,9 @@
                             <line x1="6" y1="18" x2="18" y2="18" />
                         </svg>
                     </div>
-                    <h2>Single Player</h2>
-                    <p>Traverse the dream alone — collect fragments, dodge nightmares, and reach the crystal to awaken.</p>
+                    <h2 data-translate="mode.singleplayer.title">Single Player</h2>
+                    <p data-translate="mode.singleplayer.desc">Traverse the dream alone — collect fragments, dodge
+                        nightmares, and reach the crystal to awaken.</p>
                 </div>
 
                 <div class="mode-card" data-mode="multiplayer">
@@ -73,8 +126,9 @@
                             <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                         </svg>
                     </div>
-                    <h2>Multiplayer</h2>
-                    <p>Face other dreamers in a fractured world — alter their reality or shatter them before they reach the light.</p>
+                    <h2 data-translate="mode.multiplayer.title">Multiplayer</h2>
+                    <p data-translate="mode.multiplayer.desc">Face other dreamers in a fractured world — alter their
+                        reality or shatter them before they reach the light.</p>
                 </div>
 
                 <div class="mode-card" data-mode="editor">
@@ -85,14 +139,12 @@
                             <path d="M16.5 3.5L20.5 7.5L7 21H3v-4L16.5 3.5z" />
                         </svg>
                     </div>
-                    <h2>Level Editor</h2>
-                   <p>Bend the dream to your will — craft impossible paths and share your nightmare with others.</p>
+                    <h2 data-translate="mode.editor.title">Level Editor</h2>
+                    <p data-translate="mode.editor.desc">Bend the dream to your will — craft impossible paths and share
+                        your nightmare with others.</p>
                 </div>
             </div>
-
-
-
-            <button id="start-game" class="hidden">Start Game</button>
+            <button id="start-game" class="hidden" data-translate="ui.start-game">Start Game</button>
         </div>
     </div>
 
@@ -118,23 +170,23 @@
                 </div>
             </div>
 
-            <h1 class="win-title">VICTORY!</h1>
-            <p class="win-subtitle">You have conquered the night realm</p>
+            <h1 class="win-title" data-translate="win.title">VICTORY!</h1>
+            <p class="win-subtitle" data-translate="win.subtitle">You have conquered the night realm</p>
 
-            <div class="stats-container">
+            <div id="win-stats-container" class="stats-container">
                 <div class="stat-row">
-                    <span class="stat-label">Final Score:</span>
+                    <span class="stat-label" data-translate="win.score">Final Score:</span>
                     <span id="final-score" class="stat-value score">0</span>
                 </div>
                 <div class="stat-row">
-                    <span class="stat-label">Time Elapsed:</span>
+                    <span class="stat-label" data-translate="win.time">Time Elapsed:</span>
                     <span class="stat-value time" id="final-timer"></span>
                 </div>
             </div>
 
             <div class="button-container">
-                <button id="continue-button" class="primary-button">Restart</button>
-                <button id="win-menu-button" class="outline-button">Main Menu</button>
+                <button id="continue-button" class="primary-button" data-translate="win.restart">Restart</button>
+                <button id="win-menu-button" class="outline-button" data-translate="win.menu">Main Menu</button>
             </div>
         </div>
     </div>
@@ -155,22 +207,23 @@
                 <div class="skull-shadow"></div>
             </div>
 
-            <h1 class="game-over-title">GAME OVER</h1>
-            <p id="death-message" class="game-over-subtitle">The darkness has consumed you...</p>
+            <h1 class="game-over-title" data-translate="gameover.title">GAME OVER</h1>
+            <p id="death-message" class="game-over-subtitle" data-translate="gameover.subtitle">The darkness has
+                consumed you...</p>
 
-            <div class="stats-container game-over-stats">
+            <div id="lose-stats-container" class="stats-container game-over-stats">
                 <div class="stat-row">
-                    <span class="stat-label">Score:</span>
+                    <span class="stat-label" data-translate="gameover.score">Score:</span>
                     <span class="stat-value" id="final-loose-score">0</span>
                 </div>
                 <div class="stat-row">
-                    <span class="stat-label">Time Elapsed:</span>
+                    <span class="stat-label" data-translate="gameover.time">Time Elapsed:</span>
                     <span class="stat-value" id="loose-timer">0:00</span>
                 </div>
             </div>
 
             <div class="button-container">
-                <button id="retry-button" class="primary-button game-over-button">
+                <button id="retry-button" class="primary-button game-over-button" data-translate="gameover.retry">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
@@ -178,7 +231,8 @@
                     </svg>
                     Try Again
                 </button>
-                <button id="game-over-menu-button" class="outline-button game-over-outline">
+                <button id="game-over-menu-button" class="outline-button game-over-outline"
+                    data-translate="gameover.menu">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -189,6 +243,42 @@
             </div>
         </div>
     </div>
+    <div id="end-tutorial" class="screen hidden">
+        <div class="modal-container">
+            <div class="trophy-container">
+                <div class="trophy-icon">
+                    <svg class="trophy" xmlns="http://www.w3.org/2000/svg" width="80px" height="80px"
+                        viewBox="0 0 24 24" fill="none" stroke="#00bfff">
+                        <g>
+                            <path
+                                d="M12 14V17M12 14C9.58104 14 7.56329 12.2822 7.10002 10M12 14C14.419 14 16.4367 12.2822 16.9 10M17 5H19.75C19.9823 5 20.0985 5 20.1951 5.01921C20.5918 5.09812 20.9019 5.40822 20.9808 5.80491C21 5.90151 21 6.01767 21 6.25C21 6.94698 21 7.29547 20.9424 7.58527C20.7056 8.77534 19.7753 9.70564 18.5853 9.94236C18.2955 10 17.947 10 17.25 10H17H16.9M7 5H4.25C4.01767 5 3.90151 5 3.80491 5.01921C3.40822 5.09812 3.09812 5.40822 3.01921 5.80491C3 5.90151 3 6.01767 3 6.25C3 6.94698 3 7.29547 3.05764 7.58527C3.29436 8.77534 4.22466 9.70564 5.41473 9.94236C5.70453 10 6.05302 10 6.75 10H7H7.10002M12 17C12.93 17 13.395 17 13.7765 17.1022C14.8117 17.3796 15.6204 18.1883 15.8978 19.2235C16 19.605 16 20.07 16 21H8C8 20.07 8 19.605 8.10222 19.2235C8.37962 18.1883 9.18827 17.3796 10.2235 17.1022C10.605 17 11.07 17 12 17ZM7.10002 10C7.03443 9.67689 7 9.34247 7 9V4.57143C7 4.03831 7 3.77176 7.09903 3.56612C7.19732 3.36201 7.36201 3.19732 7.56612 3.09903C7.77176 3 8.03831 3 8.57143 3H15.4286C15.9617 3 16.2282 3 16.4339 3.09903C16.638 3.19732 16.8027 3.36201 16.901 3.56612C17 3.77176 17 4.03831 17 4.57143V9C17 9.34247 16.9656 9.67689 16.9 10"
+                                stroke="#00bfff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </g>
+                    </svg>
+                </div>
+            </div>
+            <h1 class="win-title" data-translate="tutorial.complete.title">Tutorial Complete!</h1>
+            <p class="win-subtitle" data-translate="tutorial.complete.subtitle">You have mastered the basics. The real
+                dream awaits...</p>
+            <div class="button-container">
+                <button id="finish-tutorial-button" class="primary-button"
+                    data-translate="tutorial.complete.continue">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="pause-overlay" class="pause-overlay hidden">
+        <div class="pause-content">
+            <h2 class="pause-title" data-translate="pause.title">Game Paused</h2>
+            <p class="pause-subtitle" data-translate="pause.subtitle"></p>
+            <p class="keybinds-instructions" data-translate="keybinds.instructions"></p>
+            <div class="pause-explanations">
+            </div>
+            <button id="resume-button" class="primary-button">Resume</button>
+        </div>
+    </div>
+
+
 </body>
 
 </html>
