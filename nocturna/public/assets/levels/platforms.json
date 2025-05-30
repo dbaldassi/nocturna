@@ -106,7 +106,7 @@
             }
         },
         {
-            "type": "victory_condition",
+            "type": "fixed_victory_condition",
             "position": {
                 "_isDirty": false,
                 "_x": 300,
