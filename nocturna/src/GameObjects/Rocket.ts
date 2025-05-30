@@ -165,17 +165,17 @@ export class RocketObject implements Enemy {
         const particleSystem = new ParticleSystem("explosion", 2000, this.scene);
         particleSystem.particleTexture = new Texture("textures/flare.png", this.scene);
         particleSystem.emitter = this.mesh.position.clone();
-        particleSystem.minEmitBox = new Vector3(-1, -1, -1);
-        particleSystem.maxEmitBox = new Vector3(1, 1, 1);
+        particleSystem.minEmitBox = new Vector3(-5, -5, -5); // Box dimensions for emission
+        particleSystem.maxEmitBox = new Vector3(5, 5, 5);
         particleSystem.color1 = new Color4(1, 0.5, 0, 1);
         particleSystem.color2 = new Color4(1, 0, 0, 1);
         particleSystem.minSize = 2;
-        particleSystem.maxSize = 7;
+        particleSystem.maxSize = 5;
         particleSystem.minLifeTime = 0.2;
         particleSystem.maxLifeTime = 1;
         particleSystem.emitRate = 1000;
-        particleSystem.direction1 = new Vector3(-1, 1, -1);
-        particleSystem.direction2 = new Vector3(1, 1, 1);
+        particleSystem.direction1 = new Vector3(-5, -5, -5); 
+        particleSystem.direction2 = new Vector3(5,5, 5);
         particleSystem.minEmitPower = 1;
         particleSystem.maxEmitPower = 3;
 
@@ -195,11 +195,11 @@ export class RocketObject implements Enemy {
     public onPause(): void {
         // Optionally dispose or pause physics here
     }
-    
+
     /**
      * Handles logic when the game is resumed (optional).
      */
-    public onResume(): void {}
+    public onResume(): void { }
 
     /**
      * Activates the rocket: adds physics and enables collision.
@@ -212,7 +212,7 @@ export class RocketObject implements Enemy {
     /**
      * Adds an observer to the rocket (not used in this implementation).
      */
-    public addObserver(_: GameObjectObserver): void {}
+    public addObserver(_: GameObjectObserver): void { }
 }
 
 /**
