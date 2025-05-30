@@ -86,7 +86,8 @@ export const en = {
         "You were lost in the dream.",
         "The void has swallowed you.",
         "You were shattered by the dream's chaos.",
-    ]
+    ],
+    "ui.fps-warning": "⚠️ For the best experience, play at 60 FPS or higher. If you notice low FPS, try lowering the graphics quality."
 };
 
 export const QWERTY = {

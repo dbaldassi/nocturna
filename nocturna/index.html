@@ -16,7 +16,8 @@
 </head>
 
 <body>
-    <div id="top-controls" style="position:fixed;top:20px;right:20px;z-index:1000;display:flex;flex-direction:row;align-items:center;gap:16px;">
+    <div id="top-controls"
+        style="position:fixed;top:20px;right:20px;z-index:1000;display:flex;flex-direction:row;align-items:center;gap:16px;">
         <button id="settings-button" class="settings-button">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
@@ -28,12 +29,14 @@
         </button>
         <div id="audio-control" style="cursor:pointer;">
             <img id="audio-icon" src="/assets/hud/audioOn.png" style="width:32px;height:32px;vertical-align:middle;">
-            <input id="audio-slider" type="range" min="0" max="1" step="0.01" value="1" style="width:100px;display:none;vertical-align:middle;">
+            <input id="audio-slider" type="range" min="0" max="1" step="0.01" value="1"
+                style="width:100px;display:none;vertical-align:middle;">
         </div>
         <div id="music-control" style="cursor:pointer;">
             <img id="music-icon" src="/assets/hud/musicOn.png" style="width:32px;height:32px;vertical-align:middle;">
         </div>
     </div>
+
     <script src="./src/app.ts" type="module"></script>
     <div id="fps">0</div>
     <div id="hp-bar-container" class="hidden">
@@ -145,6 +148,12 @@
                 </div>
             </div>
             <button id="start-game" class="hidden" data-translate="ui.start-game">Start Game</button>
+        </div>
+        <div id="fps-warning"
+            style="background: linear-gradient(135deg, #34d399 0%, #059669 100%); color: #222; padding: 10px 20px; text-align: center; font-weight: 600; font-size: 1rem; z-index: 2000; position: fixed; bottom: 0; left: 0; width: 100%;"
+            data-translate="ui.fps-warning">
+            ⚠️ For the best experience, play at 60 FPS or higher. If you notice low FPS, try lowering the graphics
+            quality.
         </div>
     </div>
 
@@ -277,7 +286,6 @@
             <button id="resume-button" class="primary-button">Resume</button>
         </div>
     </div>
-
 
 </body>
 

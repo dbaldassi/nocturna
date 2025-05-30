@@ -13,6 +13,9 @@ export class App {
     private scene: BaseScene;
     private canvas: HTMLCanvasElement;
     private inputHandler: InputHandler;
+    private lastUpdateTime: number = 0;
+    public static readonly FPS_LIMIT: number = 120;
+    public static readonly FPS_LIMIT_MS: number = 1000 / App.FPS_LIMIT;
 
     constructor() {
         App.selectedGraphics = CookieManager.get("graphics") || "low";
@@ -215,11 +218,20 @@ export class App {
 
     gameLoop() {
         const divFps = document.getElementById("fps");
+        this.lastUpdateTime = performance.now();
 
         // run the main render loop
         this.engine.runRenderLoop(() => {
+            const currentTime = performance.now();
+            const deltaTime = currentTime - this.lastUpdateTime;
+            if (deltaTime < App.FPS_LIMIT_MS) {
+                return; // Skip rendering if the frame is too fast
+            }
+            this.lastUpdateTime = currentTime;
+            
             this.scene.update(this.engine.getDeltaTime());
             this.scene.render();
+            
             divFps.innerHTML = this.engine.getFps().toFixed() + " fps";
         });
     }
