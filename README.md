@@ -118,7 +118,7 @@ node . # run server
 ## Gameplay Video
 
 Watch a gameplay demo on YouTube:  
-[https://youtube.com/watch?v=XXXXXXXXXXX](https://youtube.com/watch?v=XXXXXXXXXXX) <!-- Replace with your actual video link -->
+[Youtube](https://www.youtube.com/watch?v=R8ayotSKBW4) <!-- Replace with your actual video link -->
 
 ---
 
