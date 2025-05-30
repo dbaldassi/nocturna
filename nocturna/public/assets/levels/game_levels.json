@@ -1,4 +1,5 @@
 [
     { "name": "Level1", "file" : "level1.json" },
-    { "name": "Level2", "file" : "level2.json" }
+    { "name": "Level2", "file" : "level2.json" },
+    { "name": "impossible level", "file" : "impossible_level.json" }
 ]
