@@ -88,7 +88,8 @@ export const fr = {
         "Vous avez été piégé dans le rêve éternel.",
         "La nuit a réclamé votre âme.",
         "Le rêve s'est transformé en cauchemar.",
-    ]
+    ],
+    "ui.fps-warning": "⚠️ Pour la meilleure expérience, jouez à 60 FPS ou plus. Si vous remarquez des baisses de FPS, essayez de réduire la qualité graphique.",
 };
 
 export const AZERTY = {

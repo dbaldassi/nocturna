@@ -85,10 +85,10 @@
             }
         },
         {
-            "type": "victory_condition",
+            "type": "fixed_victory_condition",
             "position": {
                 "_isDirty": false,
-                "_x": 75,
+                "_x": 50,
                 "_y": -780,
                 "_z": 0
             },

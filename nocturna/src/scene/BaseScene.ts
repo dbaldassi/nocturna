@@ -1,6 +1,7 @@
 import { Engine, Scene, HavokPlugin, Vector3 } from "@babylonjs/core";
 import { InputHandler } from "../InputHandler";
 import HavokPhysics from "@babylonjs/havok";
+import { App } from "../app";
 
 /**
  * Abstract base class for all game scenes in Nocturna.
@@ -83,7 +84,7 @@ export abstract class BaseScene {
         // Initialize the physics plugin with higher gravity
         this.hk = new HavokPlugin(true, this.havokInstance);
         this.scene.enablePhysics(new Vector3(0, -1000, 0), this.hk);
-        this.scene.getPhysicsEngine().setTimeStep(1 / 120);
+        this.scene.getPhysicsEngine().setTimeStep(1 / App.FPS_LIMIT);
 
         console.log("Physics added to the scene");
     }

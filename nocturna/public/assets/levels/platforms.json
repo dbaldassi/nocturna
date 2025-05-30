@@ -25,7 +25,49 @@
             "type": "parented_platform",
             "position": {
                 "_isDirty": false,
-                "_x": 75,
+                "_x": 0,
+                "_y": 0,
+                "_z": 75
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 50,
+                "_y": 50,
+                "_z": 50
+            }
+        },
+        {
+            "type": "parented_platform",
+            "position": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": -225,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": -1.5707963267948966,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 50,
+                "_y": 50,
+                "_z": 50
+            }
+        },
+        {
+            "type": "fixed_platform",
+            "position": {
+                "_isDirty": false,
+                "_x": 150,
                 "_y": 0,
                 "_z": 0
             },
@@ -40,6 +82,48 @@
                 "_x": 50,
                 "_y": 50,
                 "_z": 50
+            }
+        },
+        {
+            "type": "fixed_platform",
+            "position": {
+                "_isDirty": false,
+                "_x": 300,
+                "_y": 0,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 50,
+                "_y": 50,
+                "_z": 50
+            }
+        },
+        {
+            "type": "fixed_victory_condition",
+            "position": {
+                "_isDirty": false,
+                "_x": 300,
+                "_y": 20,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 20,
+                "_y": 20,
+                "_z": 20
             }
         },
         {
@@ -61,27 +145,6 @@
                 "_x": 10,
                 "_y": 10,
                 "_z": 10
-            }
-        },
-        {
-            "type": "victory_condition",
-            "position": {
-                "_isDirty": false,
-                "_x": 75,
-                "_y": 20,
-                "_z": 0
-            },
-            "rotation": {
-                "_isDirty": false,
-                "_x": 0,
-                "_y": 0,
-                "_z": 0
-            },
-            "size": {
-                "_isDirty": true,
-                "_x": 20,
-                "_y": 20,
-                "_z": 20
             }
         }
     ],

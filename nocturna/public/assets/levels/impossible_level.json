@@ -1,0 +1,588 @@
+{
+    "objects": [
+        {
+            "type": "fixed_platform",
+            "position": {
+                "_isDirty": false,
+                "_x": -300,
+                "_y": -200,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 50,
+                "_y": 50,
+                "_z": 50
+            }
+        },
+        {
+            "type": "player",
+            "position": {
+                "_isDirty": false,
+                "_x": -300,
+                "_y": -160,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 10,
+                "_y": 10,
+                "_z": 10
+            }
+        },
+        {
+            "type": "coin",
+            "position": {
+                "_isDirty": false,
+                "_x": -250,
+                "_y": -150,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 15,
+                "_y": 15,
+                "_z": 15
+            }
+        },
+        {
+            "type": "parented_platform",
+            "position": {
+                "_isDirty": false,
+                "_x": -200,
+                "_y": 0,
+                "_z": -175
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 1.5707963267948966,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 50,
+                "_y": 50,
+                "_z": 50
+            }
+        },
+        {
+            "type": "parented_platform",
+            "position": {
+                "_isDirty": false,
+                "_x": -200,
+                "_y": 200,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 3.141592653589793,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 50,
+                "_y": 50,
+                "_z": 50
+            }
+        },
+        {
+            "type": "fixed_rocket_activation_platform",
+            "position": {
+                "_isDirty": false,
+                "_x": -200,
+                "_y": -150,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 45,
+                "_y": 45,
+                "_z": 45
+            }
+        },
+        {
+            "type": "coin",
+            "position": {
+                "_isDirty": false,
+                "_x": -150,
+                "_y": -120,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 15,
+                "_y": 15,
+                "_z": 15
+            }
+        },
+        {
+            "type": "parented_platform",
+            "position": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 100,
+                "_z": -150
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 1.5707963267948966,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 50,
+                "_y": 50,
+                "_z": 50
+            }
+        },
+        {
+            "type": "parented_platform",
+            "position": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": -120
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 1.0471975512,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 50,
+                "_y": 50,
+                "_z": 50
+            }
+        },
+        {
+            "type": "fixed_platform",
+            "position": {
+                "_isDirty": false,
+                "_x": -15,
+                "_y": -125,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 45,
+                "_y": 45,
+                "_z": 45
+            }
+        },
+        {
+            "type": "fixed_platform",
+            "position": {
+                "_isDirty": false,
+                "_x": 50,
+                "_y": -125,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0.8726646259
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 50,
+                "_y": 50,
+                "_z": 50
+            }
+        },
+        {
+            "type": "coin",
+            "position": {
+                "_isDirty": false,
+                "_x": 100,
+                "_y": -125,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 15,
+                "_y": 15,
+                "_z": 15
+            }
+        },
+        {
+            "type": "fixed_platform",
+            "position": {
+                "_isDirty": false,
+                "_x": 125,
+                "_y": -125,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": -0.8726646259
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 50,
+                "_y": 50,
+                "_z": 50
+            }
+        },
+        {
+            "type": "fixed_platform",
+            "position": {
+                "_isDirty": false,
+                "_x": 290,
+                "_y": -130,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0.5235987756
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 50,
+                "_y": 50,
+                "_z": 50
+            }
+        },
+        {
+            "type": "parented_platform",
+            "position": {
+                "_isDirty": false,
+                "_x": 250,
+                "_y": 75,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": -2.617993878
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 50,
+                "_y": 50,
+                "_z": 50
+            }
+        },
+        {
+            "type": "parented_platform",
+            "position": {
+                "_isDirty": false,
+                "_x": 265,
+                "_y": 15,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 2.617993878
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 50,
+                "_y": 50,
+                "_z": 50
+            }
+        },
+        {
+            "type": "coin",
+            "position": {
+                "_isDirty": false,
+                "_x": 270,
+                "_y": -75,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 15,
+                "_y": 15,
+                "_z": 15
+            }
+        },
+        {
+            "type": "coin",
+            "position": {
+                "_isDirty": false,
+                "_x": 290,
+                "_y": 0,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 15,
+                "_y": 15,
+                "_z": 15
+            }
+        },
+        {
+            "type": "fixed_platform",
+            "position": {
+                "_isDirty": false,
+                "_x": 340,
+                "_y": 30,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 50,
+                "_y": 50,
+                "_z": 50
+            }
+        },
+        {
+            "type": "fixed_platform",
+            "position": {
+                "_isDirty": false,
+                "_x": 225,
+                "_y": 40,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 50,
+                "_y": 50,
+                "_z": 50
+            }
+        },
+        {
+            "type": "spike_trap",
+            "position": {
+                "_isDirty": false,
+                "_x": 245,
+                "_y": 43,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 10,
+                "_y": 1,
+                "_z": 50
+            }
+        },
+        {
+            "type": "coin",
+            "position": {
+                "_isDirty": false,
+                "_x": 225,
+                "_y": 130,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 15,
+                "_y": 15,
+                "_z": 15
+            }
+        },
+        {
+            "type": "fixed_rocket_activation_platform",
+            "position": {
+                "_isDirty": false,
+                "_x": 225,
+                "_y": 100,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 50,
+                "_y": 50,
+                "_z": 50
+            }
+        },
+        {
+            "type": "fixed_platform",
+            "position": {
+                "_isDirty": false,
+                "_x": 100,
+                "_y": 100,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 50,
+                "_y": 50,
+                "_z": 50
+            }
+        },
+        {
+            "type": "fixed_platform",
+            "position": {
+                "_isDirty": false,
+                "_x": -175,
+                "_y": 150,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 50,
+                "_y": 50,
+                "_z": 50
+            }
+        },
+        {
+            "type": "coin",
+            "position": {
+                "_isDirty": false,
+                "_x": -175,
+                "_y": 180,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 15,
+                "_y": 15,
+                "_z": 15
+            }
+        },
+        {
+            "type": "fixed_victory_condition",
+            "position": {
+                "_isDirty": false,
+                "_x": -125,
+                "_y": 100,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 20,
+                "_y": 20,
+                "_z": 20
+            }
+        }
+    ],
+    "Cube": {
+        "position": {
+            "_isDirty": false,
+            "_x": 0,
+            "_y": 0,
+            "_z": 0
+        },
+        "size": 500
+    },
+    "parent_node": {
+        "position": {
+            "_isDirty": false,
+            "_x": 0,
+            "_y": 0,
+            "_z": 0
+        }
+    }
+}
