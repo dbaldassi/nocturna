@@ -43,6 +43,27 @@
             }
         },
         {
+            "type": "coin",
+            "position": {
+                "_isDirty": false,
+                "_x": -250,
+                "_y": -150,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 15,
+                "_y": 15,
+                "_z": 15
+            }
+        },
+        {
             "type": "parented_platform",
             "position": {
                 "_isDirty": false,
@@ -103,6 +124,27 @@
                 "_x": 45,
                 "_y": 45,
                 "_z": 45
+            }
+        },
+        {
+            "type": "coin",
+            "position": {
+                "_isDirty": false,
+                "_x": -150,
+                "_y": -120,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 15,
+                "_y": 15,
+                "_z": 15
             }
         },
         {
@@ -190,6 +232,27 @@
             }
         },
         {
+            "type": "coin",
+            "position": {
+                "_isDirty": false,
+                "_x": 100,
+                "_y": -125,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 15,
+                "_y": 15,
+                "_z": 15
+            }
+        },
+        {
             "type": "fixed_platform",
             "position": {
                 "_isDirty": false,
@@ -274,6 +337,48 @@
             }
         },
         {
+            "type": "coin",
+            "position": {
+                "_isDirty": false,
+                "_x": 270,
+                "_y": -75,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 15,
+                "_y": 15,
+                "_z": 15
+            }
+        },
+        {
+            "type": "coin",
+            "position": {
+                "_isDirty": false,
+                "_x": 290,
+                "_y": 0,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 15,
+                "_y": 15,
+                "_z": 15
+            }
+        },
+        {
             "type": "fixed_platform",
             "position": {
                 "_isDirty": false,
@@ -334,6 +439,27 @@
                 "_x": 10,
                 "_y": 1,
                 "_z": 50
+            }
+        },
+        {
+            "type": "coin",
+            "position": {
+                "_isDirty": false,
+                "_x": 225,
+                "_y": 130,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
+                "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 15,
+                "_y": 15,
+                "_z": 15
             }
         },
         {
@@ -400,12 +526,33 @@
             }
         },
         {
-            "type": "victory_condition",
+            "type": "coin",
             "position": {
                 "_isDirty": false,
+                "_x": -175,
+                "_y": 180,
+                "_z": 0
+            },
+            "rotation": {
+                "_isDirty": false,
                 "_x": 0,
+                "_y": 0,
+                "_z": 0
+            },
+            "size": {
+                "_isDirty": true,
+                "_x": 15,
+                "_y": 15,
+                "_z": 15
+            }
+        },
+        {
+            "type": "fixed_victory_condition",
+            "position": {
+                "_isDirty": false,
+                "_x": -125,
                 "_y": 100,
-                "_z": 100
+                "_z": 0
             },
             "rotation": {
                 "_isDirty": false,

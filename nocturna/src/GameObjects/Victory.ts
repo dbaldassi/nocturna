@@ -20,6 +20,7 @@ import { ParentNodeObserver } from "../ParentNode";
 import { GameObject, CharacterInput, GameObjectVisitor, GameObjectObserver, GameObjectFactory, GameObjectConfig, Utils, EditorObject } from "../types";
 import { ObjectEditorImpl } from "./EditorObject";
 
+
 /**
  * VictoryCondition represents the end-of-level victory trigger in the game.
  * - Handles mesh, physics, animation, sound, and particle effects.
@@ -100,7 +101,7 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
     /**
      * Called when the parent node starts rotating (not used here).
      */
-    public onRotationStart(): void {}
+    public onRotationStart(): void { }
 
     /**
      * Called when the parent node's rotation changes.
@@ -150,7 +151,7 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
     /**
      * Updates the victory object (no-op).
      */
-    public update(__: number, _: CharacterInput): void {}
+    public update(__: number, _: CharacterInput): void { }
 
     /**
      * Accepts a visitor (for the visitor pattern).
@@ -166,12 +167,12 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
     /**
      * Handles logic when the game is paused (no-op).
      */
-    public onPause(): void {}
+    public onPause(): void { }
 
     /**
      * Handles logic when the game is resumed (no-op).
      */
-    public onResume(): void {}
+    public onResume(): void { }
 
     /**
      * Handles contact events (not used for victory objects).
@@ -184,7 +185,11 @@ export class VictoryCondition implements GameObject, ParentNodeObserver {
     /**
      * Adds an observer to the victory object (not used).
      */
-    public addObserver(_: GameObjectObserver): void {}
+    public addObserver(_: GameObjectObserver): void { }
+}
+
+export class FixedVictoryCondition extends VictoryCondition {
+    public static readonly Type: string = "fixed_victory_condition";
 }
 
 /**
@@ -198,7 +203,7 @@ export class VictoryConditionFactory implements GameObjectFactory {
      * @param config The configuration for the victory object.
      * @param physics Whether to enable physics.
      */
-    private createImpl(config: GameObjectConfig, physics: boolean): VictoryCondition {
+    protected createImpl(config: GameObjectConfig, physics: boolean): VictoryCondition {
         const victory = new VictoryCondition(null, config.scene);
         if (!config.size) {
             config.size = new Vector3(20, 20, 20);
@@ -229,13 +234,13 @@ export class VictoryConditionFactory implements GameObjectFactory {
             }
 
             // Particle system for visual effect
-            const meshColor = meshes[1].material?.diffuseColor ?? new Color3(0,0.2,1);
+            const meshColor = meshes[1].material?.diffuseColor ?? new Color3(0, 0.2, 1);
 
-            const dynTex = new DynamicTexture("sparkDynTex", {width: 16, height: 16}, config.scene, false);
+            const dynTex = new DynamicTexture("sparkDynTex", { width: 16, height: 16 }, config.scene, false);
             const ctx = dynTex.getContext();
             ctx.fillStyle = `rgb(${Math.floor(meshColor.r * 255)},${Math.floor(meshColor.g * 255)},${Math.floor(meshColor.b * 255)})`;
             ctx.beginPath();
-            ctx.arc(8, 8, 8, 0, 2 * Math.PI); 
+            ctx.arc(8, 8, 8, 0, 2 * Math.PI);
             ctx.fill();
             ctx.strokeStyle = "#fff";
             ctx.lineWidth = 1;
@@ -246,7 +251,7 @@ export class VictoryConditionFactory implements GameObjectFactory {
 
             const sparkParticles = new ParticleSystem("sparks", 100, config.scene);
             sparkParticles.particleTexture = dynTex;
-            sparkParticles.emitter = meshes[0]; 
+            sparkParticles.emitter = meshes[0];
             sparkParticles.minEmitBox = new Vector3(-0.2, 0, -0.2);
             sparkParticles.maxEmitBox = new Vector3(0.5, 0, 0.5);
             sparkParticles.color1 = new Color4(1, 1, 0.5, 1);
@@ -264,8 +269,8 @@ export class VictoryConditionFactory implements GameObjectFactory {
             // PBR material for shiny effect
             const pbr = new PBRMaterial("victoryPBR", config.scene);
             pbr.albedoColor = meshes[1].material?.diffuseColor ?? new Color3(0, 0.2, 1);
-            pbr.metallic = 0.8; 
-            pbr.roughness = 0.1; 
+            pbr.metallic = 0.8;
+            pbr.roughness = 0.1;
             pbr.reflectionTexture = new CubeTexture("https://playground.babylonjs.com/textures/environment.env", config.scene);
             pbr.reflectivityColor = new Color3(0.2, 0.8, 1);
 
@@ -295,5 +300,88 @@ export class VictoryConditionFactory implements GameObjectFactory {
         const victory = this.createImpl(config, false);
         const editor = new ObjectEditorImpl(victory);
         return editor;
+    }
+}
+
+export class FixedVictoryConditionFactory extends VictoryConditionFactory {
+    protected createImpl(config: GameObjectConfig, physics: boolean): VictoryCondition {
+        const victory = new VictoryCondition(null, config.scene);
+        if (!config.size) {
+            config.size = new Vector3(20, 20, 20);
+        }
+
+        const path = App.selectedGraphics + "/" + VictoryCondition.Type + ".glb";
+
+        Utils.createMeshTask(config, VictoryCondition.Type, path, (task) => {
+            const meshes = task.loadedMeshes;
+
+            meshes[0].name = VictoryCondition.Type;
+            config.position = Utils.calculatePositionRelativeToParent(config.parent, config.position);
+            config.rotation = Utils.calculateRotationRelativeToParent(config.parent, config.rotation);
+            Utils.configureMesh(meshes, config);
+
+            // config.parent.addChild(meshes[0]);
+
+            meshes.forEach((m) => {
+                victory.mesh.push(m);
+            });
+
+            if (physics) {
+                const p = new PhysicsAggregate(meshes[0], PhysicsShapeType.CYLINDER, { mass: 0, friction: 0, restitution: 0 }, config.scene);
+                p.body.setCollisionCallbackEnabled(true);
+                config.parent.addObserver(victory);
+                victory.victoryAggregate = p;
+                victory.startAnimation();
+            }
+
+            // Particle system for visual effect
+            const meshColor = meshes[1].material?.diffuseColor ?? new Color3(0, 0.2, 1);
+
+            const dynTex = new DynamicTexture("sparkDynTex", { width: 16, height: 16 }, config.scene, false);
+            const ctx = dynTex.getContext();
+            ctx.fillStyle = `rgb(${Math.floor(meshColor.r * 255)},${Math.floor(meshColor.g * 255)},${Math.floor(meshColor.b * 255)})`;
+            ctx.beginPath();
+            ctx.arc(8, 8, 8, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.strokeStyle = "#fff";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(8, 8, 8, 0, 2 * Math.PI);
+            ctx.stroke();
+            dynTex.update();
+
+            const sparkParticles = new ParticleSystem("sparks", 100, config.scene);
+            sparkParticles.particleTexture = dynTex;
+            sparkParticles.emitter = meshes[0];
+            sparkParticles.minEmitBox = new Vector3(-0.2, 0, -0.2);
+            sparkParticles.maxEmitBox = new Vector3(0.5, 0, 0.5);
+            sparkParticles.color1 = new Color4(1, 1, 0.5, 1);
+            sparkParticles.color2 = new Color4(1, 0.8, 0.2, 1);
+            sparkParticles.minSize = 0.5;
+            sparkParticles.maxSize = 1;
+            sparkParticles.minLifeTime = 1;
+            sparkParticles.maxLifeTime = 2;
+            sparkParticles.emitRate = 15;
+            sparkParticles.direction1 = new Vector3(-1, 1, -1);
+            sparkParticles.direction2 = new Vector3(1, 1, 1);
+            sparkParticles.gravity = new Vector3(0, -9.81, 0);
+            sparkParticles.start();
+
+            // PBR material for shiny effect
+            const pbr = new PBRMaterial("victoryPBR", config.scene);
+            pbr.albedoColor = meshes[1].material?.diffuseColor ?? new Color3(0, 0.2, 1);
+            pbr.metallic = 0.8;
+            pbr.roughness = 0.1;
+            pbr.reflectionTexture = new CubeTexture("https://playground.babylonjs.com/textures/environment.env", config.scene);
+            pbr.reflectivityColor = new Color3(0.2, 0.8, 1);
+
+            meshes[1].material = pbr;
+        });
+
+        Utils.loadSound(config.assetsManager, "victory", "assets/sounds/crystal.ogg", (sound) => {
+            victory.addSound("victory", sound);
+        });
+
+        return victory;
     }
 }
