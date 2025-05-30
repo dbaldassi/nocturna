@@ -61,6 +61,10 @@ When a rotation is triggered (for example, by using a special power), all child 
 
 To ensure smooth and visually appealing transitions, we use a Babylon.js `Animation` to animate the rotation of the parent node by 90 degrees along the chosen axis.
 
+We use havok plugin for the physic engine.
+
+The player hae the ability to double jump. We use a ray cast downside to detect if we are falling.
+
 ### Architecture
 
 ### Architecture

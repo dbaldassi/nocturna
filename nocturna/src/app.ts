@@ -15,6 +15,7 @@ export class App {
     private inputHandler: InputHandler;
 
     constructor() {
+        App.selectedGraphics = CookieManager.get("graphics") || "low";
         this.inputHandler = InputHandler.getInstance();
         document.addEventListener('DOMContentLoaded', () => {
             const cards: NodeListOf<HTMLElement> = document.querySelectorAll('.mode-card');
@@ -61,13 +62,23 @@ export class App {
         const buttons = document.querySelectorAll<HTMLButtonElement>('.graphics-btn');
 
         buttons.forEach(button => {
+            // Set initial active class based on selected graphics
+            if (button.getAttribute('data-graphics') === App.selectedGraphics) {
+                button.classList.add('active');
+            } else {
+                button.classList.remove('active');
+            }
+
             // Add click event to toggle active class
             button.addEventListener('click', () => {
                 buttons.forEach(btn => btn.classList.remove('active'));
                 button.classList.add('active');
 
                 App.selectedGraphics = button.getAttribute('data-graphics');
-                
+
+                // Save selected graphics in cookies
+                CookieManager.set("graphics", App.selectedGraphics);                
+                console.log(`Selected graphics: ${App.selectedGraphics}`);
             });
         });
 
@@ -80,7 +91,7 @@ export class App {
                const volume = parseFloat(audioSlider.value);
                audio.setVolume(volume);
             }
-            audio.setBackgroundMusic("assets/music/lobby.mp3");
+            audio.setBackgroundMusic("assets/music/lobby.mp3", 0.1);
         });
     }
 

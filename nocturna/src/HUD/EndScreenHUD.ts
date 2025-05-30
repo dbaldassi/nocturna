@@ -17,6 +17,7 @@
  */
 
 import { CharacterInput } from "../types";
+import { Translation } from "../utils/translation";
 
 /**
  * IEndScreenHUD defines the interface for end screen HUDs.
@@ -213,7 +214,7 @@ class WinScreenHUD extends BaseEndScreenHUD {
     protected display(): void {
         super.display("win-screen");
         this.initialiseButtons();
-        this.animateScore("final-score");
+        this.animateScore("final-timer");
     }
 
     /**
@@ -246,13 +247,7 @@ class loseScreenHUD extends BaseEndScreenHUD {
 
     constructor(listener: IEndScreenHUDListener, targetScore: number, time: number) {
         super(listener, targetScore, time);
-        this.messages = [
-            "The darkness has consumed you...",
-            "Your light has been extinguished...",
-            "The night claims another soul...",
-            "The shadows have overwhelmed you...",
-            "Your journey ends here... for now...",
-        ];
+        this.messages = Translation.getTranslationAny("death_messages") as string[];
 
         this.display();
     }
@@ -264,7 +259,7 @@ class loseScreenHUD extends BaseEndScreenHUD {
         super.display("game-over-screen");
         this.setRandomMessage("death-message");
         this.initialiseButtons();
-        this.animateScore("final-loose-score");
+        this.animateScore("loose-timer");
     }
 
     /**
