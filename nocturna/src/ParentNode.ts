@@ -32,6 +32,14 @@ export interface ParentNodeObserver {
     onRotationChange: () => void;
 }
 
+/**
+ * AxisSelectionObserver defines the interface for objects that want to be notified
+ * when the selected axis changes.
+ */
+export interface AxisSelectionObserver {
+    onAxisChange: (axis: "x" | "y" | "z") => void;
+}
+
 export class ParentNode {
     public static readonly Type: string = "parent_node";
     private node: TransformNode;
@@ -44,6 +52,8 @@ export class ParentNode {
         z: Math.PI / 2,
     };
     private sound: StaticSound;
+    private selectedAxis: "x" | "y" | "z" = "z";
+    private axisObservers: AxisSelectionObserver[] = [];
 
     /**
      * Constructs a new ParentNode.
@@ -81,11 +91,27 @@ export class ParentNode {
     }
 
     /**
+     * Registers an observer to be notified on axis selection changes.
+     * @param observer The observer to add.
+     */
+    public addAxisObserver(observer: AxisSelectionObserver) {
+        this.axisObservers.push(observer);
+    }
+
+    /**
      * Removes a previously registered observer.
      * @param observer The observer to remove.
      */
     public removeObserver(observer: ParentNodeObserver) {
         this.observers = this.observers.filter(obs => obs !== observer);
+    }
+
+    /**
+     * Removes a previously registered axis observer.
+     * @param observer The observer to remove.
+     */
+    public removeAxisObserver(observer: AxisSelectionObserver) {
+        this.axisObservers = this.axisObservers.filter(obs => obs !== observer);
     }
 
     /**
@@ -155,16 +181,50 @@ export class ParentNode {
     }
 
     /**
+     * Cycles to the next axis (z -> x -> y -> z).
+     */
+    public selectNextAxis() {
+        const axes: ("x" | "y" | "z")[] = ["z", "x", "y"];
+        const currentIndex = axes.indexOf(this.selectedAxis);
+        this.selectedAxis = axes[(currentIndex + 1) % axes.length];
+        this.notifyAxisObservers();
+    }
+
+    /**
+     * Cycles to the previous axis (z -> y -> x -> z).
+     */
+    public selectPrevAxis() {
+        const axes: ("x" | "y" | "z")[] = ["z", "x", "y"];
+        const currentIndex = axes.indexOf(this.selectedAxis);
+        this.selectedAxis = axes[(currentIndex - 1 + axes.length) % axes.length];
+        this.notifyAxisObservers();
+    }
+
+    /**
+     * Gets the currently selected axis.
+     */
+    public getSelectedAxis(): "x" | "y" | "z" {
+        return this.selectedAxis;
+    }
+
+    /**
+     * Notifies all registered axis observers that the selected axis has changed.
+     */
+    private notifyAxisObservers() {
+        this.axisObservers.forEach(observer => {
+            observer.onAxisChange(this.selectedAxis);
+        });
+    }
+
+    /**
      * Sets up keyboard actions for rotating the node using the InputHandler.
      * @param inputHandler The InputHandler instance.
      */
     public setupKeyActions(inputHandler: InputHandler) {
-        inputHandler.addAction("rotate_left_x", () => this.rotate("x"));
-        inputHandler.addAction("rotate_right_x", () => this.rotate("x", true));
-        inputHandler.addAction("rotate_left_y", () => this.rotate("y"));
-        inputHandler.addAction("rotate_right_y", () => this.rotate("y", true));
-        inputHandler.addAction("rotate_left_z", () => this.rotate("z"));
-        inputHandler.addAction("rotate_right_z", () => this.rotate("z", true));
+        inputHandler.addAction("select_axis_next", () => this.selectNextAxis());
+        inputHandler.addAction("select_axis_prev", () => this.selectPrevAxis());
+        inputHandler.addAction("rotate_left", () => this.rotate(this.selectedAxis));
+        inputHandler.addAction("rotate_right", () => this.rotate(this.selectedAxis, true));
     }
 
     /**
