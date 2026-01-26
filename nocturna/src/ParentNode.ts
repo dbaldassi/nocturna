@@ -211,15 +211,6 @@ export class ParentNode {
      * @param inputHandler The InputHandler instance.
      */
     public setupKeyActions(inputHandler: InputHandler) {
-        // Keep old bindings for backward compatibility
-        inputHandler.addAction("rotate_left_x", () => this.rotate("x"));
-        inputHandler.addAction("rotate_right_x", () => this.rotate("x", true));
-        inputHandler.addAction("rotate_left_y", () => this.rotate("y"));
-        inputHandler.addAction("rotate_right_y", () => this.rotate("y", true));
-        inputHandler.addAction("rotate_left_z", () => this.rotate("z"));
-        inputHandler.addAction("rotate_right_z", () => this.rotate("z", true));
-
-        // New bindings using selected axis
         inputHandler.addAction("select_axis", () => this.selectNextAxis());
         inputHandler.addAction("rotate_left", () => this.rotate(this.selectedAxis));
         inputHandler.addAction("rotate_right", () => this.rotate(this.selectedAxis, true));
