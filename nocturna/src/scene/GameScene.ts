@@ -10,6 +10,7 @@ import { LevelLoaderObserver, LevelLoader } from "../LevelLoader";
 import { VictoryCondition } from "../GameObjects/Victory";
 import { Coin } from "../GameObjects/Coin";
 import { HpBar } from "../HUD/HpBar";
+import { AxisSelector } from "../HUD/AxisSelector";
 import { NocturnaAudio } from "../NocturnaAudio";
 import { IEndScreenHUDListener } from "../HUD/EndScreenHUD";
 import { AbstractGameSceneState, InGameState, LoadingState, SelectionState } from "../states/GameStates";
@@ -40,6 +41,7 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
     protected activeCameraIndex: number = 0;
     protected state: AbstractGameSceneState;
     protected hpBar: HpBar;
+    protected axisSelector: AxisSelector;
     protected multiplicators: number[] = [20, 10, 5];
     protected readonly timeMultiplicator: number = 1000 * 60; // 1 minute in milliseconds
 
@@ -122,6 +124,8 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
         console.log("Parent created in GameScene");
         this.parent = parent;
         this.parent.setupKeyActions(this.inputHandler);
+        this.axisSelector = new AxisSelector(this.parent.getSelectedAxis(), this.inputHandler);
+        this.parent.addAxisObserver(this.axisSelector);
         this.setupKeyActions();
     }
 
@@ -374,6 +378,11 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
 
         this.cube.dispose();
         this.parent.dispose();
+
+        if (this.axisSelector) {
+            this.axisSelector.dispose();
+            this.axisSelector = null;
+        }
 
         this.gameObjects = []
         this.player = null;
