@@ -381,7 +381,6 @@ export class GameScene extends BaseScene implements LevelLoaderObserver, GameObj
 
         if (this.axisSelector) {
             this.axisSelector.dispose();
-            this.axisSelector = null;
         }
 
         this.gameObjects = []

@@ -1,5 +1,6 @@
 import { AxisSelectionObserver } from "../ParentNode";
 import { InputHandler } from "../InputHandler";
+import { Translation } from "../utils/translation";
 
 /**
  * AxisSelector displays the currently selected rotation axis in the bottom-left corner of the screen.
@@ -9,6 +10,7 @@ import { InputHandler } from "../InputHandler";
  * - Displays the key binding for selecting the axis.
  * - Updates when the axis changes through the ParentNode observer pattern.
  * - Manages its own HTML elements and lifecycle.
+ * - Supports internationalization through the Translation system.
  */
 export class AxisSelector implements AxisSelectionObserver {
     private container: HTMLElement;
@@ -71,10 +73,10 @@ export class AxisSelector implements AxisSelectionObserver {
      * @param axis The new axis to display.
      */
     private updateAxis(axis: "x" | "y" | "z"): void {
-        const axisNames = {
-            x: "Axe X",
-            y: "Axe Y",
-            z: "Axe Z"
+        const axisTranslations = {
+            x: Translation.getTranslation("axis.x"),
+            y: Translation.getTranslation("axis.y"),
+            z: Translation.getTranslation("axis.z")
         };
         
         const axisColors = {
@@ -83,11 +85,12 @@ export class AxisSelector implements AxisSelectionObserver {
             z: "#95e1d3"
         };
 
-        this.axisLabel.textContent = `Axe: ${axisNames[axis]}`;
+        this.axisLabel.textContent = `${axisTranslations[axis]}`;
         this.axisLabel.style.color = axisColors[axis];
 
         const selectKey = this.inputHandler.getKeyName("select_axis").toUpperCase();
-        this.keyLabel.textContent = `Changer: ${selectKey}`;
+        const changeLabel = Translation.getTranslation("axis.change");
+        this.keyLabel.textContent = `${changeLabel} ${selectKey}`;
     }
 
     /**
