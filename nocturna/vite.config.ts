@@ -48,5 +48,5 @@ export default defineConfig({
       "@babylonjs/core/Audio/webAudioEngine",
       "@babylonjs/core/Audio/webAudioWrapper"
     ]
-  }
+  },
 });
