@@ -29,9 +29,10 @@ export class InputHandler {
         right: ["d"],
         up: ["w"],
         down: ["s"],
-        select_axis: ["Shift"],
-        rotate_left: ["q"],
-        rotate_right: ["e"],
+        select_axis_next: ["ArrowUp"],
+        select_axis_prev: ["ArrowDown"],
+        rotate_left: ["ArrowLeft"],
+        rotate_right: ["ArrowRight"],
         pov: ["p"],
         jump: [" "],
         action_1: ["1"],
@@ -50,8 +51,8 @@ export class InputHandler {
         save: ["Enter"],
         delete: ["Backspace"],
         clone: ["f"],
-        forward: ["r"],
-        backward: ["t"],
+        forward: ["q"],
+        backward: ["e"],
     };
     private keybindManager: KeybindsManager;
     // Stores actions, which call a function when the key is pressed

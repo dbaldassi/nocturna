@@ -191,6 +191,16 @@ export class ParentNode {
     }
 
     /**
+     * Cycles to the previous axis (z -> y -> x -> z).
+     */
+    public selectPrevAxis() {
+        const axes: ("x" | "y" | "z")[] = ["z", "x", "y"];
+        const currentIndex = axes.indexOf(this.selectedAxis);
+        this.selectedAxis = axes[(currentIndex - 1 + axes.length) % axes.length];
+        this.notifyAxisObservers();
+    }
+
+    /**
      * Gets the currently selected axis.
      */
     public getSelectedAxis(): "x" | "y" | "z" {
@@ -211,7 +221,8 @@ export class ParentNode {
      * @param inputHandler The InputHandler instance.
      */
     public setupKeyActions(inputHandler: InputHandler) {
-        inputHandler.addAction("select_axis", () => this.selectNextAxis());
+        inputHandler.addAction("select_axis_next", () => this.selectNextAxis());
+        inputHandler.addAction("select_axis_prev", () => this.selectPrevAxis());
         inputHandler.addAction("rotate_left", () => this.rotate(this.selectedAxis));
         inputHandler.addAction("rotate_right", () => this.rotate(this.selectedAxis, true));
     }

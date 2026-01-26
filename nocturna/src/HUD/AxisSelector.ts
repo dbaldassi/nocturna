@@ -41,9 +41,9 @@ export class AxisSelector implements AxisSelectionObserver {
         this.container.style.left = "30px";
         this.container.style.zIndex = "1000";
         this.container.style.display = "flex";
-        this.container.style.flexDirection = "column";
-        this.container.style.alignItems = "flex-start";
-        this.container.style.gap = "4px";
+        this.container.style.flexDirection = "row";
+        this.container.style.alignItems = "center";
+        this.container.style.gap = "12px";
         this.container.style.padding = "12px 16px";
         this.container.style.background = "rgba(34, 34, 34, 0.92)";
         this.container.style.borderRadius = "12px";
@@ -51,19 +51,75 @@ export class AxisSelector implements AxisSelectionObserver {
         this.container.style.color = "white";
         this.container.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.3)";
 
+        // Left section: Axis selection with arrows
+        const axisSection = document.createElement("div");
+        axisSection.style.display = "flex";
+        axisSection.style.flexDirection = "column";
+        axisSection.style.alignItems = "center";
+        axisSection.style.gap = "4px";
+
+        // Up arrow for next axis
+        const upArrow = document.createElement("div");
+        upArrow.textContent = "▲";
+        upArrow.style.fontSize = "12px";
+        upArrow.style.color = "rgba(255, 255, 255, 0.5)";
+        upArrow.style.lineHeight = "1";
+        axisSection.appendChild(upArrow);
+
         // Axis label
         this.axisLabel = document.createElement("div");
         this.axisLabel.style.fontSize = "18px";
         this.axisLabel.style.fontWeight = "700";
         this.axisLabel.style.letterSpacing = "0.5px";
-        this.container.appendChild(this.axisLabel);
+        axisSection.appendChild(this.axisLabel);
 
-        // Key binding info
+        // Down arrow for previous axis
+        const downArrow = document.createElement("div");
+        downArrow.textContent = "▼";
+        downArrow.style.fontSize = "12px";
+        downArrow.style.color = "rgba(255, 255, 255, 0.5)";
+        downArrow.style.lineHeight = "1";
+        axisSection.appendChild(downArrow);
+
+        this.container.appendChild(axisSection);
+
+        // Divider
+        const divider = document.createElement("div");
+        divider.style.width = "1px";
+        divider.style.height = "40px";
+        divider.style.background = "rgba(255, 255, 255, 0.2)";
+        this.container.appendChild(divider);
+
+        // Right section: Rotation with arrows
+        const rotateSection = document.createElement("div");
+        rotateSection.style.display = "flex";
+        rotateSection.style.flexDirection = "row";
+        rotateSection.style.alignItems = "center";
+        rotateSection.style.gap = "8px";
+
+        // Left arrow for rotate left
+        const leftArrow = document.createElement("div");
+        leftArrow.textContent = "◄";
+        leftArrow.style.fontSize = "14px";
+        leftArrow.style.color = "rgba(255, 255, 255, 0.5)";
+        rotateSection.appendChild(leftArrow);
+
+        // Key label for rotation
         this.keyLabel = document.createElement("div");
         this.keyLabel.style.fontSize = "12px";
         this.keyLabel.style.color = "rgba(255, 255, 255, 0.7)";
         this.keyLabel.style.fontWeight = "400";
-        this.container.appendChild(this.keyLabel);
+        this.keyLabel.style.textAlign = "center";
+        rotateSection.appendChild(this.keyLabel);
+
+        // Right arrow for rotate right
+        const rightArrow = document.createElement("div");
+        rightArrow.textContent = "►";
+        rightArrow.style.fontSize = "14px";
+        rightArrow.style.color = "rgba(255, 255, 255, 0.5)";
+        rotateSection.appendChild(rightArrow);
+
+        this.container.appendChild(rotateSection);
 
         document.body.appendChild(this.container);
     }
@@ -88,9 +144,8 @@ export class AxisSelector implements AxisSelectionObserver {
         this.axisLabel.textContent = `${axisTranslations[axis]}`;
         this.axisLabel.style.color = axisColors[axis];
 
-        const selectKey = this.inputHandler.getKeyName("select_axis").toUpperCase();
-        const changeLabel = Translation.getTranslation("axis.change");
-        this.keyLabel.textContent = `${changeLabel} ${selectKey}`;
+        const rotateLabel = Translation.getTranslation("axis.rotate");
+        this.keyLabel.textContent = rotateLabel;
     }
 
     /**
