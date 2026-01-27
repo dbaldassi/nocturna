@@ -48,6 +48,10 @@ export class Player implements GameObject {
     private id: string;
     private sounds: Map<string, StaticSound> = new Map();
     private maxHp: number = 10;
+    // Variable jump height parameters
+    private initialJumpForce: number = 15000;  // Initial impulse when jump starts
+    private variableJumpForce: number = 800;   // Continuous force while holding jump
+    private maxJumpHoldTime: number = 300;     // Maximum time (ms) to hold jump for variable height
 
     /**
      * Constructs a new Player.
@@ -56,7 +60,7 @@ export class Player implements GameObject {
      */
     constructor(mesh: Mesh, scene: Scene) {
         this.scene = scene;
-        this.jumpForce = new Vector3(0, 100000, 0); // Initial jump force
+        this.jumpForce = new Vector3(0, this.initialJumpForce, 0); // Initial jump force
         this.hp = this.maxHp;
         if (mesh) this.mesh.push(mesh);
         this.state = new IdleState(this);
@@ -117,6 +121,27 @@ export class Player implements GameObject {
             return;
         }
         physicsBody.applyImpulse(this.jumpForce, this.getMesh().getAbsolutePosition());
+    }
+
+    /**
+     * Applies continuous upward force while jump button is held.
+     * Used for variable jump height.
+     */
+    public applyVariableJumpForce() {
+        const physicsBody = this.getMesh().physicsBody;
+        if (!physicsBody) {
+            console.warn("Physics body not found for the player mesh.");
+            return;
+        }
+        const variableForce = new Vector3(0, this.variableJumpForce, 0);
+        physicsBody.applyForce(variableForce, this.getMesh().getAbsolutePosition());
+    }
+
+    /**
+     * Returns the maximum jump hold time in milliseconds.
+     */
+    public getMaxJumpHoldTime(): number {
+        return this.maxJumpHoldTime;
     }
 
     /**

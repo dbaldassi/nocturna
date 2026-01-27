@@ -13,6 +13,7 @@ import { AbstractState, CharacterInput } from "../types";
 /**
  * JumpingState handles the player's behavior while jumping or double-jumping.
  * - Allows for a double jump if the input is pressed again mid-air.
+ * - Implements variable jump height (Hollow Knight style) by applying continuous force while holding jump.
  * - Transitions to MovingState or IdleState when the player lands.
  */
 class JumpingState implements AbstractState {
@@ -20,6 +21,8 @@ class JumpingState implements AbstractState {
     private player: Player;
     private doubleJumped: boolean = false;
     private canDoubleJump: boolean = false;
+    private jumpHoldTime: number = 0;  // Time the jump button has been held
+    private isInitialJump: boolean = true;  // Track if this is the initial jump or double jump
 
     constructor(player: Player) {
         this.player = player;
@@ -27,6 +30,8 @@ class JumpingState implements AbstractState {
 
     public enter(): void {
         this.player.playSound("jump");
+        this.jumpHoldTime = 0;
+        this.isInitialJump = true;
     }
     public exit(): void {
         this.player.playSound("land");
@@ -38,6 +43,13 @@ class JumpingState implements AbstractState {
     public update(dt: number, input: CharacterInput): AbstractState | null {
         this.player.move(dt, input);
 
+        // Variable jump height: apply continuous upward force while holding jump
+        if (input.jump && this.jumpHoldTime < this.player.getMaxJumpHoldTime()) {
+            this.player.applyVariableJumpForce();
+            this.jumpHoldTime += dt;
+        }
+
+        // Double jump logic
         if(!this.doubleJumped && !this.canDoubleJump) {
             // Player must first release the jump button to allow double jump
             this.canDoubleJump = !input.jump;
@@ -47,6 +59,8 @@ class JumpingState implements AbstractState {
             this.player.jump();
             this.doubleJumped = true;
             this.canDoubleJump = false;
+            this.jumpHoldTime = 0;  // Reset hold time for double jump
+            this.isInitialJump = false;
         }
 
         const isGrounded = this.player.isGrounded();

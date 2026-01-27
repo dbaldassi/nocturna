@@ -81,9 +81,9 @@ export abstract class BaseScene {
             console.error("Failed to initialize Havok Physics");
             return;
         }
-        // Initialize the physics plugin with higher gravity
+        // Initialize the physics plugin with platformer-appropriate gravity
         this.hk = new HavokPlugin(true, this.havokInstance);
-        this.scene.enablePhysics(new Vector3(0, -1000, 0), this.hk);
+        this.scene.enablePhysics(new Vector3(0, -150, 0), this.hk);
         this.scene.getPhysicsEngine().setTimeStep(1 / App.FPS_LIMIT);
 
         console.log("Physics added to the scene");
