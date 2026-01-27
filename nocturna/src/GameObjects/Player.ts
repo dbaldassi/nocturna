@@ -125,15 +125,17 @@ export class Player implements GameObject {
 
     /**
      * Applies continuous upward force while jump button is held.
-     * Used for variable jump height.
+     * Used for variable jump height. Force is scaled by delta time for frame-rate independence.
+     * @param dt Delta time in milliseconds
      */
-    public applyVariableJumpForce() {
+    public applyVariableJumpForce(dt: number) {
         const physicsBody = this.getMesh().physicsBody;
         if (!physicsBody) {
             console.warn("Physics body not found for the player mesh.");
             return;
         }
-        const variableForce = new Vector3(0, this.variableJumpForce, 0);
+        // Scale force by delta time to make it frame-rate independent
+        const variableForce = new Vector3(0, this.variableJumpForce * dt, 0);
         physicsBody.applyForce(variableForce, this.getMesh().getAbsolutePosition());
     }
 

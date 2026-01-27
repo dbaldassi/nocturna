@@ -22,7 +22,6 @@ class JumpingState implements AbstractState {
     private doubleJumped: boolean = false;
     private canDoubleJump: boolean = false;
     private jumpHoldTime: number = 0;  // Time the jump button has been held
-    private isInitialJump: boolean = true;  // Track if this is the initial jump or double jump
 
     constructor(player: Player) {
         this.player = player;
@@ -31,7 +30,6 @@ class JumpingState implements AbstractState {
     public enter(): void {
         this.player.playSound("jump");
         this.jumpHoldTime = 0;
-        this.isInitialJump = true;
     }
     public exit(): void {
         this.player.playSound("land");
@@ -44,8 +42,9 @@ class JumpingState implements AbstractState {
         this.player.move(dt, input);
 
         // Variable jump height: apply continuous upward force while holding jump
+        // Scale force by dt to make it frame-rate independent
         if (input.jump && this.jumpHoldTime < this.player.getMaxJumpHoldTime()) {
-            this.player.applyVariableJumpForce();
+            this.player.applyVariableJumpForce(dt);
             this.jumpHoldTime += dt;
         }
 
@@ -60,7 +59,6 @@ class JumpingState implements AbstractState {
             this.doubleJumped = true;
             this.canDoubleJump = false;
             this.jumpHoldTime = 0;  // Reset hold time for double jump
-            this.isInitialJump = false;
         }
 
         const isGrounded = this.player.isGrounded();
