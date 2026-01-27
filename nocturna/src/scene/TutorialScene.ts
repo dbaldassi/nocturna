@@ -14,6 +14,10 @@ export class TutorialScene extends GameScene {
     private static readonly explainationsByScene: number[] = [3, 1, 2, 2];
     private static nextStep: boolean = false;
     protected static sceneIndex: number = 0;
+    private instructionElement: HTMLElement | null = null;
+    private phase2InstructionSwitch: boolean = false;
+    private phase2SwitchTimer: number = 0;
+    private readonly PHASE2_SWITCH_TIME: number = 15000; // 15 seconds
 
     static async createScene(engine: Engine, inputHandler: InputHandler, tutorialScene: TutorialScene = null): Promise<BaseScene> {
         let scene = null;
@@ -96,6 +100,10 @@ export class TutorialScene extends GameScene {
             }
         });
         this.inputHandler.onPause();
+        
+        // Hide in-game tutorial instructions when paused
+        this.hideTutorialInstruction();
+        
         const resumeButton = document.getElementById("resume-button") as HTMLElement;
         resumeButton.addEventListener("click", () => {
             this.resumeScene();
@@ -111,6 +119,9 @@ export class TutorialScene extends GameScene {
             }
         });
         this.inputHandler.onResume();
+        
+        // Show in-game tutorial instructions when resuming
+        this.showTutorialInstruction();
     }
 
     private displayTutorialExplainations() {
@@ -149,5 +160,70 @@ export class TutorialScene extends GameScene {
     public onContinue() {
         TutorialScene.nextStep = true;
         this.recreateScene();
+    }
+
+    private showTutorialInstruction() {
+        if (!this.instructionElement) {
+            this.instructionElement = document.getElementById("tutorial-instruction");
+        }
+        
+        if (!this.instructionElement) return;
+
+        // Reset phase 2 timer
+        this.phase2InstructionSwitch = false;
+        this.phase2SwitchTimer = 0;
+        
+        const sceneIndex = TutorialScene.sceneIndex;
+        
+        // Only show instructions for phase 1 and phase 2
+        if (sceneIndex === 0) {
+            // Phase 1: Jump and movement instructions
+            const instructionText = Translation.formatWithKeyBindings(
+                "tutorial.ingame.phase1",
+                this.inputHandler.getKeyBindings()
+            );
+            this.instructionElement.innerHTML = instructionText;
+            this.instructionElement.classList.remove("hidden");
+        } else if (sceneIndex === 1) {
+            // Phase 2: Platform rotation instructions (start with first platform)
+            this.updatePhase2Instruction();
+            this.instructionElement.classList.remove("hidden");
+        } else {
+            // Phase 3 and 4: No instructions
+            this.instructionElement.classList.add("hidden");
+        }
+    }
+
+    private updatePhase2Instruction() {
+        if (!this.instructionElement) return;
+
+        const instructionKey = this.phase2InstructionSwitch 
+            ? "tutorial.ingame.phase2.platform2" 
+            : "tutorial.ingame.phase2.platform1";
+        
+        const instructionText = Translation.formatWithKeyBindings(
+            instructionKey,
+            this.inputHandler.getKeyBindings()
+        );
+        this.instructionElement.innerHTML = instructionText;
+    }
+
+    private hideTutorialInstruction() {
+        if (this.instructionElement) {
+            this.instructionElement.classList.add("hidden");
+        }
+    }
+
+    public override update() {
+        super.update();
+        
+        // Handle phase 2 instruction switching
+        if (TutorialScene.sceneIndex === 1 && !this.phase2InstructionSwitch) {
+            this.phase2SwitchTimer += this.scene.getEngine().getDeltaTime();
+            if (this.phase2SwitchTimer >= this.PHASE2_SWITCH_TIME) {
+                this.phase2InstructionSwitch = true;
+                this.updatePhase2Instruction();
+            }
+        }
     }
 }

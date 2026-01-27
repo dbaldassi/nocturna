@@ -46,6 +46,40 @@ body {
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
 }
 
+#tutorial-instruction {
+    position: fixed;
+    top: 25%;
+    left: 12.5%;
+    width: 25%;
+    transform: translateY(-50%);
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.9) 0%, rgba(99, 102, 241, 0.9) 100%);
+    color: #fff;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    z-index: 900;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(139, 92, 246, 0.4), 0 0 60px rgba(139, 92, 246, 0.2);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+#tutorial-instruction kbd {
+    display: inline-block;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.95rem;
+    font-family: monospace;
+    font-weight: bold;
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 0.4rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    margin: 0 0.2rem;
+    white-space: nowrap;
+}
+
 .hidden {
     display: none !important;
 }
