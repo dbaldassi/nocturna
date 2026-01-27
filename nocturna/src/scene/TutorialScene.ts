@@ -16,9 +16,8 @@ export class TutorialScene extends GameScene {
     protected static sceneIndex: number = 0;
     private instructionElement: HTMLElement | null = null;
     private phase2InstructionSwitch: boolean = false;
-    private phase2SwitchTimer: number = 0;
-    private readonly PHASE2_SWITCH_TIME: number = 15000; // 15 seconds
     private currentPlatformId: string | null = null;
+    private platformCollisionObservers: Map<string, any> = new Map();
 
     static async createScene(engine: Engine, inputHandler: InputHandler, tutorialScene: TutorialScene = null): Promise<BaseScene> {
         let scene = null;
@@ -68,6 +67,9 @@ export class TutorialScene extends GameScene {
         this.state = new LoadingState(this);
         this.state.enter();
 
+        // Clean up collision observers
+        this.cleanupPlatformCollisionObservers();
+
         this.gameObjects = []
         this.player = null;
         this.parent = null;
@@ -95,43 +97,57 @@ export class TutorialScene extends GameScene {
         const menuButton = document.getElementById("finish-tutorial-button") as HTMLElement;
         menuButton.addEventListener("click", () => {
             window.location.href = "index.html";
-        });
+        }, { once: true });
     }
 
     protected override setupCollisions() {
         super.setupCollisions();
+        
+        // Clean up any existing collision observers
+        this.cleanupPlatformCollisionObservers();
         
         // Add special collision handling for phase 2 platforms
         if (TutorialScene.sceneIndex === 1) {
             this.gameObjects.forEach((object) => {
                 const mesh = object.getMesh();
                 if (object.getType() === "parented_platform" && mesh.physicsBody) {
-                    mesh.physicsBody.getCollisionObservable().add((collider) => {
+                    const observer = mesh.physicsBody.getCollisionObservable().add((collider) => {
                         if (collider.collidedAgainst === this.player.getMesh().physicsBody) {
                             const platformId = object.getId();
-                            // Only trigger once per platform
-                            if (this.currentPlatformId !== platformId) {
-                                this.currentPlatformId = platformId;
-                                this.onPlatformContact(platformId);
-                            }
+                            this.onPlatformContact(platformId);
                         }
                     });
+                    this.platformCollisionObservers.set(object.getId(), observer);
                 }
             });
         }
     }
 
+    private cleanupPlatformCollisionObservers() {
+        this.platformCollisionObservers.forEach((observer) => {
+            if (observer && observer.remove) {
+                observer.remove();
+            }
+        });
+        this.platformCollisionObservers.clear();
+    }
+
     private onPlatformContact(platformId: string) {
-        // platform_0 is the first moving platform
-        // platform_3 is the second moving platform (based on typical level structure)
-        if (platformId === "platform_0" && !this.phase2InstructionSwitch) {
-            // First platform - show first instruction (already shown by default)
-            this.phase2InstructionSwitch = false;
-            this.updatePhase2Instruction();
-        } else if (platformId === "platform_3" && !this.phase2InstructionSwitch) {
-            // Second platform - show second instruction
-            this.phase2InstructionSwitch = true;
-            this.updatePhase2Instruction();
+        // platform_0 is the first moving platform - show rotation instructions
+        if (platformId === "platform_0") {
+            if (this.phase2InstructionSwitch) {
+                // Player returned to first platform, show first instruction again
+                this.phase2InstructionSwitch = false;
+                this.currentPlatformId = platformId;
+                this.updatePhase2Instruction();
+            }
+        } else if (platformId === "platform_3") {
+            // platform_3 is the second moving platform - show axis selection instructions
+            if (!this.phase2InstructionSwitch) {
+                this.phase2InstructionSwitch = true;
+                this.currentPlatformId = platformId;
+                this.updatePhase2Instruction();
+            }
         }
     }
 
