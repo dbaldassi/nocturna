@@ -52,7 +52,7 @@ export class ParentNode {
         z: Math.PI / 2,
     };
     private sound: StaticSound;
-    private selectedAxis: "x" | "y" | "z" = "z";
+    private selectedAxis: "x" | "y" | "z" = "y";
     private axisObservers: AxisSelectionObserver[] = [];
 
     /**

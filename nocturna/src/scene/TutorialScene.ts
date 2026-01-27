@@ -18,6 +18,7 @@ export class TutorialScene extends GameScene {
     private phase2InstructionSwitch: boolean = false;
     private phase2SwitchTimer: number = 0;
     private readonly PHASE2_SWITCH_TIME: number = 15000; // 15 seconds
+    private currentPlatformId: string | null = null;
 
     static async createScene(engine: Engine, inputHandler: InputHandler, tutorialScene: TutorialScene = null): Promise<BaseScene> {
         let scene = null;
@@ -43,6 +44,12 @@ export class TutorialScene extends GameScene {
         // this.startTimer();
 
         this.hpBar = new HpBar(this.player.getMaxHp());
+
+        // Reset phase 2 instruction state when loading a new level
+        if (TutorialScene.sceneIndex === 1) {
+            this.phase2InstructionSwitch = false;
+            this.currentPlatformId = null;
+        }
 
         this.state.exit();
         this.state = new InGameState(this);
@@ -82,10 +89,50 @@ export class TutorialScene extends GameScene {
         const showEndTutorial = document.getElementById("end-tutorial") as HTMLElement;
         showEndTutorial.classList.remove("hidden");
 
+        // Hide tutorial instructions when showing end tutorial screen
+        this.hideTutorialInstruction();
+
         const menuButton = document.getElementById("finish-tutorial-button") as HTMLElement;
         menuButton.addEventListener("click", () => {
             window.location.href = "index.html";
         });
+    }
+
+    protected override setupCollisions() {
+        super.setupCollisions();
+        
+        // Add special collision handling for phase 2 platforms
+        if (TutorialScene.sceneIndex === 1) {
+            this.gameObjects.forEach((object) => {
+                const mesh = object.getMesh();
+                if (object.getType() === "parented_platform" && mesh.physicsBody) {
+                    mesh.physicsBody.getCollisionObservable().add((collider) => {
+                        if (collider.collidedAgainst === this.player.getMesh().physicsBody) {
+                            const platformId = object.getId();
+                            // Only trigger once per platform
+                            if (this.currentPlatformId !== platformId) {
+                                this.currentPlatformId = platformId;
+                                this.onPlatformContact(platformId);
+                            }
+                        }
+                    });
+                }
+            });
+        }
+    }
+
+    private onPlatformContact(platformId: string) {
+        // platform_0 is the first moving platform
+        // platform_3 is the second moving platform (based on typical level structure)
+        if (platformId === "platform_0" && !this.phase2InstructionSwitch) {
+            // First platform - show first instruction (already shown by default)
+            this.phase2InstructionSwitch = false;
+            this.updatePhase2Instruction();
+        } else if (platformId === "platform_3" && !this.phase2InstructionSwitch) {
+            // Second platform - show second instruction
+            this.phase2InstructionSwitch = true;
+            this.updatePhase2Instruction();
+        }
     }
 
     private pauseScene() {
@@ -184,10 +231,8 @@ export class TutorialScene extends GameScene {
             this.instructionElement.innerHTML = instructionText;
             this.instructionElement.classList.remove("hidden");
         } else if (sceneIndex === 1) {
-            // Phase 2: Platform rotation instructions (start with first platform)
-            // Reset phase 2 timer and switch state
-            this.phase2InstructionSwitch = false;
-            this.phase2SwitchTimer = 0;
+            // Phase 2: Platform rotation instructions
+            // Don't reset phase2InstructionSwitch - keep the state based on platform collisions
             this.updatePhase2Instruction();
             this.instructionElement.classList.remove("hidden");
         } else {
@@ -216,16 +261,12 @@ export class TutorialScene extends GameScene {
         }
     }
 
-    public override update() {
-        super.update();
+    public override update(dt: number) {
+        super.update(dt);
         
-        // Handle phase 2 instruction switching (only if in phase 2 and not yet switched)
-        if (TutorialScene.sceneIndex === 1 && !this.phase2InstructionSwitch) {
-            this.phase2SwitchTimer += this.scene.getEngine().getDeltaTime();
-            if (this.phase2SwitchTimer >= this.PHASE2_SWITCH_TIME) {
-                this.phase2InstructionSwitch = true;
-                this.updatePhase2Instruction();
-            }
+        // Check if we need to hide instructions when transitioning to end state
+        if (this.checkWin() || this.checkLoose()) {
+            this.hideTutorialInstruction();
         }
     }
 }
