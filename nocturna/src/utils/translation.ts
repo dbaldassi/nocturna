@@ -75,4 +75,42 @@ export class Translation {
             }
         });
     }
+
+    /**
+     * Formats a translation string by replacing {action} placeholders with actual key bindings.
+     * Wraps each key in a <kbd> tag for styling.
+     * @param key The translation key
+     * @param keyBindings The key bindings object from InputHandler
+     * @returns Formatted HTML string with key bindings
+     */
+    public static formatWithKeyBindings(key: string, keyBindings: { [action: string]: string[] }): string {
+        if (!Translation.instance) {
+            Translation.initialize();
+        }
+        let text = Translation.instance.getTranslation(key);
+        
+        // Replace {action} placeholders with actual key bindings
+        const actionPattern = /\{(\w+)\}/g;
+        text = text.replace(actionPattern, (match, action) => {
+            const keys = keyBindings[action];
+            if (keys && keys.length > 0) {
+                // Format each key as a <kbd> element
+                return keys.map(k => {
+                    // Handle special keys for better display
+                    let displayKey = k;
+                    if (k === ' ') displayKey = 'Space';
+                    else if (k === 'ArrowUp') displayKey = '↑';
+                    else if (k === 'ArrowDown') displayKey = '↓';
+                    else if (k === 'ArrowLeft') displayKey = '←';
+                    else if (k === 'ArrowRight') displayKey = '→';
+                    else displayKey = k.toUpperCase();
+                    
+                    return `<kbd>${displayKey}</kbd>`;
+                }).join(' ');
+            }
+            return match; // Return original if action not found
+        });
+        
+        return text;
+    }
 }
