@@ -98,17 +98,43 @@ export class Translation {
                 return keys.map(k => {
                     // Handle special keys for better display
                     let displayKey = k;
-                    if (k === ' ') displayKey = 'Space';
-                    else if (k === 'ArrowUp') displayKey = '↑';
-                    else if (k === 'ArrowDown') displayKey = '↓';
-                    else if (k === 'ArrowLeft') displayKey = '←';
-                    else if (k === 'ArrowRight') displayKey = '→';
-                    else displayKey = k.toUpperCase();
+                    if (k === ' ') {
+                        displayKey = 'Space';
+                    } else if (k === 'ArrowUp') {
+                        displayKey = '↑';
+                    } else if (k === 'ArrowDown') {
+                        displayKey = '↓';
+                    } else if (k === 'ArrowLeft') {
+                        displayKey = '←';
+                    } else if (k === 'ArrowRight') {
+                        displayKey = '→';
+                    } else if (k === 'Enter') {
+                        displayKey = 'Enter';
+                    } else if (k === 'Backspace') {
+                        displayKey = 'Backspace';
+                    } else if (k === 'Shift') {
+                        displayKey = 'Shift';
+                    } else if (k === 'Control' || k === 'Ctrl') {
+                        displayKey = 'Ctrl';
+                    } else if (k === 'Alt') {
+                        displayKey = 'Alt';
+                    } else if (k === 'Tab') {
+                        displayKey = 'Tab';
+                    } else if (k === 'Escape' || k === 'Esc') {
+                        displayKey = 'Esc';
+                    } else if (k.length === 1) {
+                        // Single character keys - uppercase
+                        displayKey = k.toUpperCase();
+                    } else {
+                        // Multi-character keys - capitalize first letter only
+                        displayKey = k.charAt(0).toUpperCase() + k.slice(1).toLowerCase();
+                    }
                     
                     return `<kbd>${displayKey}</kbd>`;
                 }).join(' ');
             }
-            return match; // Return original if action not found
+            // Fallback for unbound actions
+            return `<kbd>?</kbd>`;
         });
         
         return text;

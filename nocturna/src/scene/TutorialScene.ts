@@ -167,11 +167,10 @@ export class TutorialScene extends GameScene {
             this.instructionElement = document.getElementById("tutorial-instruction");
         }
         
-        if (!this.instructionElement) return;
-
-        // Reset phase 2 timer
-        this.phase2InstructionSwitch = false;
-        this.phase2SwitchTimer = 0;
+        if (!this.instructionElement) {
+            console.warn("Tutorial instruction element not found in DOM");
+            return;
+        }
         
         const sceneIndex = TutorialScene.sceneIndex;
         
@@ -186,6 +185,9 @@ export class TutorialScene extends GameScene {
             this.instructionElement.classList.remove("hidden");
         } else if (sceneIndex === 1) {
             // Phase 2: Platform rotation instructions (start with first platform)
+            // Reset phase 2 timer and switch state
+            this.phase2InstructionSwitch = false;
+            this.phase2SwitchTimer = 0;
             this.updatePhase2Instruction();
             this.instructionElement.classList.remove("hidden");
         } else {
@@ -217,7 +219,7 @@ export class TutorialScene extends GameScene {
     public override update() {
         super.update();
         
-        // Handle phase 2 instruction switching
+        // Handle phase 2 instruction switching (only if in phase 2 and not yet switched)
         if (TutorialScene.sceneIndex === 1 && !this.phase2InstructionSwitch) {
             this.phase2SwitchTimer += this.scene.getEngine().getDeltaTime();
             if (this.phase2SwitchTimer >= this.PHASE2_SWITCH_TIME) {
