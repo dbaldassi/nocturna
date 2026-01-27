@@ -46,6 +46,10 @@ class JumpingState implements AbstractState {
         if (input.jump && this.jumpHoldTime < this.player.getMaxJumpHoldTime()) {
             this.player.applyVariableJumpForce(dt);
             this.jumpHoldTime += dt;
+        } else {
+            // Apply fall multiplier when not holding jump or after max hold time
+            // This makes the player fall faster for more responsive platforming
+            this.player.applyFallMultiplier(dt);
         }
 
         // Double jump logic
@@ -98,6 +102,9 @@ class FallingState implements AbstractState {
 
     public update(dt: number, input: CharacterInput): AbstractState | null {
         this.player.move(dt, input);
+
+        // Apply fall multiplier for faster falling
+        this.player.applyFallMultiplier(dt);
 
         const isGrounded = this.player.isGrounded();
 

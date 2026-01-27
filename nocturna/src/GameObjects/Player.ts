@@ -49,9 +49,10 @@ export class Player implements GameObject {
     private sounds: Map<string, StaticSound> = new Map();
     private maxHp: number = 10;
     // Variable jump height parameters
-    private initialJumpForce: number = 15000;  // Initial impulse when jump starts
-    private variableJumpForce: number = 800;   // Continuous force while holding jump
+    private initialJumpForce: number = 5000;  // Initial impulse when jump starts
+    private variableJumpForce: number = 1000;   // Continuous force while holding jump
     private maxJumpHoldTime: number = 300;     // Maximum time (ms) to hold jump for variable height
+    private fallMultiplier: number = 2.5;      // Multiplier for faster falling
 
     /**
      * Constructs a new Player.
@@ -144,6 +145,25 @@ export class Player implements GameObject {
      */
     public getMaxJumpHoldTime(): number {
         return this.maxJumpHoldTime;
+    }
+
+    /**
+     * Applies extra downward force when falling to make descent faster.
+     * This creates a more responsive platformer feel without affecting jump height.
+     * @param dt Delta time in milliseconds
+     */
+    public applyFallMultiplier(dt: number) {
+        const physicsBody = this.getMesh().physicsBody;
+        if (!physicsBody) {
+            console.warn("Physics body not found for the player mesh.");
+            return;
+        }
+        const velocity = physicsBody.getLinearVelocity();
+        // Only apply extra downward force when falling (negative Y velocity)
+        if (velocity.y < 0) {
+            const extraGravity = new Vector3(0, velocity.y * (this.fallMultiplier - 1) * dt, 0);
+            physicsBody.applyForce(extraGravity, this.getMesh().getAbsolutePosition());
+        }
     }
 
     /**
