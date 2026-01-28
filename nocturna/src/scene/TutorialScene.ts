@@ -110,7 +110,9 @@ export class TutorialScene extends GameScene {
         if (TutorialScene.sceneIndex === 1) {
             this.gameObjects.forEach((object) => {
                 const mesh = object.getMesh();
-                if (object.getType() === "parented_platform" && mesh.physicsBody) {
+                if (object.getType() === "fixed_platform" && mesh.physicsBody) {
+                    mesh.physicsBody.setCollisionCallbackEnabled(true);
+
                     const observer = mesh.physicsBody.getCollisionObservable().add((collider) => {
                         if (collider.collidedAgainst === this.player.getMesh().physicsBody) {
                             const platformId = object.getId();
@@ -130,18 +132,18 @@ export class TutorialScene extends GameScene {
             }
         });
         this.platformCollisionObservers.clear();
-    }
+        }
 
     private onPlatformContact(platformId: string) {
         // platform_0 is the first moving platform - show rotation instructions
-        if (platformId === "platform_0") {
+        if (platformId === "platform_2") {
             if (this.phase2InstructionSwitch) {
                 // Player returned to first platform, show first instruction again
                 this.phase2InstructionSwitch = false;
                 this.currentPlatformId = platformId;
                 this.updatePhase2Instruction();
             }
-        } else if (platformId === "platform_3") {
+        } else if (platformId === "platform_5") {
             // platform_3 is the second moving platform - show axis selection instructions
             if (!this.phase2InstructionSwitch) {
                 this.phase2InstructionSwitch = true;
