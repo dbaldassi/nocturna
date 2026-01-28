@@ -14,6 +14,10 @@ export class TutorialScene extends GameScene {
     private static readonly explainationsByScene: number[] = [3, 1, 2, 2];
     private static nextStep: boolean = false;
     protected static sceneIndex: number = 0;
+    private instructionElement: HTMLElement | null = null;
+    private phase2InstructionSwitch: boolean = false;
+    private currentPlatformId: string | null = null;
+    private platformCollisionObservers: Map<string, any> = new Map();
 
     static async createScene(engine: Engine, inputHandler: InputHandler, tutorialScene: TutorialScene = null): Promise<BaseScene> {
         let scene = null;
@@ -40,6 +44,12 @@ export class TutorialScene extends GameScene {
 
         this.hpBar = new HpBar(this.player.getMaxHp());
 
+        // Reset phase 2 instruction state when loading a new level
+        if (TutorialScene.sceneIndex === 1) {
+            this.phase2InstructionSwitch = false;
+            this.currentPlatformId = null;
+        }
+
         this.state.exit();
         this.state = new InGameState(this);
         this.state.enter();
@@ -56,6 +66,9 @@ export class TutorialScene extends GameScene {
         this.state.exit();
         this.state = new LoadingState(this);
         this.state.enter();
+
+        // Clean up collision observers
+        this.cleanupPlatformCollisionObservers();
 
         this.gameObjects = []
         this.player = null;
@@ -78,10 +91,66 @@ export class TutorialScene extends GameScene {
         const showEndTutorial = document.getElementById("end-tutorial") as HTMLElement;
         showEndTutorial.classList.remove("hidden");
 
+        // Hide tutorial instructions when showing end tutorial screen
+        this.hideTutorialInstruction();
+
         const menuButton = document.getElementById("finish-tutorial-button") as HTMLElement;
         menuButton.addEventListener("click", () => {
             window.location.href = "index.html";
+        }, { once: true });
+    }
+
+    protected override setupCollisions() {
+        super.setupCollisions();
+        
+        // Clean up any existing collision observers
+        this.cleanupPlatformCollisionObservers();
+        
+        // Add special collision handling for phase 2 platforms
+        if (TutorialScene.sceneIndex === 1) {
+            this.gameObjects.forEach((object) => {
+                const mesh = object.getMesh();
+                if (object.getType() === "fixed_platform" && mesh.physicsBody) {
+                    mesh.physicsBody.setCollisionCallbackEnabled(true);
+
+                    const observer = mesh.physicsBody.getCollisionObservable().add((collider) => {
+                        if (collider.collidedAgainst === this.player.getMesh().physicsBody) {
+                            const platformId = object.getId();
+                            this.onPlatformContact(platformId);
+                        }
+                    });
+                    this.platformCollisionObservers.set(object.getId(), observer);
+                }
+            });
+        }
+    }
+
+    private cleanupPlatformCollisionObservers() {
+        this.platformCollisionObservers.forEach((observer) => {
+            if (observer && observer.remove) {
+                observer.remove();
+            }
         });
+        this.platformCollisionObservers.clear();
+        }
+
+    private onPlatformContact(platformId: string) {
+        // platform_0 is the first moving platform - show rotation instructions
+        if (platformId === "platform_2") {
+            if (this.phase2InstructionSwitch) {
+                // Player returned to first platform, show first instruction again
+                this.phase2InstructionSwitch = false;
+                this.currentPlatformId = platformId;
+                this.updatePhase2Instruction();
+            }
+        } else if (platformId === "platform_5") {
+            // platform_3 is the second moving platform - show axis selection instructions
+            if (!this.phase2InstructionSwitch) {
+                this.phase2InstructionSwitch = true;
+                this.currentPlatformId = platformId;
+                this.updatePhase2Instruction();
+            }
+        }
     }
 
     private pauseScene() {
@@ -96,6 +165,10 @@ export class TutorialScene extends GameScene {
             }
         });
         this.inputHandler.onPause();
+        
+        // Hide in-game tutorial instructions when paused
+        this.hideTutorialInstruction();
+        
         const resumeButton = document.getElementById("resume-button") as HTMLElement;
         resumeButton.addEventListener("click", () => {
             this.resumeScene();
@@ -111,6 +184,9 @@ export class TutorialScene extends GameScene {
             }
         });
         this.inputHandler.onResume();
+        
+        // Show in-game tutorial instructions when resuming
+        this.showTutorialInstruction();
     }
 
     private displayTutorialExplainations() {
@@ -149,5 +225,66 @@ export class TutorialScene extends GameScene {
     public onContinue() {
         TutorialScene.nextStep = true;
         this.recreateScene();
+    }
+
+    private showTutorialInstruction() {
+        if (!this.instructionElement) {
+            this.instructionElement = document.getElementById("tutorial-instruction");
+        }
+        
+        if (!this.instructionElement) {
+            console.warn("Tutorial instruction element not found in DOM");
+            return;
+        }
+        
+        const sceneIndex = TutorialScene.sceneIndex;
+        
+        // Only show instructions for phase 1 and phase 2
+        if (sceneIndex === 0) {
+            // Phase 1: Jump and movement instructions
+            const instructionText = Translation.formatWithKeyBindings(
+                "tutorial.ingame.phase1",
+                this.inputHandler.getKeyBindings()
+            );
+            this.instructionElement.innerHTML = instructionText;
+            this.instructionElement.classList.remove("hidden");
+        } else if (sceneIndex === 1) {
+            // Phase 2: Platform rotation instructions
+            // Don't reset phase2InstructionSwitch - keep the state based on platform collisions
+            this.updatePhase2Instruction();
+            this.instructionElement.classList.remove("hidden");
+        } else {
+            // Phase 3 and 4: No instructions
+            this.instructionElement.classList.add("hidden");
+        }
+    }
+
+    private updatePhase2Instruction() {
+        if (!this.instructionElement) return;
+
+        const instructionKey = this.phase2InstructionSwitch 
+            ? "tutorial.ingame.phase2.platform2" 
+            : "tutorial.ingame.phase2.platform1";
+        
+        const instructionText = Translation.formatWithKeyBindings(
+            instructionKey,
+            this.inputHandler.getKeyBindings()
+        );
+        this.instructionElement.innerHTML = instructionText;
+    }
+
+    private hideTutorialInstruction() {
+        if (this.instructionElement) {
+            this.instructionElement.classList.add("hidden");
+        }
+    }
+
+    public override update(dt: number) {
+        super.update(dt);
+        
+        // Check if we need to hide instructions when transitioning to end state
+        if (this.checkWin() || this.checkLoose()) {
+            this.hideTutorialInstruction();
+        }
     }
 }
